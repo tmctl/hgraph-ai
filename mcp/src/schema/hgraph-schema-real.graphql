@@ -1,0 +1,1009 @@
+# Hgraph GraphQL Schema (Auto-generated from introspection)
+
+scalar _entity_id
+scalar _int8
+scalar airdrop_state
+scalar bigint
+scalar bytea
+scalar entity_scalar
+scalar entity_type
+scalar errata_type
+scalar int8range
+scalar jsonb
+scalar order_by_consensus_timestamp
+scalar smallint
+scalar timestamp
+scalar token_pause_status
+scalar token_supply_type
+scalar token_type
+scalar transaction_scalar
+scalar transfer_type
+
+enum _transfer_select_column {
+  amount
+  consensus_timestamp
+  errata
+  is_approval
+  receiver_account_id
+  sender_account_id
+  serial_number
+  token_id
+  type
+}
+
+enum address_book_entry_select_column {
+  consensus_timestamp
+  description
+  memo
+  node_account_id
+  node_cert_hash
+  node_id
+  public_key
+  stake
+}
+
+enum address_book_select_column {
+  end_consensus_timestamp
+  file_data
+  file_id
+  node_count
+  start_consensus_timestamp
+}
+
+enum address_book_service_endpoint_select_column {
+  consensus_timestamp
+  domain_name
+  ip_address_v4
+  node_id
+  port
+}
+
+enum assessed_custom_fee_select_column {
+  amount
+  collector_account_id
+  consensus_timestamp
+  effective_payer_account_ids
+  payer_account_id
+  token_id
+}
+
+enum contract_action_select_column {
+  call_depth
+  call_operation_type
+  call_type
+  caller
+  caller_type
+  consensus_timestamp
+  gas
+  gas_used
+  index
+  input
+  payer_account_id
+  recipient_account
+  recipient_address
+  recipient_contract
+  result_data
+  result_data_type
+  value
+}
+
+enum contract_log_select_column {
+  bloom
+  consensus_timestamp
+  contract_id
+  data
+  index
+  payer_account_id
+  root_contract_id
+  topic0
+  topic1
+  topic2
+  topic3
+  transaction_hash
+  transaction_index
+}
+
+enum contract_result_select_column {
+  amount
+  bloom
+  call_result
+  consensus_timestamp
+  contract_id
+  created_contract_ids
+  error_message
+  failed_initcode
+  function_parameters
+  function_result
+  gas_consumed
+  gas_limit
+  gas_used
+  payer_account_id
+  sender_id
+  transaction_hash
+  transaction_index
+  transaction_nonce
+  transaction_result
+}
+
+enum contract_select_column {
+  file_id
+  id
+  initcode
+  runtime_bytecode
+}
+
+enum contract_state_change_select_column {
+  consensus_timestamp
+  contract_id
+  migration
+  payer_account_id
+  slot
+  value_read
+  value_written
+}
+
+enum contract_state_select_column {
+  contract_id
+  created_timestamp
+  modified_timestamp
+  slot
+  value
+}
+
+enum contract_transactions_last_24hrs_select_column {
+  count
+  updated_at
+}
+
+enum crypto_allowance_history_select_column {
+  amount
+  amount_granted
+  owner
+  payer_account_id
+  spender
+  timestamp_range
+}
+
+enum crypto_allowance_select_column {
+  amount
+  amount_granted
+  owner
+  payer_account_id
+  spender
+  timestamp_range
+}
+
+enum crypto_transfer_select_column {
+  amount
+  consensus_timestamp
+  entity_id
+  errata
+  is_approval
+  payer_account_id
+}
+
+enum crypto_transfer_select_column_crypto_transfer_aggregate_bool_exp_bool_and_arguments_columns {
+  is_approval
+}
+
+enum crypto_transfer_select_column_crypto_transfer_aggregate_bool_exp_bool_or_arguments_columns {
+  is_approval
+}
+
+enum cursor_ordering {
+  ASC
+  DESC
+}
+
+enum custom_fee_select_column {
+  entity_id
+  fixed_fees
+  fractional_fees
+  royalty_fees
+  timestamp_range
+}
+
+enum ecosystem__nft_collection_sales_volume_select_column {
+  collection_name
+  nft_period
+  token_id
+  total
+}
+
+enum ecosystem__nft_collection_sales_volume_total_select_column {
+  collection_name
+  token_id
+  total
+}
+
+enum ecosystem_active_nft_account_cohorts_select_column {
+  cohort
+  period
+  timestamp_range
+  total
+}
+
+enum ecosystem_estimated_transaction_totals_select_column {
+  atma_transactions
+  atma_transactions_q1_2023
+  atma_transactions_q1_2024
+  atma_transactions_q2_2023
+  atma_transactions_q3_2023
+  atma_transactions_q4_2023
+  other_transactions
+  other_transactions_q1_2023
+  other_transactions_q1_2024
+  other_transactions_q2_2023
+  other_transactions_q3_2023
+  other_transactions_q4_2023
+  total_transactions
+  total_transactions_q1_2023
+  total_transactions_q1_2024
+  total_transactions_q2_2023
+  total_transactions_q3_2023
+  total_transactions_q4_2023
+}
+
+enum ecosystem_metric_description_select_column {
+  description
+  methodology
+  name
+}
+
+enum ecosystem_metric_select_column {
+  name
+  period
+  timestamp_range
+  total
+}
+
+enum ecosystem_transaction_count_by_type_select_column {
+  total
+  type
+}
+
+enum entity_history_select_column {
+  alias
+  auto_renew_account_id
+  auto_renew_period
+  balance
+  balance_timestamp
+  created_timestamp
+  decline_reward
+  deleted
+  ethereum_nonce
+  evm_address
+  expiration_timestamp
+  id
+  key
+  max_automatic_token_associations
+  memo
+  num
+  obtainer_id
+  permanent_removal
+  proxy_account_id
+  public_key
+  realm
+  receiver_sig_required
+  shard
+  stake_period_start
+  staked_account_id
+  staked_node_id
+  timestamp_range
+  type
+}
+
+enum entity_select_column {
+  alias
+  auto_renew_account_id
+  auto_renew_period
+  balance
+  balance_timestamp
+  created_timestamp
+  decline_reward
+  deleted
+  ethereum_nonce
+  evm_address
+  expiration_timestamp
+  id
+  key
+  max_automatic_token_associations
+  memo
+  num
+  obtainer_id
+  permanent_removal
+  proxy_account_id
+  public_key
+  realm
+  receiver_sig_required
+  shard
+  stake_period_start
+  staked_account_id
+  staked_node_id
+  timestamp_range
+  type
+}
+
+enum entity_stake_select_column {
+  end_stake_period
+  id
+  pending_reward
+  stake_total_start
+  staked_node_id_start
+  staked_to_me
+  timestamp_range
+}
+
+enum ethereum_transaction_select_column {
+  access_list
+  call_data
+  call_data_id
+  chain_id
+  consensus_timestamp
+  data
+  gas_limit
+  gas_price
+  hash
+  max_fee_per_gas
+  max_gas_allowance
+  max_priority_fee_per_gas
+  nonce
+  payer_account_id
+  recovery_id
+  signature_r
+  signature_s
+  signature_v
+  to_address
+  type
+  value
+}
+
+enum network_stake_select_column {
+  consensus_timestamp
+  epoch_day
+  max_stake_rewarded
+  max_staking_reward_rate_per_hbar
+  max_total_reward
+  node_reward_fee_denominator
+  node_reward_fee_numerator
+  reserved_staking_rewards
+  reward_balance_threshold
+  stake_total
+  staking_period
+  staking_period_duration
+  staking_periods_stored
+  staking_reward_fee_denominator
+  staking_reward_fee_numerator
+  staking_reward_rate
+  staking_start_threshold
+  unreserved_staking_reward_balance
+}
+
+enum nft_allowance_history_select_column {
+  approved_for_all
+  owner
+  payer_account_id
+  spender
+  timestamp_range
+  token_id
+}
+
+enum nft_allowance_select_column {
+  approved_for_all
+  owner
+  payer_account_id
+  spender
+  timestamp_range
+  token_id
+}
+
+enum nft_history_select_column {
+  account_id
+  created_timestamp
+  delegating_spender
+  deleted
+  end_timestamp
+  metadata
+  serial_number
+  spender
+  start_timestamp
+  timestamp_range
+  token_id
+}
+
+enum nft_history_select_column_nft_history_aggregate_bool_exp_bool_and_arguments_columns {
+  deleted
+}
+
+enum nft_history_select_column_nft_history_aggregate_bool_exp_bool_or_arguments_columns {
+  deleted
+}
+
+enum nft_select_column {
+  account_id
+  created_timestamp
+  delegating_spender
+  deleted
+  metadata
+  serial_number
+  spender
+  timestamp_range
+  token_id
+}
+
+enum nft_select_column_nft_aggregate_bool_exp_bool_and_arguments_columns {
+  deleted
+}
+
+enum nft_select_column_nft_aggregate_bool_exp_bool_or_arguments_columns {
+  deleted
+}
+
+enum nft_transfer_select_column {
+  consensus_timestamp
+  is_approval
+  payer_account_id
+  receiver_account_id
+  sender_account_id
+  serial_number
+  token_id
+}
+
+enum nft_transfer_select_column_nft_transfer_aggregate_bool_exp_bool_and_arguments_columns {
+  is_approval
+}
+
+enum nft_transfer_select_column_nft_transfer_aggregate_bool_exp_bool_or_arguments_columns {
+  is_approval
+}
+
+enum node_stake_select_column {
+  consensus_timestamp
+  epoch_day
+  max_stake
+  min_stake
+  node_id
+  reward_rate
+  stake
+  stake_not_rewarded
+  stake_rewarded
+  staking_period
+}
+
+enum non_fee_transfer_select_column {
+  amount
+  consensus_timestamp
+  entity_id
+  is_approval
+  payer_account_id
+}
+
+enum order_by {
+  asc
+  asc_nulls_first
+  asc_nulls_last
+  desc
+  desc_nulls_first
+  desc_nulls_last
+}
+
+enum schedule_select_column {
+  consensus_timestamp
+  creator_account_id
+  executed_timestamp
+  expiration_time
+  payer_account_id
+  schedule_id
+  transaction_body
+  wait_for_expiry
+}
+
+enum staking_reward_transfer_select_column {
+  account_id
+  amount
+  consensus_timestamp
+  payer_account_id
+}
+
+enum token_account_history_select_column {
+  account_id
+  associated
+  automatic_association
+  balance
+  balance_timestamp
+  created_timestamp
+  freeze_status
+  kyc_status
+  timestamp_range
+  token_id
+}
+
+enum token_account_select_column {
+  account_id
+  associated
+  automatic_association
+  balance
+  balance_timestamp
+  created_timestamp
+  freeze_status
+  kyc_status
+  timestamp_range
+  token_id
+}
+
+enum token_account_select_column_token_account_aggregate_bool_exp_bool_and_arguments_columns {
+  associated
+  automatic_association
+}
+
+enum token_account_select_column_token_account_aggregate_bool_exp_bool_or_arguments_columns {
+  associated
+  automatic_association
+}
+
+enum token_airdrop_history_select_column {
+  amount
+  receiver_account_id
+  sender_account_id
+  serial_number
+  state
+  timestamp_range
+  token_id
+}
+
+enum token_airdrop_select_column {
+  amount
+  receiver_account_id
+  sender_account_id
+  serial_number
+  state
+  timestamp_range
+  token_id
+}
+
+enum token_allowance_history_select_column {
+  amount
+  amount_granted
+  owner
+  payer_account_id
+  spender
+  timestamp_range
+  token_id
+}
+
+enum token_allowance_select_column {
+  amount
+  amount_granted
+  owner
+  payer_account_id
+  spender
+  timestamp_range
+  token_id
+}
+
+enum token_history_select_column {
+  created_timestamp
+  decimals
+  fee_schedule_key
+  freeze_default
+  freeze_key
+  freeze_status
+  initial_supply
+  kyc_key
+  kyc_status
+  max_supply
+  metadata
+  metadata_key
+  name
+  pause_key
+  pause_status
+  supply_key
+  supply_type
+  symbol
+  timestamp_range
+  token_id
+  total_supply
+  treasury_account_id
+  type
+  wipe_key
+}
+
+enum token_select_column {
+  created_timestamp
+  decimals
+  fee_schedule_key
+  freeze_default
+  freeze_key
+  freeze_status
+  initial_supply
+  kyc_key
+  kyc_status
+  max_supply
+  metadata
+  metadata_key
+  name
+  pause_key
+  pause_status
+  supply_key
+  supply_type
+  symbol
+  timestamp_range
+  token_id
+  total_supply
+  treasury_account_id
+  type
+  wipe_key
+}
+
+enum token_transfer_select_column {
+  account_id
+  amount
+  consensus_timestamp
+  is_approval
+  payer_account_id
+  token_id
+}
+
+enum token_transfer_select_column_token_transfer_aggregate_bool_exp_bool_and_arguments_columns {
+  is_approval
+}
+
+enum token_transfer_select_column_token_transfer_aggregate_bool_exp_bool_or_arguments_columns {
+  is_approval
+}
+
+enum topic_message_lookup_select_column {
+  partition
+  sequence_number_range
+  timestamp_range
+  topic_id
+}
+
+enum topic_message_select_column {
+  chunk_num
+  chunk_total
+  consensus_timestamp
+  initial_transaction_id
+  message
+  payer_account_id
+  running_hash
+  running_hash_version
+  sequence_number
+  topic_id
+  valid_start_timestamp
+}
+
+enum topic_select_column {
+  admin_key
+  created_timestamp
+  fee_exempt_key_list
+  fee_schedule_key
+  id
+  submit_key
+  timestamp_range
+}
+
+enum total_accounts_select_column {
+  count
+  updated_at
+}
+
+enum transaction_select_column {
+  batch_key
+  charged_tx_fee
+  consensus_timestamp
+  entity_id
+  errata
+  index
+  initial_balance
+  inner_transactions
+  itemized_transfer
+  max_custom_fees
+  max_fee
+  memo
+  nft_transfer
+  node_account_id
+  nonce
+  parent_consensus_timestamp
+  payer_account_id
+  result
+  scheduled
+  transaction_bytes
+  transaction_hash
+  transaction_record_bytes
+  type
+  valid_duration_seconds
+  valid_start_ns
+}
+
+enum transaction_signature_select_column {
+  consensus_timestamp
+  entity_id
+  public_key_prefix
+  signature
+  type
+}
+
+enum transactions_last_24hrs_select_column {
+  count
+  updated_at
+}
+
+"""
+columns and relationships of "_transfer"
+"""
+type _transfer {
+  amount: bigint
+  consensus_timestamp: bigint
+  consensus_timestamp_iso8601: String
+  errata: errata_type
+  is_approval: Boolean
+  nft: nft
+  receiver_account_id: bigint
+  sender_account_id: bigint
+  serial_number: bigint
+  token: token
+  token_id: bigint
+  transaction: transaction
+  type: transfer_type
+}
+
+"""
+aggregated selection of "_transfer"
+"""
+type _transfer_aggregate {
+  aggregate: _transfer_aggregate_fields
+  nodes: [_transfer!]!
+}
+
+"""
+columns and relationships of "address_book"
+"""
+type address_book {
+  address_book_entry(distinct_on: [address_book_entry_select_column!], limit: Int, offset: Int, order_by: [address_book_entry_order_by!], where: address_book_entry_bool_exp): [address_book_entry!]!
+  address_book_entry_aggregate(distinct_on: [address_book_entry_select_column!], limit: Int, offset: Int, order_by: [address_book_entry_order_by!], where: address_book_entry_bool_exp): address_book_entry_aggregate!
+  end_consensus_timestamp: bigint
+  end_consensus_timestamp_iso8601: String
+  file_data: bytea!
+  file_id: bigint!
+  node_count: Int
+  start_consensus_timestamp: bigint!
+  start_consensus_timestamp_iso8601: String
+}
+
+"""
+columns and relationships of "address_book_entry"
+"""
+type address_book_entry {
+  address_book: address_book
+  consensus_timestamp: bigint!
+  consensus_timestamp_iso8601: String
+  description: String
+  memo: String
+  node_account_id: bigint!
+  node_cert_hash: bytea
+  node_id: bigint!
+  public_key: String
+  stake: bigint
+}
+
+"""
+Assessed custom fees for HTS transactions
+"""
+type assessed_custom_fee {
+  amount: bigint!
+  collector_account_id: bigint!
+  consensus_timestamp: bigint!
+  consensus_timestamp_iso8601: String
+  effective_payer_account_ids: [bigint!]!
+  payer_account_id: bigint!
+  token_id: bigint
+}
+
+"""
+columns and relationships of "contract"
+"""
+type contract {
+  file_id: bigint
+  id: bigint!
+  initcode: bytea
+  runtime_bytecode: bytea
+}
+
+"""
+columns and relationships of "contract_action"
+"""
+type contract_action {
+  call_depth: Int!
+  call_operation_type: Int
+  call_type: Int
+  caller: bigint
+  caller_type: entity_type
+  consensus_timestamp: bigint!
+  consensus_timestamp_iso8601: String
+  gas: bigint!
+  gas_used: bigint!
+  index: Int!
+  input: bytea
+  payer_account_id: bigint!
+  recipient_account: bigint
+  recipient_address: bytea
+  recipient_contract: bigint
+}
+
+"""
+aggregated selection of "contract"
+"""
+type contract_aggregate {
+  aggregate: contract_aggregate_fields
+  nodes: [contract!]!
+}
+
+"""
+aggregate avg on columns
+"""
+type contract_avg_fields {
+  file_id: Float
+  id: Float
+}
+
+"""
+columns and relationships of "contract_log"
+"""
+type contract_log {
+  bloom: bytea!
+  consensus_timestamp: bigint!
+  consensus_timestamp_iso8601: String
+  contract_id: bigint!
+  data: bytea!
+  index: Int!
+  payer_account_id: bigint!
+  root_contract_id: bigint
+  topic0: bytea
+  topic1: bytea
+  topic2: bytea
+  topic3: bytea
+  transaction_hash: bytea
+  transaction_index: Int
+}
+
+"""
+aggregate max on columns
+"""
+type contract_max_fields {
+  file_id: bigint
+  id: bigint
+}
+
+"""
+aggregate min on columns
+"""
+type contract_min_fields {
+  file_id: bigint
+  id: bigint
+}
+
+"""
+columns and relationships of "contract_result"
+"""
+type contract_result {
+  amount: bigint
+  bloom: bytea
+  call_result: bytea
+  consensus_timestamp: bigint!
+  consensus_timestamp_iso8601: String
+  contract_id: bigint!
+  created_contract_ids: [bigint!]
+  error_message: String
+  failed_initcode: bytea
+  function_parameters: bytea!
+  function_result: bytea
+  gas_consumed: bigint
+  gas_limit: bigint!
+  gas_used: bigint
+  payer_account_id: bigint!
+}
+
+"""
+columns and relationships of "contract_state"
+"""
+type contract_state {
+  contract_id: bigint!
+  created_timestamp: bigint!
+  created_timestamp_iso8601: String
+  modified_timestamp: bigint!
+  modified_timestamp_iso8601: String
+  slot: bytea!
+  value: bytea
+}
+
+"""
+aggregate sum on columns
+"""
+type contract_sum_fields {
+  file_id: bigint
+  id: bigint
+}
+
+"""
+columns and relationships of "contract_transactions_last_24hrs"
+"""
+type contract_transactions_last_24hrs {
+  count: bigint
+  updated_at: timestamp
+}
+
+"""
+aggregated selection of "contract_transactions_last_24hrs"
+"""
+type contract_transactions_last_24hrs_aggregate {
+  aggregate: contract_transactions_last_24hrs_aggregate_fields
+  nodes: [contract_transactions_last_24hrs!]!
+}
+
+"""
+aggregate fields of "contract_transactions_last_24hrs"
+"""
+type contract_transactions_last_24hrs_aggregate_fields {
+  avg: contract_transactions_last_24hrs_avg_fields
+  count(columns: [contract_transactions_last_24hrs_select_column!], distinct: Boolean): Int!
+  max: contract_transactions_last_24hrs_max_fields
+  min: contract_transactions_last_24hrs_min_fields
+  stddev: contract_transactions_last_24hrs_stddev_fields
+  stddev_pop: contract_transactions_last_24hrs_stddev_pop_fields
+  stddev_samp: contract_transactions_last_24hrs_stddev_samp_fields
+  sum: contract_transactions_last_24hrs_sum_fields
+  var_pop: contract_transactions_last_24hrs_var_pop_fields
+  var_samp: contract_transactions_last_24hrs_var_samp_fields
+  variance: contract_transactions_last_24hrs_variance_fields
+}
+
+"""
+aggregate avg on columns
+"""
+type contract_transactions_last_24hrs_avg_fields {
+  count: Float
+}
+
+"""
+aggregate max on columns
+"""
+type contract_transactions_last_24hrs_max_fields {
+  count: bigint
+  updated_at: timestamp
+}
+
+type Query {
+  account_transfer(args: account_transfer_args!, distinct_on: [_transfer_select_column!], limit: Int, offset: Int, order_by: [_transfer_order_by!]): [_transfer!]!
+  account_transfer_aggregate(args: account_transfer_args!, distinct_on: [_transfer_select_column!], limit: Int, offset: Int, order_by: [_transfer_order_by!]): _transfer_aggregate!
+  child_transactions(args: child_transactions_args!, distinct_on: [transaction_select_column!], limit: Int, offset: Int, order_by: [transaction_order_by!]): [transaction!]!
+  child_transactions_aggregate(args: child_transactions_args!, distinct_on: [transaction_select_column!], limit: Int, offset: Int, order_by: [transaction_order_by!]): transaction_aggregate!
+  contract_transactions_last_24hrs(distinct_on: [contract_transactions_last_24hrs_select_column!], limit: Int, offset: Int, order_by: [contract_transactions_last_24hrs_order_by!], where: contract_transactions_last_24hrs_bool_exp): [contract_transactions_last_24hrs!]!
+  contract_transactions_last_24hrs_aggregate(distinct_on: [contract_transactions_last_24hrs_select_column!], limit: Int, offset: Int, order_by: [contract_transactions_last_24hrs_order_by!], where: contract_transactions_last_24hrs_bool_exp): contract_transactions_last_24hrs_aggregate!
+  crypto_transfer(distinct_on: [crypto_transfer_select_column!], limit: Int, offset: Int, order_by: [crypto_transfer_order_by!], where: crypto_transfer_bool_exp): [crypto_transfer!]!
+  crypto_transfer_aggregate(distinct_on: [crypto_transfer_select_column!], limit: Int, offset: Int, order_by: [crypto_transfer_order_by!], where: crypto_transfer_bool_exp): crypto_transfer_aggregate!
+  ecosystem__nft_collection_sales_volume(distinct_on: [ecosystem__nft_collection_sales_volume_select_column!], limit: Int, offset: Int, order_by: [ecosystem__nft_collection_sales_volume_order_by!], where: ecosystem__nft_collection_sales_volume_bool_exp): [ecosystem__nft_collection_sales_volume!]!
+  ecosystem__nft_collection_sales_volume_total(distinct_on: [ecosystem__nft_collection_sales_volume_total_select_column!], limit: Int, offset: Int, order_by: [ecosystem__nft_collection_sales_volume_total_order_by!], where: ecosystem__nft_collection_sales_volume_total_bool_exp): [ecosystem__nft_collection_sales_volume_total!]!
+  ecosystem_active_accounts_per_period(args: ecosystem_active_accounts_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): [ecosystem_metric!]!
+  ecosystem_active_accounts_per_period_aggregate(args: ecosystem_active_accounts_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): ecosystem_metric_aggregate!
+  ecosystem_active_nft_account_cohorts(distinct_on: [ecosystem_active_nft_account_cohorts_select_column!], limit: Int, offset: Int, order_by: [ecosystem_active_nft_account_cohorts_order_by!], where: ecosystem_active_nft_account_cohorts_bool_exp): [ecosystem_active_nft_account_cohorts!]!
+  ecosystem_active_nft_account_cohorts_aggregate(distinct_on: [ecosystem_active_nft_account_cohorts_select_column!], limit: Int, offset: Int, order_by: [ecosystem_active_nft_account_cohorts_order_by!], where: ecosystem_active_nft_account_cohorts_bool_exp): ecosystem_active_nft_account_cohorts_aggregate!
+  ecosystem_associated_transaction_fees_per_period(args: ecosystem_associated_transaction_fees_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): [ecosystem_metric!]!
+  ecosystem_associated_transaction_fees_per_period_aggregate(args: ecosystem_associated_transaction_fees_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): ecosystem_metric_aggregate!
+  ecosystem_associated_transactions_per_period(args: ecosystem_associated_transactions_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): [ecosystem_metric!]!
+  ecosystem_associated_transactions_per_period_aggregate(args: ecosystem_associated_transactions_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): ecosystem_metric_aggregate!
+  ecosystem_estimated_transaction_totals(distinct_on: [ecosystem_estimated_transaction_totals_select_column!], limit: Int, offset: Int, order_by: [ecosystem_estimated_transaction_totals_order_by!], where: ecosystem_estimated_transaction_totals_bool_exp): [ecosystem_estimated_transaction_totals!]!
+  ecosystem_estimated_transaction_totals_aggregate(distinct_on: [ecosystem_estimated_transaction_totals_select_column!], limit: Int, offset: Int, order_by: [ecosystem_estimated_transaction_totals_order_by!], where: ecosystem_estimated_transaction_totals_bool_exp): ecosystem_estimated_transaction_totals_aggregate!
+  ecosystem_fungible_token_transfers_per_period(args: ecosystem_fungible_token_transfers_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): [ecosystem_metric!]!
+  ecosystem_fungible_token_transfers_per_period_aggregate(args: ecosystem_fungible_token_transfers_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): ecosystem_metric_aggregate!
+  ecosystem_nft_collection_sales_volume(args: ecosystem_nft_collection_sales_volume_args!, distinct_on: [ecosystem__nft_collection_sales_volume_select_column!], limit: Int, offset: Int, order_by: [ecosystem__nft_collection_sales_volume_order_by!]): [ecosystem__nft_collection_sales_volume!]!
+  ecosystem_nft_collection_sales_volume_total(args: ecosystem_nft_collection_sales_volume_total_args!, distinct_on: [ecosystem__nft_collection_sales_volume_total_select_column!], limit: Int, offset: Int, order_by: [ecosystem__nft_collection_sales_volume_total_order_by!]): [ecosystem__nft_collection_sales_volume_total!]!
+  ecosystem_nft_holders_per_period(args: ecosystem_nft_holders_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): [ecosystem_metric!]!
+  ecosystem_nft_holders_per_period_aggregate(args: ecosystem_nft_holders_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): ecosystem_metric_aggregate!
+  ecosystem_non_fungible_token_transfers_per_period(args: ecosystem_non_fungible_token_transfers_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): [ecosystem_metric!]!
+  ecosystem_non_fungible_token_transfers_per_period_aggregate(args: ecosystem_non_fungible_token_transfers_per_period_args!, distinct_on: [ecosystem_metric_select_column!], limit: Int, offset: Int, order_by: [ecosystem_metric_order_by!]): ecosystem_metric_aggregate!
+  ecosystem_transaction_count_by_type(distinct_on: [ecosystem_transaction_count_by_type_select_column!], limit: Int, offset: Int, order_by: [ecosystem_transaction_count_by_type_order_by!], where: ecosystem_transaction_count_by_type_bool_exp): [ecosystem_transaction_count_by_type!]!
+  ecosystem_transaction_count_by_type_aggregate(distinct_on: [ecosystem_transaction_count_by_type_select_column!], limit: Int, offset: Int, order_by: [ecosystem_transaction_count_by_type_order_by!], where: ecosystem_transaction_count_by_type_bool_exp): ecosystem_transaction_count_by_type_aggregate!
+}
+
+

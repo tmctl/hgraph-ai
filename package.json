@@ -1,0 +1,77 @@
+{
+  "name": "hgraph-ai",
+  "version": "1.0.0",
+  "description": "Hgraph AI - Hedera blockchain data access with MCP server and frontend",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "mcp"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:mcp\"",
+    "dev:frontend": "cd frontend && next dev",
+    "dev:mcp": "cd mcp && tsx src/index.ts",
+    "build": "npm run build:frontend && npm run build:mcp",
+    "build:frontend": "cd frontend && next build",
+    "build:mcp": "cd mcp && tsc",
+    "start:frontend": "cd frontend && next start",
+    "start:mcp": "cd mcp && node dist/index.js",
+    "lint": "npm run lint:frontend && npm run lint:mcp",
+    "lint:frontend": "cd frontend && next lint",
+    "lint:mcp": "cd mcp && eslint src/**/*.ts",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,ts,tsx,json,md,css}\"",
+    "test": "cd mcp && jest",
+    "test:watch": "cd mcp && jest --watch",
+    "test:coverage": "cd mcp && jest --coverage",
+    "test:integration": "cd mcp && jest tests/integration",
+    "test:unit": "cd mcp && jest tests/unit"
+  },
+  "dependencies": {
+    "@heroicons/react": "^2.2.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "axios": "^1.6.0",
+    "graphql": "^16.8.0",
+    "graphql-request": "^6.1.0",
+    "next": "15.4.6",
+    "pg": "^8.11.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "sql-formatter": "^15.0.0",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.10.0",
+    "@types/pg": "^8.10.0",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "concurrently": "^8.2.0",
+    "eslint": "^8.55.0",
+    "eslint-config-next": "15.4.6",
+    "eslint-config-prettier": "^10.1.8",
+    "jest": "^29.7.0",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4",
+    "ts-jest": "^29.1.0",
+    "tsx": "^4.6.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "mcp",
+    "hedera",
+    "blockchain",
+    "hgraph",
+    "ai"
+  ],
+  "author": "Hgraph Team",
+  "license": "MIT"
+}
