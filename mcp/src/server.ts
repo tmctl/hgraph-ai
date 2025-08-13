@@ -40,6 +40,147 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// MCP info endpoint
+app.get('/', (req, res) => {
+  res.json({
+    mcp: '1.0',
+    name: 'hgraph-mcp-server',
+    description: 'MCP server for Hedera blockchain data access via Hgraph APIs',
+    version: '1.0.0',
+  });
+});
+
+// MCP Protocol endpoints for Claude.ai
+app.post('/', async (req, res) => {
+  console.log('MCP Request:', JSON.stringify(req.body, null, 2));
+  try {
+    const { method, params, id } = req.body;
+    
+    if (method === 'initialize') {
+      res.json({
+        jsonrpc: '2.0',
+        id,
+        result: {
+          protocolVersion: '2025-06-18',
+          serverInfo: {
+            name: 'hgraph-mcp-server',
+            version: '1.0.0',
+          },
+          capabilities: {
+            tools: {},
+          },
+        },
+      });
+    } else if (method === 'notifications/initialized') {
+      // This is a notification, no response needed
+      res.status(204).send();
+      return;
+    } else if (method === 'tools/list') {
+      const tools = [
+        {
+          name: 'execute_graphql_query',
+          description: 'Execute a GraphQL query and return the data from Hgraph API',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: { type: 'string', description: 'GraphQL query string' },
+              variables: { type: 'object', description: 'Variables for the GraphQL query' },
+            },
+            required: ['query'],
+          },
+        },
+        {
+          name: 'ask_question',
+          description: 'Ask a question about the database in natural language and get data back',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              question: { type: 'string', description: 'Natural language question about the data' },
+            },
+            required: ['question'],
+          },
+        },
+        {
+          name: 'get_account_info',
+          description: 'Get detailed information about a Hedera account',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              accountId: { type: 'string', description: 'Hedera account ID (e.g., 0.0.123456)' },
+            },
+            required: ['accountId'],
+          },
+        },
+        {
+          name: 'get_network_stats',
+          description: 'Get current Hedera network statistics and metrics',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              metric: { 
+                type: 'string', 
+                enum: ['all', 'tps', 'nodes', 'supply'],
+                description: 'Specific metric to retrieve (default: all)',
+                default: 'all',
+              },
+            },
+          },
+        },
+      ];
+      
+      res.json({
+        jsonrpc: '2.0',
+        id,
+        result: { tools },
+      });
+    } else if (method === 'tools/call') {
+      const { name, arguments: args } = params;
+      let result;
+      
+      switch (name) {
+        case 'execute_graphql_query':
+          result = await executeGraphQLQuery(args?.query as string, args?.variables as Record<string, any>);
+          break;
+        case 'ask_question':
+          result = await askQuestion(args?.question as string);
+          break;
+        case 'get_account_info':
+          result = await getAccountInfo(args?.accountId as string);
+          break;
+        case 'get_network_stats':
+          result = await getNetworkStats(args?.metric as string);
+          break;
+        default:
+          throw new Error(`Unknown tool: ${name}`);
+      }
+      
+      res.json({
+        jsonrpc: '2.0',
+        id,
+        result,
+      });
+    } else {
+      res.json({
+        jsonrpc: '2.0',
+        id,
+        error: {
+          code: -32601,
+          message: 'Method not found',
+        },
+      });
+    }
+  } catch (error: any) {
+    res.json({
+      jsonrpc: '2.0',
+      id: req.body.id,
+      error: {
+        code: -32603,
+        message: error.message || 'Internal error',
+      },
+    });
+  }
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({
