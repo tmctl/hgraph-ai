@@ -37,16 +37,16 @@ hgraph.ai is a cutting-edge artificial intelligence platform that leverages bloc
                     │
                     ▼
 ┌─────────────────────────────────────────┐
-│             API Gateway                  │
-│     Authentication & Request Routing     │
+│          MCP Server (Port 3000)          │
+│   HTTP REST API / MCP Protocol Server    │
 └─────────────────────────────────────────┘
                     │
         ┌───────────┴───────────┐
         ▼                       ▼
 ┌──────────────┐        ┌──────────────────┐
-│  AI Engine   │        │   Blockchain     │
-│  LLM Models  │◄───────┤    Network       │
-│  Processing  │        │  Smart Contracts │
+│  Hgraph APIs │        │  Hedera Network  │
+│   GraphQL    │◄───────┤   Blockchain     │
+│   REST/RPC   │        │    Mirror Node   │
 └──────────────┘        └──────────────────┘
 ```
 
@@ -69,26 +69,27 @@ cd hgraph-ai
 npm install
 
 # Set up environment variables
-cp .env.example .env
+cp mcp/.env.example mcp/.env
 # Edit .env with your configuration
 
-# Start development server
-npm run dev
+# Start development server (multiple options)
+npm run dev              # Start all services
+npm run dev:mcp-server   # Start MCP HTTP server only
+npm run dev:frontend     # Start frontend only
 ```
 
 ### Configuration
 
-Create a `.env` file with the following variables:
+Create a `.env` file in the `mcp` directory with the following variables:
 
 ```env
-# Blockchain Configuration
-BLOCKCHAIN_RPC_URL=your_rpc_url
-SMART_CONTRACT_ADDRESS=contract_address
-CHAIN_ID=chain_id
+# Server Configuration
+MCP_PORT=3000  # Port for HTTP server mode
 
-# AI Configuration
-AI_MODEL_ENDPOINT=model_endpoint
-AI_API_KEY=your_api_key
+# Hgraph API Configuration
+HGRAPH_GRAPHQL_URL=https://mainnet.hedera.api.hgraph.io/v1/graphql
+HGRAPH_REST_URL=https://mainnet.hedera.api.hgraph.io/v1/pk_prod_ab2c41b848c0b568e96a31ef0ca2f2fbaa549470/api/v1
+HGRAPH_API_KEY=your-hgraph-api-key-here
 
 # Application
 NEXT_PUBLIC_APP_URL=http://localhost:3000
@@ -96,27 +97,67 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 ## Usage
 
-### Web Interface
+### MCP Server Modes
 
-1. Connect your Web3 wallet
-2. Ensure you have sufficient hgraph tokens
-3. Start chatting with the AI assistant
-4. View transaction history on the blockchain
+The MCP server can run in two modes:
 
-### API Access
+#### 1. Stdio Mode (for MCP clients)
 
-```javascript
-import { HGraphAI } from '@hgraph/ai-sdk';
+```bash
+npm run dev:mcp          # Development
+npm run start:mcp        # Production
+```
 
-const ai = new HGraphAI({
-  walletAddress: 'your_wallet_address',
-  privateKey: 'your_private_key',
-});
+#### 2. HTTP Server Mode (REST API on port)
 
-const response = await ai.chat({
-  message: 'Hello, blockchain AI!',
-  model: 'hgraph-turbo',
-});
+```bash
+npm run dev:mcp-server   # Development (default port 3000)
+MCP_PORT=8080 npm run dev:mcp-server  # Custom port
+```
+
+### HTTP API Endpoints
+
+When running in HTTP server mode:
+
+- `GET /health` - Health check
+- `GET /tools` - List available tools
+- `POST /execute` - Execute any tool
+
+#### GraphQL Operations
+
+- `POST /graphql/execute` - Execute GraphQL queries
+- `GET /graphql/schema` - Get full schema
+- `POST /graphql/refresh-schema` - Refresh schema cache
+
+#### Blockchain Data Access
+
+- `GET /account/:accountId` - Account information
+- `GET /account/:accountId/transactions` - Transaction history
+- `GET /account/:accountId/tokens` - Token balances
+- `GET /network/stats` - Network statistics
+
+#### JSON-RPC Methods
+
+- `POST /jsonrpc` - Execute any JSON-RPC method
+- `GET /jsonrpc/chain-id` - Get chain ID
+- `GET /jsonrpc/block/:blockNumber` - Get block data
+- `GET /jsonrpc/transaction/:hash` - Get transaction
+
+### API Example
+
+```bash
+# Check server health
+curl http://localhost:3000/health
+
+# Get network statistics
+curl -X POST http://localhost:3000/execute \
+  -H "Content-Type: application/json" \
+  -d '{"tool": "get_network_stats", "arguments": {"metric": "all"}}'
+
+# Execute GraphQL query
+curl -X POST http://localhost:3000/graphql/execute \
+  -H "Content-Type: application/json" \
+  -d '{"query": "{ accounts(limit: 5) { id balance } }"}'
 ```
 
 ## Development
@@ -125,20 +166,25 @@ const response = await ai.chat({
 
 - **Frontend**: React, Next.js, TypeScript
 - **Styling**: Tailwind CSS
-- **Blockchain**: Ethereum/Polygon/Hedera
-- **Smart Contracts**: Solidity
-- **Backend**: Node.js, Express
-- **AI**: OpenAI API / Custom Models
+- **Blockchain**: Hedera Hashgraph
+- **APIs**: Hgraph GraphQL, REST, JSON-RPC
+- **Backend**: Node.js, Express (HTTP mode)
+- **Protocol**: Model Context Protocol (MCP)
+- **Data Access**: GraphQL with full introspection
 
 ### Project Structure
 
 ```
 hgraph-ai/
-├── frontend/          # React frontend application
-├── contracts/         # Smart contracts
-├── backend/          # API and AI processing
-├── docs/             # Documentation
-└── tests/            # Test suites
+├── frontend/          # Next.js web interface
+├── mcp/              # MCP server (stdio & HTTP modes)
+│   ├── src/
+│   │   ├── index.ts      # Stdio MCP server
+│   │   ├── server.ts     # HTTP REST server
+│   │   └── tools/        # Hgraph API integrations
+│   └── tests/        # Test suites
+├── agent/            # Python AI agent
+└── package.json      # Monorepo configuration
 ```
 
 ## Roadmap

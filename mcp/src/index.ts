@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import 'dotenv/config';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -15,6 +16,7 @@ import {
   buildGraphQLQuery,
   refreshGraphQLSchema,
 } from './tools/graphql.js';
+import { askQuestion, getDatabaseInfo, downloadDatabaseSchema } from './tools/database.js';
 // SQL tools removed for security - MCP best practice is to return data, not queries
 import { getAccountInfo } from './tools/account.js';
 import { getTransactionHistory } from './tools/transactions.js';
@@ -97,8 +99,38 @@ const tools: Tool[] = [
       required: ['description'],
     },
   },
-  // SQL query tools removed - following MCP best practices
-  // The server now only returns processed data, not raw SQL queries
+  // Database tools - following MCP best practices
+  // Returns processed data from natural language questions
+  {
+    name: 'ask_question',
+    description: 'Ask a question about the database in natural language and get data back',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        question: {
+          type: 'string',
+          description: 'Natural language question about the data',
+        },
+      },
+      required: ['question'],
+    },
+  },
+  {
+    name: 'get_database_info',
+    description: 'Get information about database tables and schema',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
+  {
+    name: 'download_database_schema',
+    description: 'Download and cache the current database schema',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+  },
   {
     name: 'get_account_info',
     description: 'Get detailed information about a Hedera account (REST API)',
@@ -304,7 +336,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case 'get_graphql_query_template':
         return await buildGraphQLQuery(args?.description as string, args?.returnFields as string[]);
 
-      // SQL query execution removed for security - MCP best practice
+      // Database tools
+      case 'ask_question':
+        return await askQuestion(args?.question as string);
+
+      case 'get_database_info':
+        return await getDatabaseInfo();
+
+      case 'download_database_schema':
+        const schema = await downloadDatabaseSchema();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Database schema downloaded successfully. Found ${Object.keys(schema.tables).length} tables.`,
+            },
+          ],
+        };
 
       case 'get_account_info':
         return await getAccountInfo(args?.accountId as string);

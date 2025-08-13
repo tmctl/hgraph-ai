@@ -51,6 +51,10 @@ cp .env.example .env
 
 Configure the following environment variables:
 
+### Server Configuration
+
+- `MCP_PORT`: Port for HTTP server mode (default: 3000)
+
 ### GraphQL Configuration
 
 - `HGRAPH_GRAPHQL_URL`: Hgraph GraphQL API endpoint (default: https://mainnet.hedera.api.hgraph.io/v1/graphql)
@@ -78,6 +82,10 @@ This MCP server follows security best practices:
 
 ### Running the Server
 
+The MCP server can run in two modes:
+
+#### 1. Stdio Mode (for MCP clients)
+
 ```bash
 # Development mode
 npm run dev
@@ -85,6 +93,76 @@ npm run dev
 # Production mode
 npm run build && npm start
 ```
+
+#### 2. HTTP Server Mode (for REST API access)
+
+```bash
+# Development mode (runs on port 3000 by default)
+npm run dev:mcp-server
+
+# Production mode
+npm run build && npm run start:mcp-server
+
+# Or with custom port
+MCP_PORT=8080 npm run dev:mcp-server
+```
+
+### HTTP API Endpoints
+
+When running in HTTP server mode, the following REST endpoints are available:
+
+- `GET /health` - Health check endpoint
+- `GET /tools` - List all available tools
+- `POST /execute` - Execute any tool with generic interface
+
+#### GraphQL Endpoints
+
+- `POST /graphql/execute` - Execute GraphQL query
+- `GET /graphql/schema` - Get GraphQL schema
+- `POST /graphql/refresh-schema` - Refresh schema from server
+- `POST /graphql/query-template` - Get query template
+
+#### Account Endpoints
+
+- `GET /account/:accountId` - Get account information
+- `GET /account/:accountId/transactions` - Get transaction history
+- `GET /account/:accountId/tokens` - Get token balances
+
+#### Network Endpoints
+
+- `GET /network/stats` - Get network statistics
+
+#### Database Endpoints
+
+- `POST /database/ask` - Ask a natural language question about the data
+- `GET /database/info` - Get database schema information
+- `POST /database/schema/download` - Download and cache database schema
+
+**Example: Download Database Schema**
+
+```bash
+# Download and cache the database schema (requires DB credentials in .env)
+curl -X POST http://localhost:3000/database/schema/download \
+  -H "Content-Type: application/json"
+
+# Get current schema information
+curl http://localhost:3000/database/info
+
+# Ask a natural language question
+curl -X POST http://localhost:3000/database/ask \
+  -H "Content-Type: application/json" \
+  -d '{"question": "Show me the top 10 accounts by balance"}'
+```
+
+#### JSON-RPC Endpoints
+
+- `POST /jsonrpc` - Execute JSON-RPC method
+- `GET /jsonrpc/chain-id` - Get chain ID
+- `GET /jsonrpc/block/:blockNumber?` - Get block by number
+- `GET /jsonrpc/transaction/:hash` - Get transaction by hash
+- `POST /jsonrpc/eth-call` - Execute eth_call
+- `POST /jsonrpc/send-transaction` - Send raw transaction
+- `GET /jsonrpc/methods` - List available methods
 
 ### MCP Tools
 
@@ -148,7 +226,134 @@ Get a GraphQL query template/example for learning purposes (not for direct execu
 
 ## Data Access Tools
 
-**Note:** Following MCP best practices, this server does not expose direct SQL query execution. Instead, use the provided REST API tools (get_account_info, get_transaction_history, etc.) which return validated, processed data.
+### Natural Language Database Queries
+
+#### `ask_question`
+
+Ask questions about the database in natural language and get structured data back.
+
+**Parameters:**
+
+- `question` (string): Natural language question about the data
+
+**Examples:**
+
+```json
+{
+  "name": "ask_question",
+  "arguments": {
+    "question": "Show me the top 10 accounts by balance"
+  }
+}
+```
+
+```json
+{
+  "name": "ask_question",
+  "arguments": {
+    "question": "What are the most recent transactions for account 0.0.98?"
+  }
+}
+```
+
+```json
+{
+  "name": "ask_question",
+  "arguments": {
+    "question": "How many unique accounts have made transactions in the last 24 hours?"
+  }
+}
+```
+
+```json
+{
+  "name": "ask_question",
+  "arguments": {
+    "question": "List all token transfers greater than 1000 units today"
+  }
+}
+```
+
+```json
+{
+  "name": "ask_question",
+  "arguments": {
+    "question": "Show me accounts created in the last week with their initial balances"
+  }
+}
+```
+
+```json
+{
+  "name": "ask_question",
+  "arguments": {
+    "question": "What is the total HBAR supply across all accounts?"
+  }
+}
+```
+
+```json
+{
+  "name": "ask_question",
+  "arguments": {
+    "question": "Find all smart contract deployments from yesterday"
+  }
+}
+```
+
+```json
+{
+  "name": "ask_question",
+  "arguments": {
+    "question": "Which accounts have the most token associations?"
+  }
+}
+```
+
+**Common Question Patterns:**
+
+- **Account queries**: "Show accounts with...", "List accounts that...", "Find accounts where..."
+- **Transaction queries**: "Show transactions...", "List recent transfers...", "Find payments..."
+- **Token queries**: "Show token balances...", "List NFT owners...", "Find token transfers..."
+- **Statistical queries**: "Count...", "Sum...", "Average...", "Group by..."
+- **Time-based queries**: "In the last hour/day/week", "Between dates", "Since yesterday"
+- **Comparison queries**: "Greater than", "Less than", "Between X and Y"
+- **Sorting queries**: "Top 10", "Bottom 5", "Ordered by", "Latest", "Oldest"
+
+**How it works:**
+
+1. Converts your natural language question to SQL using AI (Anthropic Claude) or pattern matching
+2. Validates the SQL query against the database schema
+3. Executes the query safely (read-only)
+4. Returns formatted results
+
+#### `get_database_info`
+
+Get information about available tables and their structure.
+
+**Example:**
+
+```json
+{
+  "name": "get_database_info",
+  "arguments": {}
+}
+```
+
+#### `download_database_schema`
+
+Download and cache the current database schema for validation.
+
+**Example:**
+
+```json
+{
+  "name": "download_database_schema",
+  "arguments": {}
+}
+```
+
+**Note:** Following MCP best practices, this server validates all queries and only allows SELECT statements. No direct SQL execution is exposed.
 
 ## JSON-RPC Tools
 
