@@ -19,7 +19,10 @@ The Hgraph MCP server has been completely redesigned to be fully compliant with 
 - Structured response formats with `content` arrays
 
 ### 3. ✅ Enhanced Security
-- **Authentication**: API token-based authentication
+- **Authentication**: Dual authentication support:
+  - API tokens for simple authentication
+  - OAuth 2.0 Bearer tokens for enterprise integration
+- **OAuth Providers**: Google, Auth0, and custom OAuth providers
 - **Rate Limiting**: 100 requests/minute per token (configurable)
 - **CORS**: Configurable allowed origins
 - **Security Headers**: XSS, clickjacking, and other protections
@@ -220,6 +223,30 @@ To integrate with the MCP server:
 3. **Handle streaming**: Responses come via SSE events
 4. **Follow JSON-RPC format**: All requests and responses use JSON-RPC 2.0
 
+## Authentication
+
+### API Token Authentication
+```bash
+# Generate secure token
+openssl rand -hex 32
+
+# Use in requests
+curl -H "x-api-token: your-token" http://localhost:3001/sse
+```
+
+### OAuth 2.0 Authentication
+```bash
+# Enable OAuth
+OAUTH_ENABLED=true
+OAUTH_GOOGLE_CLIENT_ID=your-client-id
+OAUTH_GOOGLE_CLIENT_SECRET=your-client-secret
+
+# Use Bearer token in requests
+curl -H "Authorization: Bearer your-oauth-token" http://localhost:3001/sse
+```
+
+For complete OAuth setup guide, see [OAUTH_SETUP.md](./OAUTH_SETUP.md)
+
 ## Testing
 
 ```bash
@@ -229,8 +256,14 @@ npm test
 # Test HTTP server
 curl http://localhost:3001/health
 
-# Test with authentication
+# Check authentication status
+curl http://localhost:3001/auth/status
+
+# Test with API token
 curl -H "x-api-token: your-token" http://localhost:3001/sse
+
+# Test with OAuth Bearer token
+curl -H "Authorization: Bearer your-oauth-token" http://localhost:3001/sse
 ```
 
 ## Monitoring

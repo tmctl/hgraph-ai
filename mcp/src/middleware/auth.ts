@@ -1,11 +1,13 @@
 /**
  * Authentication and Rate Limiting Middleware
  * 
- * Provides security for the MCP HTTP server
+ * Provides security for the MCP HTTP server with support for
+ * both API tokens and OAuth 2.0 Bearer tokens
  */
 
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
+import { oauthMiddleware, getOAuthStatus } from './oauth.js';
 
 // Rate limiting storage
 interface RateLimitEntry {
@@ -68,7 +70,8 @@ export function removeToken(token: string): boolean {
 }
 
 /**
- * Authentication middleware
+ * Combined authentication middleware
+ * Supports both API tokens and OAuth 2.0
  */
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
   // Skip auth for health check and root info endpoint
@@ -76,17 +79,25 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     return next();
   }
   
-  const token = req.headers[TOKEN_HEADER] as string;
+  // Check for OAuth Bearer token first
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return oauthMiddleware(req, res, next);
+  }
   
-  if (!token) {
+  // Fall back to API token authentication
+  const apiToken = req.headers[TOKEN_HEADER] as string;
+  
+  if (!apiToken) {
     res.status(401).json({
       error: 'Authentication required',
-      message: `Missing ${TOKEN_HEADER} header`,
+      message: `Missing ${TOKEN_HEADER} header or Authorization Bearer token`,
+      supportedMethods: ['api-token', 'oauth2'],
     });
     return;
   }
   
-  if (!validateToken(token)) {
+  if (!validateToken(apiToken)) {
     res.status(403).json({
       error: 'Invalid token',
       message: 'The provided API token is invalid',
@@ -99,6 +110,9 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
   if (userId) {
     (req as any).userId = userId;
   }
+  
+  // Mark as API token authentication
+  (req as any).authType = 'api-token';
   
   next();
 }
@@ -169,7 +183,7 @@ export function corsOptions() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: [TOKEN_HEADER, USER_ID_HEADER, 'Content-Type'],
+    allowedHeaders: [TOKEN_HEADER, USER_ID_HEADER, 'Content-Type', 'Authorization'],
     exposedHeaders: ['X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'],
   };
 }
@@ -183,4 +197,22 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   next();
+}
+
+/**
+ * Get authentication status
+ */
+export function getAuthStatus(): any {
+  return {
+    apiTokens: {
+      configured: validTokens.size > 0,
+      count: validTokens.size,
+    },
+    oauth: getOAuthStatus(),
+    rateLimiting: {
+      maxRequests: RATE_LIMIT_MAX_REQUESTS,
+      windowMs: RATE_LIMIT_WINDOW,
+      activeEntries: rateLimitStore.size,
+    },
+  };
 }

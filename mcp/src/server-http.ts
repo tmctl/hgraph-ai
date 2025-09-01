@@ -59,6 +59,7 @@ import {
 import { listResources, listResourceTemplates, readResource } from './resources/index.js';
 import { listPrompts, getPrompt } from './prompts/index.js';
 import { tools, handleToolCall } from './tools/index.js';
+import authRoutes from './routes/auth.js';
 
 const app = express();
 const PORT = process.env.MCP_PORT || 3001;
@@ -90,6 +91,11 @@ app.use(cors(corsOptions()));
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(securityHeaders);
+
+// Authentication routes (before auth middleware)
+app.use('/auth', authRoutes);
+
+// Apply authentication and rate limiting to all other routes
 app.use(authMiddleware);
 app.use(rateLimitMiddleware);
 
@@ -114,6 +120,11 @@ app.get('/', (req, res) => {
       sse: '/sse',
       rpc: '/rpc',
       health: '/health',
+      auth: '/auth',
+    },
+    authentication: {
+      methods: ['api-token', 'oauth2'],
+      oauth: process.env.OAUTH_ENABLED === 'true',
     },
   });
 });
@@ -395,7 +406,20 @@ app.listen(PORT, () => {
   console.log('================================================');
   console.log(`🚀 Hgraph MCP HTTP/SSE Server`);
   console.log(`📍 Running on http://localhost:${PORT}`);
-  console.log(`🔐 Authentication: ${process.env.MCP_API_TOKENS ? 'Configured' : 'Using temporary token'}`);
+  const authMethods = [];
+  if (process.env.MCP_API_TOKENS) authMethods.push('API Tokens');
+  if (process.env.OAUTH_ENABLED === 'true') authMethods.push('OAuth 2.0');
+  if (authMethods.length === 0) authMethods.push('Temporary Token');
+  console.log(`🔐 Authentication: ${authMethods.join(', ')}`);
+  if (process.env.OAUTH_ENABLED === 'true') {
+    const providers = [];
+    if (process.env.OAUTH_GOOGLE_CLIENT_ID) providers.push('Google');
+    if (process.env.OAUTH_AUTH0_DOMAIN) providers.push('Auth0');
+    if (process.env.OAUTH_CUSTOM_ISSUER) providers.push('Custom');
+    if (providers.length > 0) {
+      console.log(`🔑 OAuth Providers: ${providers.join(', ')}`);
+    }
+  }
   console.log(`📡 Protocol: MCP ${PROTOCOL_VERSION}`);
   console.log(`🔌 Transport: Server-Sent Events (SSE)`);
   console.log('================================================');
@@ -404,6 +428,7 @@ app.listen(PORT, () => {
   console.log(`  GET  /health - Health check`);
   console.log(`  GET  /sse    - SSE connection (main MCP channel)`);
   console.log(`  POST /rpc    - RPC endpoint (requires connection)`);
+  console.log(`  *    /auth/* - OAuth 2.0 authentication routes`);
   console.log('================================================');
 });
 
