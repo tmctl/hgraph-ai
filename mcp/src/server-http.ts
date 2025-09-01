@@ -12,6 +12,7 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
+import { join } from 'path';
 import crypto from 'crypto';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
@@ -93,6 +94,9 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(securityHeaders);
+
+// Serve static files from public directory (BEFORE any route handlers)
+app.use(express.static(join(process.cwd(), 'public')));
 
 // Authentication routes (no auth required for these)
 app.use('/auth', authRoutes);
@@ -190,6 +194,11 @@ app.post('/', (req, res) => {
     protocol: PROTOCOL_VERSION,
     instructions: 'Use GET / for server info, or /sse for MCP connections',
   });
+});
+
+// Serve login page with OAuth parameters (before auth middleware)
+app.get('/auth/login', (req, res) => {
+  res.sendFile(join(process.cwd(), 'public', 'index.html'));
 });
 
 // Apply authentication and rate limiting to protected routes (AFTER OAuth routes)

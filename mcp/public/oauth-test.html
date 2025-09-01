@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Test Client</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 20px; }
+        .card { background: white; border-radius: 8px; padding: 20px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        button { background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px; }
+        input { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .result { background: #f8f9fa; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; white-space: pre-wrap; }
+        .error { background: #fff5f5; color: #c53030; }
+        .success { background: #f0fff4; color: #2d7e2f; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>OAuth Test Client</h1>
+        <p>Test the OAuth flow with this simple client.</p>
+    </div>
+
+    <div class="card">
+        <h3>Step 1: Register OAuth Client</h3>
+        <input type="text" id="client-name" placeholder="Client Name" value="Test OAuth Client">
+        <input type="url" id="client-uri" placeholder="Client URI" value="http://localhost:3000">
+        <input type="url" id="redirect-uri" placeholder="Redirect URI" value="http://localhost:3000/oauth-test.html">
+        <button onclick="registerClient()">Register Client</button>
+        <div id="registration-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="card">
+        <h3>Step 2: Start Authorization</h3>
+        <input type="text" id="auth-client-id" placeholder="Client ID" readonly>
+        <input type="text" id="auth-scope" placeholder="Scope" value="read">
+        <button onclick="startAuth()" id="auth-btn" disabled>Start Authorization</button>
+        <div id="auth-result" class="result" style="display: none;"></div>
+    </div>
+
+    <div class="card">
+        <h3>Step 3: Exchange Token</h3>
+        <input type="text" id="token-client-id" placeholder="Client ID" readonly>
+        <input type="text" id="token-client-secret" placeholder="Client Secret" readonly>
+        <input type="text" id="token-code" placeholder="Authorization Code" readonly>
+        <button onclick="exchangeToken()" id="token-btn" disabled>Exchange Token</button>
+        <div id="token-result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let clientCredentials = null;
+        let accessToken = null;
+
+        // Handle OAuth callback
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const error = urlParams.get('error');
+
+            if (error) {
+                showResult('auth-result', `Authorization failed: ${error}`, 'error');
+            } else if (code) {
+                showResult('auth-result', `✅ Authorization successful!\nCode: ${code}`, 'success');
+                document.getElementById('token-code').value = code;
+                document.getElementById('token-btn').disabled = false;
+            }
+        });
+
+        async function registerClient() {
+            const clientName = document.getElementById('client-name').value;
+            const clientUri = document.getElementById('client-uri').value;
+            const redirectUri = document.getElementById('redirect-uri').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_name: clientName,
+                        client_uri: clientUri,
+                        redirect_uris: [redirectUri],
+                        grant_types: ['authorization_code'],
+                        response_types: ['code']
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    clientCredentials = data;
+                    showResult('registration-result', 
+                        `✅ Client registered!\nClient ID: ${data.client_id}\nClient Secret: ${data.client_secret}`,
+                        'success'
+                    );
+
+                    document.getElementById('auth-client-id').value = data.client_id;
+                    document.getElementById('token-client-id').value = data.client_id;
+                    document.getElementById('token-client-secret').value = data.client_secret;
+                    document.getElementById('auth-btn').disabled = false;
+                } else {
+                    showResult('registration-result', `❌ Registration failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('registration-result', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        function startAuth() {
+            const clientId = document.getElementById('auth-client-id').value;
+            const scope = document.getElementById('auth-scope').value;
+            const redirectUri = document.getElementById('redirect-uri').value;
+            const state = Math.random().toString(36).substring(7);
+
+            const authUrl = new URL(`${API_BASE}/oauth/authorize`);
+            authUrl.searchParams.set('client_id', clientId);
+            authUrl.searchParams.set('redirect_uri', redirectUri);
+            authUrl.searchParams.set('response_type', 'code');
+            authUrl.searchParams.set('scope', scope);
+            authUrl.searchParams.set('state', state);
+
+            showResult('auth-result', `🚀 Redirecting to authorization server...`, 'success');
+            setTimeout(() => window.location.href = authUrl.toString(), 1000);
+        }
+
+        async function exchangeToken() {
+            const clientId = document.getElementById('token-client-id').value;
+            const clientSecret = document.getElementById('token-client-secret').value;
+            const code = document.getElementById('token-code').value;
+            const redirectUri = document.getElementById('redirect-uri').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/oauth/token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        grant_type: 'authorization_code',
+                        client_id: clientId,
+                        client_secret: clientSecret,
+                        code: code,
+                        redirect_uri: redirectUri
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    accessToken = data.access_token;
+                    showResult('token-result', 
+                        `✅ Token exchange successful!\nAccess Token: ${data.access_token}\nExpires: ${data.expires_in}s`,
+                        'success'
+                    );
+                } else {
+                    showResult('token-result', `❌ Token exchange failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResult('token-result', `❌ Network error: ${error.message}`, 'error');
+            }
+        }
+
+        function showResult(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

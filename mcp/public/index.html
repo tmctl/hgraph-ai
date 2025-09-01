@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hgraph AI OAuth</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
+        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .alert { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        h2 { color: #333; text-align: center; }
+        p { text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔗 Hgraph AI Login</h2>
+        <div id="alert"></div>
+        <form id="authForm">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit" id="submitBtn">Sign In</button>
+        </form>
+        <p><a href="#" onclick="toggleMode()">Create Account</a></p>
+    </div>
+    <script>
+        let isLogin = true;
+        function toggleMode() {
+            isLogin = !isLogin;
+            document.getElementById("submitBtn").textContent = isLogin ? "Sign In" : "Create Account";
+            document.querySelector("a").textContent = isLogin ? "Create Account" : "Sign In";
+        }
+        document.getElementById("authForm").onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const endpoint = isLogin ? "/auth/login" : "/auth/register";
+            try {
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    credentials: "include",
+                    body: JSON.stringify({email, password})
+                });
+                const data = await response.json();
+                const alertDiv = document.getElementById("alert");
+                if (response.ok) {
+                    alertDiv.innerHTML = '<div class="alert success">' + (isLogin ? "Login" : "Registration") + ' successful!</div>';
+                } else {
+                    alertDiv.innerHTML = '<div class="alert error">' + (data.message || "Error occurred") + '</div>';
+                }
+            } catch (error) {
+                document.getElementById("alert").innerHTML = '<div class="alert error">Network error</div>';
+            }
+        };
+    </script>
+</body>
+</html>

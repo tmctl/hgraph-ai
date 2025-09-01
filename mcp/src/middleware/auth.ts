@@ -74,7 +74,7 @@ export function removeToken(token: string): boolean {
  * Supports both API tokens and OAuth 2.0
  */
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
-  // Skip auth for health check, root endpoints, discovery, registration, and user auth APIs
+  // Skip auth for health check, root endpoints, discovery, registration, user auth APIs, and static files
   if (
     req.path === '/health' ||
     (req.path === '/' && req.method === 'GET') ||
@@ -83,7 +83,16 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     req.path === '/register' ||
     req.path.startsWith('/api/auth/') ||
     req.path.startsWith('/api/oauth/') ||
-    req.path.startsWith('/oauth/')
+    req.path.startsWith('/oauth/') ||
+    req.path.startsWith('/auth/') ||
+    // Allow static files (HTML, CSS, JS, images, etc.)
+    req.path.endsWith('.html') ||
+    req.path.endsWith('.css') ||
+    req.path.endsWith('.js') ||
+    req.path.endsWith('.ico') ||
+    req.path.endsWith('.png') ||
+    req.path.endsWith('.jpg') ||
+    req.path.endsWith('.svg')
   ) {
     return next();
   }
@@ -94,35 +103,29 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     return oauthMiddleware(req, res, next);
   }
 
-  // Fall back to API token authentication
+  // Check for API token (optional for most endpoints now)
   const apiToken = req.headers[TOKEN_HEADER] as string;
+  
+  if (apiToken) {
+    if (!validateToken(apiToken)) {
+      res.status(403).json({
+        error: 'Invalid token',
+        message: 'The provided API token is invalid',
+      });
+      return;
+    }
 
-  if (!apiToken) {
-    res.status(401).json({
-      error: 'Authentication required',
-      message: `Missing ${TOKEN_HEADER} header or Authorization Bearer token`,
-      supportedMethods: ['api-token', 'oauth2'],
-    });
-    return;
+    // Extract user ID if provided
+    const userId = req.headers[USER_ID_HEADER] as string;
+    if (userId) {
+      (req as any).userId = userId;
+    }
+
+    // Mark as API token authentication
+    (req as any).authType = 'api-token';
   }
 
-  if (!validateToken(apiToken)) {
-    res.status(403).json({
-      error: 'Invalid token',
-      message: 'The provided API token is invalid',
-    });
-    return;
-  }
-
-  // Extract user ID if provided
-  const userId = req.headers[USER_ID_HEADER] as string;
-  if (userId) {
-    (req as any).userId = userId;
-  }
-
-  // Mark as API token authentication
-  (req as any).authType = 'api-token';
-
+  // Allow unauthenticated access to most endpoints now
   next();
 }
 
