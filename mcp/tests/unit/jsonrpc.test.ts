@@ -14,7 +14,6 @@ import {
   getBlockByNumber,
   getTransactionByHash,
   ethCall,
-  sendRawTransaction,
   listJsonRpcMethods,
 } from '../../src/tools/jsonrpc';
 
@@ -246,47 +245,7 @@ describe('JSON-RPC Tools', () => {
     });
   });
 
-  describe('sendRawTransaction', () => {
-    it('should send signed transaction', async () => {
-      const mockResponse = {
-        data: {
-          jsonrpc: '2.0',
-          result: '0xtxhash123',
-          id: 123,
-        },
-      };
-      mockAxios.post.mockResolvedValue(mockResponse);
-
-      const result = await sendRawTransaction('0xsigneddata');
-
-      expect(result.content[0].text).toContain('# Transaction Submission Result');
-      expect(result.content[0].text).toContain('**Transaction Hash:** 0xtxhash123');
-      expect(result.content[0].text).toContain(
-        'Use `get_transaction_by_hash` to check transaction status',
-      );
-    });
-
-    it('should add 0x prefix to signed transaction if missing', async () => {
-      const mockResponse = {
-        data: {
-          jsonrpc: '2.0',
-          result: '0xtxhash',
-          id: 123,
-        },
-      };
-      mockAxios.post.mockResolvedValue(mockResponse);
-
-      await sendRawTransaction('signeddata');
-
-      expect(mockAxios.post).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          params: ['0xsigneddata'],
-        }),
-        expect.any(Object),
-      );
-    });
-  });
+  // sendRawTransaction tests removed - function removed for security
 
   describe('listJsonRpcMethods', () => {
     it('should list all supported methods', async () => {
@@ -297,7 +256,7 @@ describe('JSON-RPC Tools', () => {
       expect(result.content[0].text).toContain('eth_getBlockByNumber');
       expect(result.content[0].text).toContain('eth_getTransactionByHash');
       expect(result.content[0].text).toContain('eth_call');
-      expect(result.content[0].text).toContain('eth_sendRawTransaction');
+      // eth_sendRawTransaction removed for security
       expect(result.content[0].text).toContain('**Network:** mainnet');
     });
 

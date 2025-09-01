@@ -215,6 +215,66 @@ async function getOrFetchSchema(): Promise<DatabaseSchema> {
 }
 
 /**
+ * Generate natural language summary of query results
+ */
+async function generateNaturalLanguageSummary(
+  question: string,
+  sqlQuery: string,
+  results: any[],
+  executionTime: number,
+): Promise<string> {
+  const anthropic = new Anthropic({
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
+  });
+
+  // Prepare results summary for the prompt
+  const resultsSample = results.slice(0, 10);
+  const resultsJson = JSON.stringify(resultsSample, null, 2);
+
+  const prompt = `Given this database query and results, provide a natural language summary:
+
+Original Question: "${question}"
+
+SQL Query Executed:
+${sqlQuery}
+
+Query Results (${results.length} total rows, showing first ${resultsSample.length}):
+${resultsJson}
+
+Execution Time: ${executionTime}ms
+
+Please provide a clear, concise natural language summary that:
+1. Directly answers the user's question
+2. Highlights key findings from the data
+3. Mentions any important patterns or insights
+4. Is written in a conversational tone
+5. Includes specific numbers/values from the results when relevant
+
+Keep the response focused and under 150 words.`;
+
+  try {
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 300,
+      temperature: 0.3,
+      system:
+        'You are a helpful data analyst. Provide clear, concise summaries of database query results in natural language. Focus on answering the user\'s question directly.',
+      messages: [
+        {
+          role: 'user',
+          content: prompt,
+        },
+      ],
+    });
+
+    return response.content[0].type === 'text' ? response.content[0].text.trim() : 'Unable to generate summary.';
+  } catch (error) {
+    console.error('Error generating natural language summary:', error);
+    return 'Query executed successfully. See the results table above for details.';
+  }
+}
+
+/**
  * Convert natural language to SQL using Anthropic Claude
  */
 async function naturalLanguageToSQL(question: string, schema: DatabaseSchema): Promise<string> {
@@ -261,7 +321,8 @@ SQL Query:`;
       model: 'claude-3-5-sonnet-20241022',
       max_tokens: 500,
       temperature: 0,
-      system: 'You are a SQL expert. Generate only valid PostgreSQL SELECT queries. Return only the SQL code, no explanations or markdown formatting.',
+      system:
+        'You are a SQL expert. Generate only valid PostgreSQL SELECT queries. Return only the SQL code, no explanations or markdown formatting.',
       messages: [
         {
           role: 'user',
@@ -270,9 +331,7 @@ SQL Query:`;
       ],
     });
 
-    const sqlQuery = response.content[0].type === 'text' 
-      ? response.content[0].text.trim() 
-      : '';
+    const sqlQuery = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
 
     // Clean up the query
     return sqlQuery
@@ -419,7 +478,18 @@ export async function askQuestion(question: string) {
       output += `**Rows Returned:** ${result.rows.length}\n\n`;
 
       if (result.rows.length > 0) {
-        output += '## Results\n\n';
+        // Generate natural language summary
+        const naturalLanguageSummary = await generateNaturalLanguageSummary(
+          question,
+          sqlQuery,
+          result.rows,
+          executionTime,
+        );
+        
+        output += '## Natural Language Summary\n\n';
+        output += naturalLanguageSummary + '\n\n';
+        
+        output += '## Results Table\n\n';
 
         // For small result sets, show as table
         if (result.rows.length <= 10) {
@@ -446,6 +516,8 @@ export async function askQuestion(question: string) {
           output += '\n```\n';
         }
       } else {
+        output += '## Natural Language Summary\n\n';
+        output += 'No data was found matching your query. The database returned zero results.\n\n';
         output += '## Results\n\nNo data found matching your query.\n';
       }
 

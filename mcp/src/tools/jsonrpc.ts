@@ -39,7 +39,7 @@ const SupportedMethods = z.enum([
   'eth_getBlockByNumber',
   'eth_getTransactionByHash',
   'eth_call',
-  'eth_sendRawTransaction',
+  // 'eth_sendRawTransaction', // Removed for security - use Hedera SDK for write operations
 ]);
 
 // Parameter schemas for specific methods
@@ -314,35 +314,7 @@ export async function ethCall(to: string, data: string, blockNumber: string = 'l
   }
 }
 
-export async function sendRawTransaction(signedTransaction: string) {
-  try {
-    if (!signedTransaction.startsWith('0x')) {
-      signedTransaction = '0x' + signedTransaction;
-    }
-
-    const result = await makeJsonRpcCall('eth_sendRawTransaction', [signedTransaction]);
-
-    let formattedResult = '# Transaction Submission Result\n\n';
-    formattedResult += `**Network:** ${getApiConfig().network}\n`;
-    formattedResult += `**Transaction Hash:** ${result}\n\n`;
-
-    formattedResult += '## Next Steps\n';
-    formattedResult += '- Use `get_transaction_by_hash` to check transaction status\n';
-    formattedResult += '- Transaction may take a few seconds to be included in a block\n';
-    formattedResult += '- Check block explorer for detailed transaction information\n';
-
-    return {
-      content: [
-        {
-          type: 'text',
-          text: formattedResult,
-        },
-      ],
-    };
-  } catch (error: any) {
-    throw new Error(`Failed to send transaction: ${error.message}`);
-  }
-}
+// sendRawTransaction removed for security - write operations should use Hedera SDK directly
 
 export async function listJsonRpcMethods() {
   const methods = [
@@ -366,11 +338,7 @@ export async function listJsonRpcMethods() {
       description: 'Executes a new message call without creating a transaction',
       params: ['callObject {to, data, from?, gas?, gasPrice?, value?}', 'blockNumber'],
     },
-    {
-      method: 'eth_sendRawTransaction',
-      description: 'Sends a signed transaction to the network',
-      params: ['signedTransactionData (hex)'],
-    },
+    // eth_sendRawTransaction removed for security - use Hedera SDK for write operations
   ];
 
   let formattedResult = '# Supported JSON-RPC Methods\n\n';

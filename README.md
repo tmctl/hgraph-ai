@@ -101,40 +101,51 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 The MCP server can run in two modes:
 
-#### 1. Stdio Mode (for MCP clients)
+#### 1. Stdio Mode (for Claude Desktop)
 
 ```bash
 npm run dev:mcp          # Development
 npm run start:mcp        # Production
 ```
 
-#### 2. HTTP Server Mode (REST API on port)
+Configure in Claude Desktop's settings to connect to the MCP server.
+
+#### 2. HTTP/SSE Mode (for Web Applications)
 
 ```bash
-npm run dev:mcp-server   # Development (default port 3000)
-MCP_PORT=8080 npm run dev:mcp-server  # Custom port
+npm run dev:mcp-http     # Development (default port 3001)
+MCP_PORT=8080 npm run dev:mcp-http  # Custom port
 ```
 
-### HTTP API Endpoints
+### HTTP/SSE API
 
-When running in HTTP server mode:
+The HTTP server uses Server-Sent Events for real-time streaming:
 
+- `GET /` - Server information
 - `GET /health` - Health check
-- `GET /tools` - List available tools
-- `POST /execute` - Execute any tool
+- `GET /sse` - SSE connection endpoint
+- `POST /rpc` - JSON-RPC endpoint
 
-#### GraphQL Operations
+### MCP Capabilities
 
-- `POST /graphql/execute` - Execute GraphQL queries
-- `GET /graphql/schema` - Get full schema
-- `POST /graphql/refresh-schema` - Refresh schema cache
+#### Tools (17 available)
+- GraphQL query execution
+- Natural language database queries
+- Transaction history and token balances
+- JSON-RPC methods (read-only)
+- D3.js visualization generation
 
-#### Blockchain Data Access
+#### Resources
+- GraphQL and database schemas
+- API documentation
+- Dynamic data access (accounts, tokens, contracts)
 
-- `GET /account/:accountId` - Account information
-- `GET /account/:accountId/transactions` - Transaction history
-- `GET /account/:accountId/tokens` - Token balances
-- `GET /network/stats` - Network statistics
+#### Prompts (8 templates)
+- Account analysis
+- Token portfolio
+- Transaction investigation
+- Smart contract auditing
+- Network statistics
 
 #### JSON-RPC Methods
 
@@ -180,8 +191,12 @@ hgraph-ai/
 ├── mcp/              # MCP server (stdio & HTTP modes)
 │   ├── src/
 │   │   ├── index.ts      # Stdio MCP server
-│   │   ├── server.ts     # HTTP REST server
-│   │   └── tools/        # Hgraph API integrations
+│   │   ├── server-http.ts # HTTP/SSE MCP server
+│   │   ├── tools/        # Hgraph API integrations
+│   │   ├── resources/    # MCP resources
+│   │   ├── prompts/      # MCP prompt templates
+│   │   ├── transport/    # Transport implementations
+│   │   └── middleware/   # Auth & security
 │   └── tests/        # Test suites
 ├── agent/            # Python AI agent
 └── package.json      # Monorepo configuration
