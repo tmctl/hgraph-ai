@@ -1,61 +1,386 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hgraph AI OAuth</title>
+    <title>Hgraph AI - Magic Link Login</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 400px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
-        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        .alert { padding: 10px; margin: 10px 0; border-radius: 5px; }
-        .success { background: #d4edda; color: #155724; }
-        .error { background: #f8d7da; color: #721c24; }
-        h2 { color: #333; text-align: center; }
-        p { text-align: center; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
+            max-width: 400px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2); 
+        }
+        input { 
+            width: 100%; 
+            padding: 14px; 
+            margin: 10px 0; 
+            border: 2px solid #e0e0e0; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover:not(:disabled) { 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .alert { 
+            padding: 12px; 
+            margin: 15px 0; 
+            border-radius: 8px; 
+            font-size: 14px;
+        }
+        .info { 
+            background: #e3f2fd; 
+            color: #1565c0;
+            border: 1px solid #90caf9;
+        }
+        .success { 
+            background: #e8f5e9; 
+            color: #2e7d32;
+            border: 1px solid #81c784;
+        }
+        .error { 
+            background: #ffebee; 
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        h2 { 
+            color: #333; 
+            text-align: center; 
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        p { 
+            text-align: center; 
+            color: #666;
+            margin: 10px 0;
+        }
+        .logo {
+            text-align: center;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+        }
+        .code-input-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .code-input {
+            width: 45px;
+            height: 50px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 0;
+            border-radius: 8px;
+        }
+        .timer {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin: 15px 0;
+        }
+        .resend-link {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .resend-link:hover {
+            text-decoration: underline;
+        }
+        .resend-link.disabled {
+            color: #999;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🔗 Hgraph AI Login</h2>
+        <div class="logo">🔐</div>
+        <h2>Hgraph AI</h2>
+        
         <div id="alert"></div>
-        <form id="authForm">
-            <input type="email" id="email" placeholder="Email" required>
-            <input type="password" id="password" placeholder="Password" required>
-            <button type="submit" id="submitBtn">Sign In</button>
-        </form>
-        <p><a href="#" onclick="toggleMode()">Create Account</a></p>
+        
+        <!-- Step 1: Email Input -->
+        <div id="step-email" class="step active">
+            <p>Enter your email to receive a magic link</p>
+            <form id="emailForm">
+                <input type="email" id="email" placeholder="your@email.com" required autocomplete="email">
+                <button type="submit" id="emailSubmitBtn">Send Magic Code</button>
+            </form>
+        </div>
+        
+        <!-- Step 2: Code Input -->
+        <div id="step-code" class="step">
+            <p>Enter the 6-digit code sent to <span id="emailDisplay"></span></p>
+            <form id="codeForm">
+                <div class="code-input-container">
+                    <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                    <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                </div>
+                <button type="submit" id="codeSubmitBtn">Verify Code</button>
+                <div class="timer" id="timer"></div>
+                <p><a href="#" id="resendLink" class="resend-link">Send new code</a></p>
+                <p><a href="#" id="changeEmailLink" class="resend-link">Use different email</a></p>
+            </form>
+        </div>
+        
+        <!-- Step 3: Success -->
+        <div id="step-success" class="step">
+            <div class="alert success">✅ Authentication successful!</div>
+            <p>You are now logged in to Hgraph AI</p>
+            <button onclick="window.location.reload()">Continue</button>
+        </div>
     </div>
+    
     <script>
-        let isLogin = true;
-        function toggleMode() {
-            isLogin = !isLogin;
-            document.getElementById("submitBtn").textContent = isLogin ? "Sign In" : "Create Account";
-            document.querySelector("a").textContent = isLogin ? "Create Account" : "Sign In";
+        let currentEmail = '';
+        let expiryTime = null;
+        let timerInterval = null;
+        
+        // Handle code input fields
+        const codeInputs = document.querySelectorAll('.code-input');
+        codeInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value && index < codeInputs.length - 1) {
+                    codeInputs[index + 1].focus();
+                }
+                // Auto-submit when all fields are filled
+                if (index === codeInputs.length - 1 && e.target.value) {
+                    const code = Array.from(codeInputs).map(i => i.value).join('');
+                    if (code.length === 6) {
+                        document.getElementById('codeForm').dispatchEvent(new Event('submit'));
+                    }
+                }
+            });
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    codeInputs[index - 1].focus();
+                }
+            });
+            
+            // Only allow digits
+            input.addEventListener('beforeinput', (e) => {
+                if (e.data && !/[0-9]/.test(e.data)) {
+                    e.preventDefault();
+                }
+            });
+        });
+        
+        // Show step
+        function showStep(stepId) {
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.getElementById(stepId).classList.add('active');
         }
-        document.getElementById("authForm").onsubmit = async (e) => {
+        
+        // Show alert
+        function showAlert(message, type = 'info') {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.innerHTML = `<div class="alert ${type}">${message}</div>`;
+            if (type === 'error' || type === 'success') {
+                setTimeout(() => {
+                    alertDiv.innerHTML = '';
+                }, 5000);
+            }
+        }
+        
+        // Start timer
+        function startTimer() {
+            expiryTime = Date.now() + 10 * 60 * 1000; // 10 minutes
+            
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                const remaining = Math.max(0, expiryTime - Date.now());
+                const minutes = Math.floor(remaining / 60000);
+                const seconds = Math.floor((remaining % 60000) / 1000);
+                
+                document.getElementById('timer').textContent = 
+                    remaining > 0 
+                        ? `Code expires in ${minutes}:${seconds.toString().padStart(2, '0')}`
+                        : 'Code expired';
+                
+                if (remaining === 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('resendLink').classList.remove('disabled');
+                }
+            }, 1000);
+        }
+        
+        // Email form submission
+        document.getElementById('emailForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById("email").value;
-            const password = document.getElementById("password").value;
-            const endpoint = isLogin ? "/auth/login" : "/auth/register";
+            
+            currentEmail = document.getElementById('email').value;
+            const button = document.getElementById('emailSubmitBtn');
+            button.disabled = true;
+            button.textContent = 'Sending...';
+            
             try {
-                const response = await fetch(endpoint, {
-                    method: "POST",
-                    headers: {"Content-Type": "application/json"},
-                    credentials: "include",
-                    body: JSON.stringify({email, password})
+                const response = await fetch('/auth/request-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentEmail })
                 });
+                
                 const data = await response.json();
-                const alertDiv = document.getElementById("alert");
+                
                 if (response.ok) {
-                    alertDiv.innerHTML = '<div class="alert success">' + (isLogin ? "Login" : "Registration") + ' successful!</div>';
+                    document.getElementById('emailDisplay').textContent = currentEmail;
+                    showStep('step-code');
+                    showAlert('Code sent! Check your email inbox.', 'success');
+                    startTimer();
+                    
+                    // Clear code inputs
+                    codeInputs.forEach(input => input.value = '');
+                    codeInputs[0].focus();
                 } else {
-                    alertDiv.innerHTML = '<div class="alert error">' + (data.message || "Error occurred") + '</div>';
+                    showAlert(data.message || 'Failed to send code', 'error');
                 }
             } catch (error) {
-                document.getElementById("alert").innerHTML = '<div class="alert error">Network error</div>';
+                showAlert('Network error. Please try again.', 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Send Magic Code';
             }
-        };
+        });
+        
+        // Code form submission
+        document.getElementById('codeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const code = Array.from(codeInputs).map(input => input.value).join('');
+            
+            if (code.length !== 6) {
+                showAlert('Please enter all 6 digits', 'error');
+                return;
+            }
+            
+            const button = document.getElementById('codeSubmitBtn');
+            button.disabled = true;
+            button.textContent = 'Verifying...';
+            
+            try {
+                const response = await fetch('/auth/verify-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                        email: currentEmail,
+                        code: code
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (timerInterval) clearInterval(timerInterval);
+                    showStep('step-success');
+                    
+                    // Store token if needed
+                    if (data.access_token) {
+                        localStorage.setItem('access_token', data.access_token);
+                    }
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showAlert(data.error || 'Invalid code', 'error');
+                    // Clear code inputs on error
+                    codeInputs.forEach(input => input.value = '');
+                    codeInputs[0].focus();
+                }
+            } catch (error) {
+                showAlert('Network error. Please try again.', 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Verify Code';
+            }
+        });
+        
+        // Resend code
+        document.getElementById('resendLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            
+            if (e.target.classList.contains('disabled')) return;
+            
+            e.target.classList.add('disabled');
+            
+            try {
+                const response = await fetch('/auth/request-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: currentEmail })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('New code sent!', 'success');
+                    startTimer();
+                    codeInputs.forEach(input => input.value = '');
+                    codeInputs[0].focus();
+                } else {
+                    showAlert(data.message || 'Failed to send code', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error', 'error');
+            }
+        });
+        
+        // Change email
+        document.getElementById('changeEmailLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (timerInterval) clearInterval(timerInterval);
+            showStep('step-email');
+            document.getElementById('email').value = '';
+            document.getElementById('email').focus();
+        });
     </script>
 </body>
 </html>

@@ -2,14 +2,26 @@
  * User model and database operations
  */
 
+import crypto from 'crypto';
+
 export interface User {
   id: string;
   email: string;
-  password_hash: string;
   name?: string;
   verified: boolean;
   created_at: Date;
   updated_at: Date;
+}
+
+export interface MagicCode {
+  id: string;
+  email: string;
+  code: string;
+  expires_at: Date;
+  used: boolean;
+  ip_address?: string;
+  user_agent?: string;
+  created_at: Date;
 }
 
 export interface OAuthClient {
@@ -56,25 +68,73 @@ export interface OAuthRefreshToken {
 // In-memory storage for development (replace with real database in production)
 export class UserStore {
   private users: Map<string, User> = new Map();
+  private magicCodes: Map<string, MagicCode> = new Map();
   private clients: Map<string, OAuthClient> = new Map();
   private authCodes: Map<string, OAuthAuthorizationCode> = new Map();
   private accessTokens: Map<string, OAuthAccessToken> = new Map();
   private refreshTokens: Map<string, OAuthRefreshToken> = new Map();
 
   // User operations
-  async createUser(email: string, passwordHash: string, name?: string): Promise<User> {
+  async createUser(email: string, name?: string): Promise<User> {
     const id = crypto.randomUUID();
     const user: User = {
       id,
       email: email.toLowerCase(),
-      password_hash: passwordHash,
       name,
-      verified: false, // In production, implement email verification
+      verified: true, // User is verified when they use magic link
       created_at: new Date(),
       updated_at: new Date(),
     };
     this.users.set(id, user);
     return user;
+  }
+
+  // Magic Code operations
+  async createMagicCode(email: string, ipAddress?: string, userAgent?: string): Promise<MagicCode> {
+    // Generate a 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const id = crypto.randomUUID();
+    
+    const magicCode: MagicCode = {
+      id,
+      email: email.toLowerCase(),
+      code,
+      expires_at: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes
+      used: false,
+      ip_address: ipAddress,
+      user_agent: userAgent,
+      created_at: new Date(),
+    };
+    
+    // Store by email for easy lookup
+    this.magicCodes.set(email.toLowerCase(), magicCode);
+    return magicCode;
+  }
+
+  async findMagicCode(email: string): Promise<MagicCode | null> {
+    return this.magicCodes.get(email.toLowerCase()) || null;
+  }
+
+  async verifyMagicCode(email: string, code: string): Promise<boolean> {
+    const magicCode = await this.findMagicCode(email);
+    
+    if (!magicCode) return false;
+    if (magicCode.used) return false;
+    if (magicCode.code !== code) return false;
+    if (magicCode.expires_at < new Date()) return false;
+    
+    // Mark as used
+    magicCode.used = true;
+    return true;
+  }
+
+  async cleanupMagicCodes(): Promise<void> {
+    const now = new Date();
+    for (const [email, code] of this.magicCodes.entries()) {
+      if (code.expires_at < now || code.used) {
+        this.magicCodes.delete(email);
+      }
+    }
   }
 
   async findUserByEmail(email: string): Promise<User | null> {

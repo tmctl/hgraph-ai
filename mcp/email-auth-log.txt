@@ -1,0 +1,9 @@
+Email Authentication Log
+Started: 2025-09-01T22:29:35.015Z
+==================================================
+
+[2025-09-01T22:40:42.205Z] ATTEMPT: test@example.com - IP: ::1
+[2025-09-01T22:40:42.323Z] FAILED: test@example.com - Error: connect ECONNREFUSED ::1:1025
+[2025-09-01T22:43:12.026Z] ATTEMPT: test@example.com - IP: ::1
+[2025-09-01T22:43:12.139Z] FAILED: test@example.com - Error: connect ECONNREFUSED ::1:1025
+[2025-09-01T22:43:25.542Z] SUCCESS: test@example.com - New user created

@@ -13,7 +13,6 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import { join } from 'path';
-import crypto from 'crypto';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import {
   CallToolRequestSchema,
@@ -52,7 +51,6 @@ const ErrorCode = {
 
 import { SSETransport, SSEConnection } from './transport/sse.js';
 import {
-  authMiddleware,
   rateLimitMiddleware,
   corsOptions,
   securityHeaders,
@@ -61,7 +59,10 @@ import {
 import { listResources, listResourceTemplates, readResource } from './resources/index.js';
 import { listPrompts, getPrompt } from './prompts/index.js';
 import { tools, handleToolCall } from './tools/index.js';
-import authRoutes from './routes/auth.js';
+// Import auth dependencies
+import * as crypto from 'crypto';
+import { userStore } from './models/user.js';
+import { sendMagicCode, sendWelcomeEmail, logEmailAttempt } from './services/email.js';
 
 const app = express();
 const PORT = process.env.MCP_PORT || 3001;
@@ -95,25 +96,99 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(securityHeaders);
 
-// Serve static files from public directory (BEFORE any route handlers)
+// Authentication routes (inline to avoid module issues)
+app.post('/auth/request-code', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({ error: 'Email is required' });
+      return;
+    }
+    const normalizedEmail = email.toLowerCase().trim();
+    const ipAddress = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+    const existingCode = await userStore.findMagicCode(normalizedEmail);
+    if (existingCode && !existingCode.used && existingCode.expires_at > new Date()) {
+      res.status(429).json({ 
+        error: 'Code already sent', 
+        message: 'Please check your email or wait a few minutes before requesting a new code' 
+      });
+      return;
+    }
+    const magicCode = await userStore.createMagicCode(normalizedEmail, ipAddress, userAgent);
+    const emailSent = await sendMagicCode(normalizedEmail, magicCode.code, ipAddress);
+    if (!emailSent) {
+      res.status(500).json({ error: 'Failed to send email' });
+      return;
+    }
+    res.json({ 
+      success: true, 
+      message: 'Magic code sent to your email. Please check your inbox.' 
+    });
+  } catch (error) {
+    console.error('Error in request-code:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post('/auth/verify-code', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      res.status(400).json({ error: 'Email and code are required' });
+      return;
+    }
+    const normalizedEmail = email.toLowerCase().trim();
+    const isValid = await userStore.verifyMagicCode(normalizedEmail, code);
+    if (!isValid) {
+      logEmailAttempt(normalizedEmail, 'failed', 'Invalid or expired code');
+      res.status(401).json({ error: 'Invalid or expired code' });
+      return;
+    }
+    let user = await userStore.findUserByEmail(normalizedEmail);
+    const isNewUser = !user;
+    if (!user) {
+      user = await userStore.createUser(normalizedEmail);
+      await sendWelcomeEmail(normalizedEmail);
+    }
+    logEmailAttempt(normalizedEmail, 'success', isNewUser ? 'New user created' : 'Existing user');
+    const accessToken = crypto.randomBytes(32).toString('hex');
+    const refreshToken = crypto.randomBytes(32).toString('hex');
+    await userStore.createAccessToken(accessToken, 'web-client', user.id, ['read', 'write']);
+    const accessTokenRecord = await userStore.findAccessToken(accessToken);
+    if (accessTokenRecord) {
+      await userStore.createRefreshToken(refreshToken, accessTokenRecord.id);
+    }
+    res.cookie('session_token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000,
+    });
+    res.json({
+      success: true,
+      user: { id: user.id, email: user.email, name: user.name },
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      token_type: 'Bearer',
+      expires_in: 3600,
+    });
+  } catch (error) {
+    console.error('Error in verify-code:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Serve static files from public directory
 app.use(express.static(join(process.cwd(), 'public')));
 
-// Authentication routes (no auth required for these)
-app.use('/auth', authRoutes);
-
 // Import additional routes
-import userAuthRoutes from './routes/user-auth.js';
-import oauthRoutes from './routes/oauth.js';
-import oauthClientRoutes from './routes/oauth-clients.js';
 
 // User authentication API routes
-app.use('/api/auth', userAuthRoutes);
 
 // OAuth client management API routes
-app.use('/api/oauth', oauthClientRoutes);
 
 // OAuth provider routes
-app.use('/oauth', oauthRoutes);
 
 // OAuth discovery endpoints (public, no auth required)
 app.get('/.well-known/oauth-authorization-server', (req, res) => {
@@ -196,13 +271,10 @@ app.post('/', (req, res) => {
   });
 });
 
-// Serve login page with OAuth parameters (before auth middleware)
-app.get('/auth/login', (req, res) => {
-  res.sendFile(join(process.cwd(), 'public', 'index.html'));
-});
+// Login page is now served by static middleware at root
 
 // Apply authentication and rate limiting to protected routes (AFTER OAuth routes)
-app.use(authMiddleware);
+// Authentication is now handled per-route via magic link system
 app.use(rateLimitMiddleware);
 
 // Connection storage

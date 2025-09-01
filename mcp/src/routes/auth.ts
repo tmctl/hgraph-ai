@@ -1,324 +1,212 @@
 /**
- * Authentication routes for OAuth 2.0 flow
+ * Authentication routes for magic link system
  */
 
 import { Router, Request, Response } from 'express';
-import { randomBytes } from 'crypto';
-import {
-  generateOAuthState,
-  validateOAuthState,
-  getAuthorizationUrl,
-  getOAuthStatus,
-} from '../middleware/oauth.js';
-import { getAuthStatus } from '../middleware/auth.js';
-import axios from 'axios';
+import * as crypto from 'crypto';
+import { userStore } from '../models/user.js';
+import { sendMagicCode, sendWelcomeEmail, logEmailAttempt } from '../services/email.js';
 
 const router = Router();
 
-// In-memory state storage (use Redis/database in production)
-const stateStore = new Map<
-  string,
-  {
-    state: string;
-    provider: string;
-    redirectUri: string;
-    createdAt: number;
-  }
->();
-
-// Clean up expired states periodically
-setInterval(() => {
-  const now = Date.now();
-  const expiry = 10 * 60 * 1000; // 10 minutes
-
-  for (const [key, value] of stateStore.entries()) {
-    if (now - value.createdAt > expiry) {
-      stateStore.delete(key);
-    }
-  }
-}, 60000); // Run every minute
-
-/**
- * GET /auth/status - Get authentication configuration
- */
-router.get('/status', (req: Request, res: Response) => {
-  const status = {
-    ...getAuthStatus(),
-    endpoints: {
-      authorize: '/auth/authorize',
-      callback: '/auth/callback',
-      logout: '/auth/logout',
-      connector: '/auth/connector',
-    },
-    supportedProviders: ['google', 'auth0', 'custom'],
-  };
-
-  res.json(status);
+// Test route
+router.get('/test', (req: Request, res: Response) => {
+  res.json({ message: 'Auth routes are working!' });
 });
 
 /**
- * POST /auth/connector - Handle connector authorization
+ * Request magic link code
+ * POST /auth/request-code
  */
-router.post('/connector', (req: Request, res: Response) => {
-  const { connector, action, permissions } = req.body;
+router.post('/request-code', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
 
-  if (!connector || !action) {
-    res.status(400).json({
-      error: 'invalid_request',
-      message: 'Missing required parameters: connector, action',
-    });
-    return;
-  }
+    if (!email || typeof email !== 'string') {
+      res.status(400).json({ error: 'Email is required' });
+      return;
+    }
 
-  if (action === 'authorize' && connector === 'hgraph-mcp') {
-    // Validate permissions
-    const requiredPermissions = [
-      'read_accounts',
-      'read_transactions',
-      'read_tokens',
-      'read_network_stats',
-      'execute_graphql',
-    ];
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
 
-    const grantedPermissions = permissions || [];
-    const missingPermissions = requiredPermissions.filter((p) => !grantedPermissions.includes(p));
+    // Get IP address for logging
+    const ipAddress = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
 
-    if (missingPermissions.length > 0) {
-      res.status(400).json({
-        error: 'insufficient_permissions',
-        message: 'Missing required permissions',
-        missing: missingPermissions,
-        required: requiredPermissions,
+    // Check if there's an existing unused code
+    const existingCode = await userStore.findMagicCode(normalizedEmail);
+    if (existingCode && !existingCode.used && existingCode.expires_at > new Date()) {
+      res.status(429).json({ 
+        error: 'Code already sent', 
+        message: 'Please check your email or wait a few minutes before requesting a new code' 
       });
       return;
     }
 
-    res.json({
-      status: 'authorized',
-      connector: 'hgraph-mcp',
-      permissions: grantedPermissions,
-      authorized_at: new Date().toISOString(),
+    // Create new magic code
+    const magicCode = await userStore.createMagicCode(normalizedEmail, ipAddress, userAgent);
+
+    // Send email with code
+    const emailSent = await sendMagicCode(normalizedEmail, magicCode.code, ipAddress);
+
+    if (!emailSent) {
+      res.status(500).json({ error: 'Failed to send email' });
+      return;
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Magic code sent to your email. Please check your inbox.' 
     });
-  } else if (action === 'deny') {
-    res.json({
-      status: 'denied',
-      connector: connector,
-      message: 'Connector authorization denied by user',
-    });
-  } else {
-    res.status(400).json({
-      error: 'invalid_action',
-      message: 'Supported actions: authorize, deny',
-    });
+  } catch (error) {
+    console.error('Error in request-code:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 /**
- * GET /auth/authorize - Start OAuth flow
+ * Verify magic link code
+ * POST /auth/verify-code
  */
-router.get('/authorize', (req: Request, res: Response) => {
-  const { provider = 'google', redirect_uri } = req.query;
-
-  if (typeof provider !== 'string' || !['google', 'auth0', 'custom'].includes(provider)) {
-    res.status(400).json({
-      error: 'invalid_provider',
-      message: 'Supported providers: google, auth0, custom',
-    });
-    return;
-  }
-
-  const redirectUri = (redirect_uri as string) || process.env.OAUTH_DEFAULT_REDIRECT_URI || '';
-  if (!redirectUri) {
-    res.status(400).json({
-      error: 'missing_redirect_uri',
-      message: 'redirect_uri parameter is required',
-    });
-    return;
-  }
-
+router.post('/verify-code', async (req: Request, res: Response) => {
   try {
-    const state = generateOAuthState();
-    const sessionId = randomBytes(16).toString('hex');
+    const { email, code } = req.body;
 
-    // Store state
-    stateStore.set(sessionId, {
-      state,
-      provider,
-      redirectUri,
-      createdAt: Date.now(),
-    });
+    if (!email || !code) {
+      res.status(400).json({ error: 'Email and code are required' });
+      return;
+    }
 
-    // Get authorization URL
-    const authUrl = getAuthorizationUrl(provider, redirectUri, state);
+    const normalizedEmail = email.toLowerCase().trim();
 
-    res.json({
-      authUrl,
-      state,
-      sessionId,
-      provider,
-      expiresIn: 600, // 10 minutes
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      error: 'oauth_error',
-      message: error.message,
-    });
-  }
-});
+    // Verify the code
+    const isValid = await userStore.verifyMagicCode(normalizedEmail, code);
 
-/**
- * POST /auth/callback - Handle OAuth callback
- */
-router.post('/callback', async (req: Request, res: Response) => {
-  const { code, state, sessionId, error, error_description } = req.body;
+    if (!isValid) {
+      logEmailAttempt(normalizedEmail, 'failed', 'Invalid or expired code');
+      res.status(401).json({ error: 'Invalid or expired code' });
+      return;
+    }
 
-  if (error) {
-    res.status(400).json({
-      error: 'oauth_error',
-      message: error_description || error,
-    });
-    return;
-  }
+    // Find or create user
+    let user = await userStore.findUserByEmail(normalizedEmail);
+    const isNewUser = !user;
 
-  if (!code || !state || !sessionId) {
-    res.status(400).json({
-      error: 'invalid_request',
-      message: 'Missing required parameters: code, state, sessionId',
-    });
-    return;
-  }
+    if (!user) {
+      user = await userStore.createUser(normalizedEmail);
+      await sendWelcomeEmail(normalizedEmail);
+    }
 
-  // Validate state
-  const storedSession = stateStore.get(sessionId);
-  if (!storedSession) {
-    res.status(400).json({
-      error: 'invalid_session',
-      message: 'Session expired or invalid',
-    });
-    return;
-  }
+    // Log successful authentication
+    logEmailAttempt(normalizedEmail, 'success', isNewUser ? 'New user created' : 'Existing user');
 
-  if (!validateOAuthState(state, storedSession.state)) {
-    res.status(400).json({
-      error: 'invalid_state',
-      message: 'State parameter mismatch',
-    });
-    return;
-  }
+    // Generate OAuth tokens
+    const accessToken = crypto.randomBytes(32).toString('hex');
+    const refreshToken = crypto.randomBytes(32).toString('hex');
 
-  try {
-    // Exchange code for token
-    const tokenResponse = await exchangeCodeForToken(
-      storedSession.provider,
-      code,
-      storedSession.redirectUri,
+    // Store tokens (simplified for now - in production, use proper OAuth flow)
+    await userStore.createAccessToken(
+      accessToken,
+      'web-client',
+      user.id,
+      ['read', 'write'],
     );
 
-    // Clean up state
-    stateStore.delete(sessionId);
+    const accessTokenRecord = await userStore.findAccessToken(accessToken);
+    if (accessTokenRecord) {
+      await userStore.createRefreshToken(refreshToken, accessTokenRecord.id);
+    }
+
+    // Set session cookie
+    res.cookie('session_token', accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000, // 1 hour
+    });
 
     res.json({
-      access_token: tokenResponse.access_token,
-      token_type: tokenResponse.token_type || 'Bearer',
-      expires_in: tokenResponse.expires_in,
-      scope: tokenResponse.scope,
-      provider: storedSession.provider,
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      token_type: 'Bearer',
+      expires_in: 3600,
     });
-  } catch (error: any) {
-    console.error('Token exchange error:', error);
-    res.status(500).json({
-      error: 'token_exchange_failed',
-      message: 'Failed to exchange authorization code for token',
-    });
+  } catch (error) {
+    console.error('Error in verify-code:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 /**
- * GET /auth/userinfo - Get user information (OAuth userinfo endpoint)
- */
-router.get('/userinfo', (req: Request, res: Response) => {
-  // Extract user info from token or session
-  const userId = (req as any).userId || 'anonymous';
-  const authType = (req as any).authType || 'unknown';
-
-  res.json({
-    sub: userId,
-    name: `User ${userId}`,
-    preferred_username: userId,
-    auth_method: authType,
-    scope: 'read write',
-    client_id: 'hgraph-mcp-server',
-    iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour
-  });
-});
-
-/**
- * POST /auth/logout - Logout (invalidate token)
+ * Logout
+ * POST /auth/logout
  */
 router.post('/logout', (req: Request, res: Response) => {
-  // For OAuth tokens, we can't really "logout" on the server side
-  // since tokens are validated with the OAuth provider
-  // Client should discard the token
-
-  res.json({
-    message: 'Logged out successfully',
-    instruction: 'Discard your access token on the client side',
-  });
+  res.clearCookie('session_token');
+  res.json({ success: true, message: 'Logged out successfully' });
 });
 
 /**
- * Exchange authorization code for access token
+ * Get current user
+ * GET /auth/me
  */
-async function exchangeCodeForToken(
-  provider: string,
-  code: string,
-  redirectUri: string,
-): Promise<any> {
-  const config = {
-    google: {
-      tokenUrl: 'https://oauth2.googleapis.com/token',
-      clientId: process.env.OAUTH_GOOGLE_CLIENT_ID,
-      clientSecret: process.env.OAUTH_GOOGLE_CLIENT_SECRET,
-    },
-    auth0: {
-      tokenUrl: `${process.env.OAUTH_AUTH0_DOMAIN}/oauth/token`,
-      clientId: process.env.OAUTH_AUTH0_CLIENT_ID,
-      clientSecret: process.env.OAUTH_AUTH0_CLIENT_SECRET,
-    },
-    custom: {
-      tokenUrl: process.env.OAUTH_CUSTOM_TOKEN_URL,
-      clientId: process.env.OAUTH_CUSTOM_CLIENT_ID,
-      clientSecret: process.env.OAUTH_CUSTOM_CLIENT_SECRET,
-    },
-  };
+router.get('/me', async (req: Request, res: Response) => {
+  try {
+    // Get token from cookie or Authorization header
+    const cookieToken = req.cookies?.session_token;
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    
+    const token = cookieToken || bearerToken;
 
-  const providerConfig = config[provider as keyof typeof config];
-  if (!providerConfig || !providerConfig.tokenUrl) {
-    throw new Error(`Token URL not configured for provider: ${provider}`);
+    if (!token) {
+      res.status(401).json({ error: 'Not authenticated' });
+      return;
+    }
+
+    // Find access token
+    const accessToken = await userStore.findAccessToken(token);
+    if (!accessToken || accessToken.expires_at < new Date()) {
+      res.status(401).json({ error: 'Invalid or expired token' });
+      return;
+    }
+
+    // Get user
+    const user = await userStore.findUserById(accessToken.user_id);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      verified: user.verified,
+    });
+  } catch (error) {
+    console.error('Error in /me:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
+});
 
-  const params = new URLSearchParams({
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: redirectUri,
-    client_id: providerConfig.clientId || '',
-    client_secret: providerConfig.clientSecret || '',
-  });
-
-  const response = await axios.post(providerConfig.tokenUrl, params, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
-    },
-    timeout: 10000,
-  });
-
-  if (response.data.error) {
-    throw new Error(response.data.error_description || response.data.error);
+/**
+ * Clean up expired codes and tokens periodically
+ */
+setInterval(async () => {
+  try {
+    await userStore.cleanupMagicCodes();
+    await userStore.cleanupExpiredTokens();
+  } catch (error) {
+    console.error('Error in cleanup:', error);
   }
-
-  return response.data;
-}
+}, 5 * 60 * 1000); // Every 5 minutes
 
 export default router;
