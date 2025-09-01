@@ -129,6 +129,7 @@ The HTTP server uses Server-Sent Events for real-time streaming:
 ### MCP Capabilities
 
 #### Tools (17 available)
+
 - GraphQL query execution
 - Natural language database queries
 - Transaction history and token balances
@@ -136,11 +137,13 @@ The HTTP server uses Server-Sent Events for real-time streaming:
 - D3.js visualization generation
 
 #### Resources
+
 - GraphQL and database schemas
 - API documentation
 - Dynamic data access (accounts, tokens, contracts)
 
 #### Prompts (8 templates)
+
 - Account analysis
 - Token portfolio
 - Transaction investigation

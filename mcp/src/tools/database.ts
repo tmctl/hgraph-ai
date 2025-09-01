@@ -258,7 +258,7 @@ Keep the response focused and under 150 words.`;
       max_tokens: 300,
       temperature: 0.3,
       system:
-        'You are a helpful data analyst. Provide clear, concise summaries of database query results in natural language. Focus on answering the user\'s question directly.',
+        "You are a helpful data analyst. Provide clear, concise summaries of database query results in natural language. Focus on answering the user's question directly.",
       messages: [
         {
           role: 'user',
@@ -267,7 +267,9 @@ Keep the response focused and under 150 words.`;
       ],
     });
 
-    return response.content[0].type === 'text' ? response.content[0].text.trim() : 'Unable to generate summary.';
+    return response.content[0].type === 'text'
+      ? response.content[0].text.trim()
+      : 'Unable to generate summary.';
   } catch (error) {
     console.error('Error generating natural language summary:', error);
     return 'Query executed successfully. See the results table above for details.';
@@ -485,10 +487,10 @@ export async function askQuestion(question: string) {
           result.rows,
           executionTime,
         );
-        
+
         output += '## Natural Language Summary\n\n';
         output += naturalLanguageSummary + '\n\n';
-        
+
         output += '## Results Table\n\n';
 
         // For small result sets, show as table

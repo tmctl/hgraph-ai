@@ -86,8 +86,8 @@ describe('MCP Server Integration', () => {
       // Mock the database connection
       jest.mock('../../src/tools/database.js', () => ({
         askQuestion: jest.fn().mockResolvedValue({
-          content: [{ type: 'text', text: 'Database response' }]
-        })
+          content: [{ type: 'text', text: 'Database response' }],
+        }),
       }));
 
       // Test will pass if function exists

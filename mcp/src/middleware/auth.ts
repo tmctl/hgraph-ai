@@ -1,6 +1,6 @@
 /**
  * Authentication and Rate Limiting Middleware
- * 
+ *
  * Provides security for the MCP HTTP server with support for
  * both API tokens and OAuth 2.0 Bearer tokens
  */
@@ -32,7 +32,7 @@ const USER_ID_HEADER = 'x-user-id';
 export function initializeAuth(): void {
   // Generate initial API tokens from environment
   const tokens = process.env.MCP_API_TOKENS?.split(',') || [];
-  
+
   if (tokens.length === 0) {
     // Generate a default token if none provided
     const defaultToken = crypto.randomBytes(32).toString('hex');
@@ -43,7 +43,7 @@ export function initializeAuth(): void {
     console.log('================================================');
     validTokens.add(defaultToken);
   } else {
-    tokens.forEach(token => validTokens.add(token.trim()));
+    tokens.forEach((token) => validTokens.add(token.trim()));
     console.log(`Loaded ${tokens.length} API tokens`);
   }
 }
@@ -74,20 +74,29 @@ export function removeToken(token: string): boolean {
  * Supports both API tokens and OAuth 2.0
  */
 export function authMiddleware(req: Request, res: Response, next: NextFunction): void {
-  // Skip auth for health check and root info endpoint
-  if (req.path === '/health' || (req.path === '/' && req.method === 'GET')) {
+  // Skip auth for health check, root endpoints, discovery, registration, and user auth APIs
+  if (
+    req.path === '/health' ||
+    (req.path === '/' && req.method === 'GET') ||
+    (req.path === '/' && req.method === 'POST') ||
+    req.path.startsWith('/.well-known/') ||
+    req.path === '/register' ||
+    req.path.startsWith('/api/auth/') ||
+    req.path.startsWith('/api/oauth/') ||
+    req.path.startsWith('/oauth/')
+  ) {
     return next();
   }
-  
+
   // Check for OAuth Bearer token first
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     return oauthMiddleware(req, res, next);
   }
-  
+
   // Fall back to API token authentication
   const apiToken = req.headers[TOKEN_HEADER] as string;
-  
+
   if (!apiToken) {
     res.status(401).json({
       error: 'Authentication required',
@@ -96,7 +105,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     });
     return;
   }
-  
+
   if (!validateToken(apiToken)) {
     res.status(403).json({
       error: 'Invalid token',
@@ -104,16 +113,16 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     });
     return;
   }
-  
+
   // Extract user ID if provided
   const userId = req.headers[USER_ID_HEADER] as string;
   if (userId) {
     (req as any).userId = userId;
   }
-  
+
   // Mark as API token authentication
   (req as any).authType = 'api-token';
-  
+
   next();
 }
 
@@ -125,31 +134,31 @@ export function rateLimitMiddleware(req: Request, res: Response, next: NextFunct
   if (req.path === '/sse') {
     return next();
   }
-  
+
   // Use token or IP as identifier
   const token = req.headers[TOKEN_HEADER] as string;
   const identifier = token || req.ip || 'unknown';
-  
+
   const now = Date.now();
   const entry = rateLimitStore.get(identifier);
-  
+
   if (!entry || entry.resetTime < now) {
     // Create new entry
     rateLimitStore.set(identifier, {
       count: 1,
       resetTime: now + RATE_LIMIT_WINDOW,
     });
-    
+
     // Clean up old entries
     for (const [key, value] of rateLimitStore.entries()) {
       if (value.resetTime < now) {
         rateLimitStore.delete(key);
       }
     }
-    
+
     return next();
   }
-  
+
   if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
     const retryAfter = Math.ceil((entry.resetTime - now) / 1000);
     res.status(429).json({
@@ -159,7 +168,7 @@ export function rateLimitMiddleware(req: Request, res: Response, next: NextFunct
     });
     return;
   }
-  
+
   entry.count++;
   next();
 }
@@ -169,12 +178,15 @@ export function rateLimitMiddleware(req: Request, res: Response, next: NextFunct
  */
 export function corsOptions() {
   const allowedOrigins = process.env.MCP_ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
-  
+
   return {
-    origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
       // Allow requests with no origin (e.g., Postman, curl)
       if (!origin) return callback(null, true);
-      
+
       if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {

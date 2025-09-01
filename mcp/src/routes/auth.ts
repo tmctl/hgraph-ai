@@ -4,11 +4,11 @@
 
 import { Router, Request, Response } from 'express';
 import { randomBytes } from 'crypto';
-import { 
-  generateOAuthState, 
-  validateOAuthState, 
+import {
+  generateOAuthState,
+  validateOAuthState,
   getAuthorizationUrl,
-  getOAuthStatus 
+  getOAuthStatus,
 } from '../middleware/oauth.js';
 import { getAuthStatus } from '../middleware/auth.js';
 import axios from 'axios';
@@ -16,18 +16,21 @@ import axios from 'axios';
 const router = Router();
 
 // In-memory state storage (use Redis/database in production)
-const stateStore = new Map<string, { 
-  state: string; 
-  provider: string; 
-  redirectUri: string; 
-  createdAt: number; 
-}>();
+const stateStore = new Map<
+  string,
+  {
+    state: string;
+    provider: string;
+    redirectUri: string;
+    createdAt: number;
+  }
+>();
 
 // Clean up expired states periodically
 setInterval(() => {
   const now = Date.now();
   const expiry = 10 * 60 * 1000; // 10 minutes
-  
+
   for (const [key, value] of stateStore.entries()) {
     if (now - value.createdAt > expiry) {
       stateStore.delete(key);
@@ -45,11 +48,69 @@ router.get('/status', (req: Request, res: Response) => {
       authorize: '/auth/authorize',
       callback: '/auth/callback',
       logout: '/auth/logout',
+      connector: '/auth/connector',
     },
     supportedProviders: ['google', 'auth0', 'custom'],
   };
-  
+
   res.json(status);
+});
+
+/**
+ * POST /auth/connector - Handle connector authorization
+ */
+router.post('/connector', (req: Request, res: Response) => {
+  const { connector, action, permissions } = req.body;
+
+  if (!connector || !action) {
+    res.status(400).json({
+      error: 'invalid_request',
+      message: 'Missing required parameters: connector, action',
+    });
+    return;
+  }
+
+  if (action === 'authorize' && connector === 'hgraph-mcp') {
+    // Validate permissions
+    const requiredPermissions = [
+      'read_accounts',
+      'read_transactions',
+      'read_tokens',
+      'read_network_stats',
+      'execute_graphql',
+    ];
+
+    const grantedPermissions = permissions || [];
+    const missingPermissions = requiredPermissions.filter((p) => !grantedPermissions.includes(p));
+
+    if (missingPermissions.length > 0) {
+      res.status(400).json({
+        error: 'insufficient_permissions',
+        message: 'Missing required permissions',
+        missing: missingPermissions,
+        required: requiredPermissions,
+      });
+      return;
+    }
+
+    res.json({
+      status: 'authorized',
+      connector: 'hgraph-mcp',
+      permissions: grantedPermissions,
+      authorized_at: new Date().toISOString(),
+    });
+  } else if (action === 'deny') {
+    res.json({
+      status: 'denied',
+      connector: connector,
+      message: 'Connector authorization denied by user',
+    });
+  } else {
+    res.status(400).json({
+      error: 'invalid_action',
+      message: 'Supported actions: authorize, deny',
+    });
+  }
 });
 
 /**
@@ -57,7 +118,7 @@ router.get('/status', (req: Request, res: Response) => {
  */
 router.get('/authorize', (req: Request, res: Response) => {
   const { provider = 'google', redirect_uri } = req.query;
-  
+
   if (typeof provider !== 'string' || !['google', 'auth0', 'custom'].includes(provider)) {
     res.status(400).json({
       error: 'invalid_provider',
@@ -65,8 +126,8 @@ router.get('/authorize', (req: Request, res: Response) => {
     });
     return;
   }
-  
-  const redirectUri = redirect_uri as string || process.env.OAUTH_DEFAULT_REDIRECT_URI || '';
+
+  const redirectUri = (redirect_uri as string) || process.env.OAUTH_DEFAULT_REDIRECT_URI || '';
   if (!redirectUri) {
     res.status(400).json({
       error: 'missing_redirect_uri',
@@ -74,11 +135,11 @@ router.get('/authorize', (req: Request, res: Response) => {
     });
     return;
   }
-  
+
   try {
     const state = generateOAuthState();
     const sessionId = randomBytes(16).toString('hex');
-    
+
     // Store state
     stateStore.set(sessionId, {
       state,
@@ -86,10 +147,10 @@ router.get('/authorize', (req: Request, res: Response) => {
       redirectUri,
       createdAt: Date.now(),
     });
-    
+
     // Get authorization URL
     const authUrl = getAuthorizationUrl(provider, redirectUri, state);
-    
+
     res.json({
       authUrl,
       state,
@@ -110,7 +171,7 @@ router.get('/authorize', (req: Request, res: Response) => {
  */
 router.post('/callback', async (req: Request, res: Response) => {
   const { code, state, sessionId, error, error_description } = req.body;
-  
+
   if (error) {
     res.status(400).json({
       error: 'oauth_error',
@@ -118,7 +179,7 @@ router.post('/callback', async (req: Request, res: Response) => {
     });
     return;
   }
-  
+
   if (!code || !state || !sessionId) {
     res.status(400).json({
       error: 'invalid_request',
@@ -126,7 +187,7 @@ router.post('/callback', async (req: Request, res: Response) => {
     });
     return;
   }
-  
+
   // Validate state
   const storedSession = stateStore.get(sessionId);
   if (!storedSession) {
@@ -136,7 +197,7 @@ router.post('/callback', async (req: Request, res: Response) => {
     });
     return;
   }
-  
+
   if (!validateOAuthState(state, storedSession.state)) {
     res.status(400).json({
       error: 'invalid_state',
@@ -144,18 +205,18 @@ router.post('/callback', async (req: Request, res: Response) => {
     });
     return;
   }
-  
+
   try {
     // Exchange code for token
     const tokenResponse = await exchangeCodeForToken(
       storedSession.provider,
       code,
-      storedSession.redirectUri
+      storedSession.redirectUri,
     );
-    
+
     // Clean up state
     stateStore.delete(sessionId);
-    
+
     res.json({
       access_token: tokenResponse.access_token,
       token_type: tokenResponse.token_type || 'Bearer',
@@ -173,13 +234,33 @@ router.post('/callback', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /auth/userinfo - Get user information (OAuth userinfo endpoint)
+ */
+router.get('/userinfo', (req: Request, res: Response) => {
+  // Extract user info from token or session
+  const userId = (req as any).userId || 'anonymous';
+  const authType = (req as any).authType || 'unknown';
+
+  res.json({
+    sub: userId,
+    name: `User ${userId}`,
+    preferred_username: userId,
+    auth_method: authType,
+    scope: 'read write',
+    client_id: 'hgraph-mcp-server',
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour
+  });
+});
+
+/**
  * POST /auth/logout - Logout (invalidate token)
  */
 router.post('/logout', (req: Request, res: Response) => {
   // For OAuth tokens, we can't really "logout" on the server side
   // since tokens are validated with the OAuth provider
   // Client should discard the token
-  
+
   res.json({
     message: 'Logged out successfully',
     instruction: 'Discard your access token on the client side',
@@ -192,7 +273,7 @@ router.post('/logout', (req: Request, res: Response) => {
 async function exchangeCodeForToken(
   provider: string,
   code: string,
-  redirectUri: string
+  redirectUri: string,
 ): Promise<any> {
   const config = {
     google: {
@@ -211,12 +292,12 @@ async function exchangeCodeForToken(
       clientSecret: process.env.OAUTH_CUSTOM_CLIENT_SECRET,
     },
   };
-  
+
   const providerConfig = config[provider as keyof typeof config];
   if (!providerConfig || !providerConfig.tokenUrl) {
     throw new Error(`Token URL not configured for provider: ${provider}`);
   }
-  
+
   const params = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
@@ -224,23 +305,19 @@ async function exchangeCodeForToken(
     client_id: providerConfig.clientId || '',
     client_secret: providerConfig.clientSecret || '',
   });
-  
-  const response = await axios.post(
-    providerConfig.tokenUrl,
-    params,
-    {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
-      },
-      timeout: 10000,
-    }
-  );
-  
+
+  const response = await axios.post(providerConfig.tokenUrl, params, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Accept: 'application/json',
+    },
+    timeout: 10000,
+  });
+
   if (response.data.error) {
     throw new Error(response.data.error_description || response.data.error);
   }
-  
+
   return response.data;
 }
 

@@ -13,9 +13,7 @@ describe('OAuth 2.0 Authentication', () => {
 
   describe('OAuth Disabled (Default)', () => {
     it('should return OAuth disabled status', async () => {
-      const response = await request(app)
-        .get('/auth/status')
-        .expect(200);
+      const response = await request(app).get('/auth/status').expect(200);
 
       expect(response.body.oauth.enabled).toBe(false);
       expect(response.body.supportedProviders).toEqual(['google', 'auth0', 'custom']);
@@ -23,9 +21,7 @@ describe('OAuth 2.0 Authentication', () => {
 
     it('should still accept API token authentication', async () => {
       // This should work with API token even when OAuth is disabled
-      const response = await request(app)
-        .get('/health')
-        .expect(200);
+      const response = await request(app).get('/health').expect(200);
 
       expect(response.body.status).toBe('healthy');
     });
@@ -51,9 +47,7 @@ describe('OAuth 2.0 Authentication', () => {
     });
 
     it('should return OAuth enabled status', async () => {
-      const response = await request(app)
-        .get('/auth/status')
-        .expect(200);
+      const response = await request(app).get('/auth/status').expect(200);
 
       expect(response.body.oauth.enabled).toBe(true);
       expect(response.body.oauth.providers).toContain('google');
@@ -72,9 +66,7 @@ describe('OAuth 2.0 Authentication', () => {
     });
 
     it('should require redirect_uri parameter', async () => {
-      const response = await request(app)
-        .get('/auth/authorize?provider=google')
-        .expect(400);
+      const response = await request(app).get('/auth/authorize?provider=google').expect(400);
 
       expect(response.body.error).toBe('missing_redirect_uri');
     });
@@ -94,10 +86,7 @@ describe('OAuth 2.0 Authentication', () => {
         .expect(200);
 
       // Try callback without required parameters
-      const response = await request(app)
-        .post('/auth/callback')
-        .send({})
-        .expect(400);
+      const response = await request(app).post('/auth/callback').send({}).expect(400);
 
       expect(response.body.error).toBe('invalid_request');
     });
@@ -108,7 +97,7 @@ describe('OAuth 2.0 Authentication', () => {
         .send({
           code: 'test-code',
           state: 'test-state',
-          sessionId: 'invalid-session'
+          sessionId: 'invalid-session',
         })
         .expect(400);
 
@@ -120,9 +109,7 @@ describe('OAuth 2.0 Authentication', () => {
     it('should reject requests without Bearer token when OAuth enabled', async () => {
       process.env.OAUTH_ENABLED = 'true';
 
-      const response = await request(app)
-        .get('/sse')
-        .expect(401);
+      const response = await request(app).get('/sse').expect(401);
 
       expect(response.body.error).toBe('oauth_required');
 
@@ -148,9 +135,7 @@ describe('OAuth 2.0 Authentication', () => {
       process.env.OAUTH_ENABLED = 'true';
       process.env.MCP_API_TOKENS = 'test-api-token';
 
-      const statusResponse = await request(app)
-        .get('/auth/status')
-        .expect(200);
+      const statusResponse = await request(app).get('/auth/status').expect(200);
 
       expect(statusResponse.body.apiTokens.configured).toBe(true);
       expect(statusResponse.body.oauth.enabled).toBe(true);

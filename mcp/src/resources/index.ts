@@ -1,6 +1,6 @@
 /**
  * Resource Management for MCP Server
- * 
+ *
  * Provides access to contextual data sources
  */
 
@@ -117,20 +117,20 @@ export async function readResource(uri: string): Promise<{ content: any; mimeTyp
   // Parse URI
   const url = new URL(uri);
   const [, type, ...pathParts] = url.pathname.split('/');
-  
+
   switch (type) {
     case 'schema':
       return readSchemaResource(pathParts.join('/'));
-      
+
     case 'docs':
       return readDocumentationResource(pathParts.join('/'));
-      
+
     case 'config':
       return readConfigurationResource(pathParts.join('/'));
-      
+
     case 'data':
       return readDataResource(pathParts);
-      
+
     default:
       throw new Error(`Unknown resource type: ${type}`);
   }
@@ -149,7 +149,7 @@ async function readSchemaResource(path: string): Promise<{ content: any; mimeTyp
         content: schema.content[0].text,
         mimeType: 'application/graphql',
       };
-      
+
     case 'database':
       // Import database schema
       const { getDatabaseInfo } = await import('../tools/database.js');
@@ -158,7 +158,7 @@ async function readSchemaResource(path: string): Promise<{ content: any; mimeTyp
         content: dbInfo.content[0].text,
         mimeType: 'application/json',
       };
-      
+
     default:
       throw new Error(`Unknown schema resource: ${path}`);
   }
@@ -167,9 +167,11 @@ async function readSchemaResource(path: string): Promise<{ content: any; mimeTyp
 /**
  * Read documentation resources
  */
-async function readDocumentationResource(path: string): Promise<{ content: any; mimeType: string }> {
+async function readDocumentationResource(
+  path: string,
+): Promise<{ content: any; mimeType: string }> {
   const docsPath = join(process.cwd(), 'docs');
-  
+
   switch (path) {
     case 'api':
       const apiDocsPath = join(docsPath, 'api.md');
@@ -183,7 +185,7 @@ async function readDocumentationResource(path: string): Promise<{ content: any; 
         content: generateApiDocumentation(),
         mimeType: 'text/markdown',
       };
-      
+
     case 'examples':
       const examplesPath = join(docsPath, 'examples.md');
       if (existsSync(examplesPath)) {
@@ -196,7 +198,7 @@ async function readDocumentationResource(path: string): Promise<{ content: any; 
         content: generateExampleDocumentation(),
         mimeType: 'text/markdown',
       };
-      
+
     default:
       throw new Error(`Unknown documentation resource: ${path}`);
   }
@@ -205,22 +207,31 @@ async function readDocumentationResource(path: string): Promise<{ content: any; 
 /**
  * Read configuration resources
  */
-async function readConfigurationResource(path: string): Promise<{ content: any; mimeType: string }> {
+async function readConfigurationResource(
+  path: string,
+): Promise<{ content: any; mimeType: string }> {
   switch (path) {
     case 'endpoints':
       return {
-        content: JSON.stringify({
-          graphql: process.env.HGRAPH_GRAPHQL_ENDPOINT || 'https://mainnet.hedera.api.hgraph.com/v1/graphql',
-          rest: process.env.HGRAPH_REST_ENDPOINT || 'https://mainnet.mirrornode.hedera.com/api/v1',
-          jsonrpc: process.env.HGRAPH_JSONRPC_ENDPOINT || 'https://mainnet.hedera.api.hgraph.com/v1/jsonrpc',
-          database: {
-            configured: !!process.env.DB_HOST,
-            host: process.env.DB_HOST ? '***' : undefined,
+        content: JSON.stringify(
+          {
+            graphql:
+              process.env.HGRAPH_GRAPHQL_ENDPOINT ||
+              'https://mainnet.hedera.api.hgraph.io/v1/graphql',
+            rest: process.env.HGRAPH_REST_ENDPOINT || 'https://mainnet.hedera.api.hgraph.io/api/v1',
+            jsonrpc:
+              process.env.HGRAPH_JSONRPC_ENDPOINT || 'https://mainnet.hedera.api.hgraph.io/rpc',
+            database: {
+              configured: !!process.env.DB_HOST,
+              host: process.env.DB_HOST ? '***' : undefined,
+            },
           },
-        }, null, 2),
+          null,
+          2,
+        ),
         mimeType: 'application/json',
       };
-      
+
     default:
       throw new Error(`Unknown configuration resource: ${path}`);
   }
@@ -231,30 +242,35 @@ async function readConfigurationResource(path: string): Promise<{ content: any; 
  */
 async function readDataResource(pathParts: string[]): Promise<{ content: any; mimeType: string }> {
   const [resourceType, resourceId] = pathParts;
-  
+
   switch (resourceType) {
     case 'accounts':
       const { getTransactionHistory } = await import('../tools/transactions.js');
       const { getTokenBalances } = await import('../tools/tokens.js');
-      
+
       const [transactions, tokens] = await Promise.all([
         getTransactionHistory(resourceId, 10, 'desc'),
         getTokenBalances(resourceId),
       ]);
-      
+
       return {
-        content: JSON.stringify({
-          accountId: resourceId,
-          transactions: JSON.parse(transactions.content[0].text),
-          tokens: JSON.parse(tokens.content[0].text),
-        }, null, 2),
+        content: JSON.stringify(
+          {
+            accountId: resourceId,
+            transactions: JSON.parse(transactions.content[0].text),
+            tokens: JSON.parse(tokens.content[0].text),
+          },
+          null,
+          2,
+        ),
         mimeType: 'application/json',
       };
-      
+
     case 'tokens': {
       // Fetch token information
       const { executeGraphQLQuery } = await import('../tools/graphql.js');
-      const tokenResult = await executeGraphQLQuery(`
+      const tokenResult = await executeGraphQLQuery(
+        `
         query GetToken($tokenId: String!) {
           token(where: { token_id: { _eq: $tokenId } }) {
             token_id
@@ -266,18 +282,21 @@ async function readDataResource(pathParts: string[]): Promise<{ content: any; mi
             type
           }
         }
-      `, { tokenId: resourceId });
-      
+      `,
+        { tokenId: resourceId },
+      );
+
       return {
         content: tokenResult.content[0].text,
         mimeType: 'application/json',
       };
     }
-      
+
     case 'contracts': {
       // Fetch contract information
       const { executeGraphQLQuery: executeQuery } = await import('../tools/graphql.js');
-      const contractResult = await executeQuery(`
+      const contractResult = await executeQuery(
+        `
         query GetContract($contractId: String!) {
           contract(where: { contract_id: { _eq: $contractId } }) {
             contract_id
@@ -287,23 +306,25 @@ async function readDataResource(pathParts: string[]): Promise<{ content: any; mi
             runtime_bytecode
           }
         }
-      `, { contractId: resourceId });
-      
+      `,
+        { contractId: resourceId },
+      );
+
       return {
         content: contractResult.content[0].text,
         mimeType: 'application/json',
       };
     }
-      
+
     case 'transactions':
       const { getTransactionByHash } = await import('../tools/jsonrpc.js');
       const txResult = await getTransactionByHash(resourceId);
-      
+
       return {
         content: txResult.content[0].text,
         mimeType: 'application/json',
       };
-      
+
     default:
       throw new Error(`Unknown data resource type: ${resourceType}`);
   }

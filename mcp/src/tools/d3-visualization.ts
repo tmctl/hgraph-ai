@@ -9,7 +9,17 @@ import Anthropic from '@anthropic-ai/sdk';
 
 export interface VisualizationRequest {
   data: any[];
-  type: 'bar' | 'line' | 'pie' | 'scatter' | 'area' | 'bubble' | 'heatmap' | 'network' | 'tree' | 'auto';
+  type:
+    | 'bar'
+    | 'line'
+    | 'pie'
+    | 'scatter'
+    | 'area'
+    | 'bubble'
+    | 'heatmap'
+    | 'network'
+    | 'tree'
+    | 'auto';
   title?: string;
   description?: string;
   width?: number;
@@ -97,10 +107,14 @@ Return only the JavaScript code, no explanations or markdown.`;
     });
 
     let code = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
-    
+
     // Clean up any markdown formatting if present
-    code = code.replace(/```javascript/gi, '').replace(/```js/gi, '').replace(/```/g, '').trim();
-    
+    code = code
+      .replace(/```javascript/gi, '')
+      .replace(/```js/gi, '')
+      .replace(/```/g, '')
+      .trim();
+
     return code;
   } catch (error) {
     console.error('Error generating D3 code with AI:', error);
@@ -204,7 +218,9 @@ svg.append("text")
   .text("${requirements.yAxis?.label || yField}");
 
 // Add tooltips if interactive
-${requirements.interactive !== false ? `
+${
+  requirements.interactive !== false
+    ? `
 const tooltip = d3.select("body").append("div")
   .attr("class", "d3-tooltip")
   .style("opacity", 0)
@@ -225,7 +241,9 @@ svg.selectAll(".bar")
   .on("mouseout", function(d) {
     tooltip.transition().duration(500).style("opacity", 0);
   });
-` : ''}`;
+`
+    : ''
+}`;
 
     case 'line':
       return `
@@ -362,7 +380,9 @@ arcs.append("text")
 /**
  * Main function to create D3 visualization
  */
-export async function createD3Visualization(request: VisualizationRequest): Promise<D3VisualizationResponse> {
+export async function createD3Visualization(
+  request: VisualizationRequest,
+): Promise<D3VisualizationResponse> {
   try {
     // Validate input
     if (!request.data || !Array.isArray(request.data) || request.data.length === 0) {
@@ -371,16 +391,16 @@ export async function createD3Visualization(request: VisualizationRequest): Prom
 
     // Determine visualization type
     let visualizationType = request.type || 'auto';
-    
+
     if (visualizationType === 'auto') {
       // Auto-detect based on data structure
       const fields = Object.keys(request.data[0]);
-      const hasNumeric = fields.some(f => typeof request.data[0][f] === 'number');
-      const hasDate = fields.some(f => 
-        typeof request.data[0][f] === 'string' && 
-        request.data[0][f].match(/\d{4}-\d{2}-\d{2}/)
+      const hasNumeric = fields.some((f) => typeof request.data[0][f] === 'number');
+      const hasDate = fields.some(
+        (f) =>
+          typeof request.data[0][f] === 'string' && request.data[0][f].match(/\d{4}-\d{2}-\d{2}/),
       );
-      
+
       if (hasDate && hasNumeric) {
         visualizationType = 'line';
       } else if (fields.length === 2 && hasNumeric) {
@@ -393,22 +413,16 @@ export async function createD3Visualization(request: VisualizationRequest): Prom
     }
 
     // Generate D3 code
-    const code = await generateD3CodeWithAI(
-      request.data,
-      visualizationType,
-      request
-    );
+    const code = await generateD3CodeWithAI(request.data, visualizationType, request);
 
     // Prepare response
     const response: D3VisualizationResponse = {
       code: code,
-      dependencies: [
-        'https://d3js.org/d3.v7.min.js'
-      ],
+      dependencies: ['https://d3js.org/d3.v7.min.js'],
       containerRequirements: {
         id: 'visualization-container',
         width: request.width || 800,
-        height: request.height || 600
+        height: request.height || 600,
       },
       dataFormat: 'json',
       instructions: `
@@ -417,7 +431,7 @@ export async function createD3Visualization(request: VisualizationRequest): Prom
 3. Ensure your data is available in a variable called 'data'
 4. Execute the provided D3 code after the DOM is loaded
 5. The visualization will render in the container div
-      `.trim()
+      `.trim(),
     };
 
     return response;
@@ -429,7 +443,10 @@ export async function createD3Visualization(request: VisualizationRequest): Prom
 /**
  * Generate D3 code from natural language description
  */
-export async function generateD3FromDescription(description: string, data?: any[]): Promise<D3VisualizationResponse> {
+export async function generateD3FromDescription(
+  description: string,
+  data?: any[],
+): Promise<D3VisualizationResponse> {
   const anthropic = new Anthropic({
     apiKey: process.env.ANTHROPIC_API_KEY || '',
   });
@@ -462,9 +479,10 @@ Return ONLY the JSON object, no explanations.`;
       ],
     });
 
-    const responseText = response.content[0].type === 'text' ? response.content[0].text.trim() : '{}';
+    const responseText =
+      response.content[0].type === 'text' ? response.content[0].text.trim() : '{}';
     const params = JSON.parse(responseText);
-    
+
     // Create visualization request
     const request: VisualizationRequest = {
       data: data || [],
@@ -472,7 +490,7 @@ Return ONLY the JSON object, no explanations.`;
       title: params.title,
       xAxis: params.xAxis,
       yAxis: params.yAxis,
-      ...params
+      ...params,
     };
 
     return createD3Visualization(request);

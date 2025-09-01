@@ -1,6 +1,6 @@
 /**
  * Prompt Templates for MCP Server
- * 
+ *
  * Provides reusable interaction templates for common tasks
  */
 
@@ -143,46 +143,49 @@ export async function listPrompts(): Promise<Prompt[]> {
 /**
  * Get a specific prompt by name
  */
-export async function getPrompt(name: string, args: Record<string, string>): Promise<PromptMessage[]> {
-  const prompt = prompts.find(p => p.name === name);
-  
+export async function getPrompt(
+  name: string,
+  args: Record<string, string>,
+): Promise<PromptMessage[]> {
+  const prompt = prompts.find((p) => p.name === name);
+
   if (!prompt) {
     throw new Error(`Unknown prompt: ${name}`);
   }
-  
+
   // Validate required arguments
   for (const arg of prompt.arguments || []) {
     if (arg.required && !args[arg.name]) {
       throw new Error(`Missing required argument: ${arg.name}`);
     }
   }
-  
+
   // Generate prompt messages based on the template
   switch (name) {
     case 'analyze_account':
       return generateAccountAnalysisPrompt(args);
-      
+
     case 'token_portfolio':
       return generateTokenPortfolioPrompt(args);
-      
+
     case 'transaction_investigation':
       return generateTransactionInvestigationPrompt(args);
-      
+
     case 'contract_audit':
       return generateContractAuditPrompt(args);
-      
+
     case 'network_statistics':
       return generateNetworkStatisticsPrompt(args);
-      
+
     case 'create_visualization':
       return generateVisualizationPrompt(args);
-      
+
     case 'query_builder':
       return generateQueryBuilderPrompt(args);
-      
+
     case 'gas_estimation':
       return generateGasEstimationPrompt(args);
-      
+
     default:
       throw new Error(`Prompt not implemented: ${name}`);
   }
@@ -193,7 +196,7 @@ export async function getPrompt(name: string, args: Record<string, string>): Pro
  */
 function generateAccountAnalysisPrompt(args: Record<string, string>): PromptMessage[] {
   const depth = args.depth || 'detailed';
-  
+
   return [
     {
       role: 'user',
@@ -202,22 +205,34 @@ function generateAccountAnalysisPrompt(args: Record<string, string>): PromptMess
         text: `Please provide a ${depth} analysis of Hedera account ${args.accountId}.
         
 Include the following in your analysis:
-${depth === 'basic' ? `
+${
+  depth === 'basic'
+    ? `
 - Current balance
 - Account creation date
-- Recent activity summary` : ''}
-${depth === 'detailed' || depth === 'comprehensive' ? `
+- Recent activity summary`
+    : ''
+}
+${
+  depth === 'detailed' || depth === 'comprehensive'
+    ? `
 - Current balance and historical trends
 - Token holdings and values
 - Transaction patterns and frequency
 - Key interactions with other accounts
-- Smart contract interactions` : ''}
-${depth === 'comprehensive' ? `
+- Smart contract interactions`
+    : ''
+}
+${
+  depth === 'comprehensive'
+    ? `
 - Detailed transaction categorization
 - Network fee analysis
 - Token transfer patterns
 - Potential risks or anomalies
-- Recommendations for optimization` : ''}
+- Recommendations for optimization`
+    : ''
+}
 
 Use the available tools to gather the necessary data and present a clear, structured analysis.`,
       },
@@ -230,7 +245,7 @@ Use the available tools to gather the necessary data and present a clear, struct
  */
 function generateTokenPortfolioPrompt(args: Record<string, string>): PromptMessage[] {
   const includeNFTs = args.includeNFTs === 'true';
-  
+
   return [
     {
       role: 'user',
@@ -281,7 +296,7 @@ Use multiple tools to gather comprehensive information about this transaction.`,
  */
 function generateContractAuditPrompt(args: Record<string, string>): PromptMessage[] {
   const checkType = args.checkType || 'general';
-  
+
   return [
     {
       role: 'user',
@@ -290,26 +305,42 @@ function generateContractAuditPrompt(args: Record<string, string>): PromptMessag
         text: `Perform a ${checkType} audit of smart contract ${args.contractId}.
 
 Focus on:
-${checkType === 'security' ? `
+${
+  checkType === 'security'
+    ? `
 - Known vulnerability patterns
 - Access control issues
 - Reentrancy risks
-- Integer overflow/underflow possibilities` : ''}
-${checkType === 'gas' ? `
+- Integer overflow/underflow possibilities`
+    : ''
+}
+${
+  checkType === 'gas'
+    ? `
 - Gas consumption patterns
 - Optimization opportunities
 - Expensive operations
-- Storage efficiency` : ''}
-${checkType === 'functionality' ? `
+- Storage efficiency`
+    : ''
+}
+${
+  checkType === 'functionality'
+    ? `
 - Contract purpose and design
 - Available functions and their uses
 - Event emissions
-- Integration points` : ''}
-${checkType === 'general' ? `
+- Integration points`
+    : ''
+}
+${
+  checkType === 'general'
+    ? `
 - Contract overview and purpose
 - Key functions and events
 - Basic security considerations
-- Recent activity and usage` : ''}
+- Recent activity and usage`
+    : ''
+}
 
 Provide actionable recommendations where applicable.`,
       },
@@ -323,7 +354,7 @@ Provide actionable recommendations where applicable.`,
 function generateNetworkStatisticsPrompt(args: Record<string, string>): PromptMessage[] {
   const timeframe = args.timeframe || 'day';
   const metrics = args.metrics?.split(',') || ['transactions', 'accounts', 'tokens'];
-  
+
   return [
     {
       role: 'user',
@@ -332,7 +363,7 @@ function generateNetworkStatisticsPrompt(args: Record<string, string>): PromptMe
         text: `Generate Hedera network statistics for the last ${timeframe}.
 
 Include the following metrics:
-${metrics.map(m => `- ${m.trim()}`).join('\n')}
+${metrics.map((m) => `- ${m.trim()}`).join('\n')}
 
 Provide:
 1. Current values for each metric
@@ -352,7 +383,7 @@ Use GraphQL queries to gather accurate, real-time data.`,
  */
 function generateVisualizationPrompt(args: Record<string, string>): PromptMessage[] {
   const dataSource = args.dataSource || 'auto';
-  
+
   return [
     {
       role: 'user',
@@ -379,7 +410,7 @@ Make the visualization interactive and informative.`,
  */
 function generateQueryBuilderPrompt(args: Record<string, string>): PromptMessage[] {
   const format = args.format || 'both';
-  
+
   return [
     {
       role: 'user',
@@ -409,7 +440,7 @@ Use the GraphQL schema to ensure query validity.`,
  */
 function generateGasEstimationPrompt(args: Record<string, string>): PromptMessage[] {
   const parameters = args.parameters ? JSON.parse(args.parameters) : {};
-  
+
   return [
     {
       role: 'user',

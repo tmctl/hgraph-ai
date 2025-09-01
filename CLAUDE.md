@@ -10,6 +10,7 @@
 
 - Follow existing code patterns and conventions in the project
 - Use Prettier for formatting (run `npm run format`)
+- **ALWAYS run `npm run format` after making any code changes**
 - Ensure all TypeScript code passes linting
 
 ## MCP Server Best Practices

@@ -67,15 +67,16 @@ server.setRequestHandler(ListResourceTemplatesRequestSchema, async () => {
 server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
   const { uri } = request.params;
   const resourceData = await readResource(uri);
-  
+
   return {
     contents: [
       {
         uri,
         mimeType: resourceData.mimeType,
-        text: typeof resourceData.content === 'string'
-          ? resourceData.content
-          : JSON.stringify(resourceData.content, null, 2),
+        text:
+          typeof resourceData.content === 'string'
+            ? resourceData.content
+            : JSON.stringify(resourceData.content, null, 2),
       },
     ],
   };
@@ -92,7 +93,7 @@ server.setRequestHandler(ListPromptsRequestSchema, async () => {
 server.setRequestHandler(GetPromptRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   const messages = await getPrompt(name, args || {});
-  
+
   return {
     description: `Prompt template: ${name}`,
     messages,

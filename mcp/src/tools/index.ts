@@ -1,6 +1,6 @@
 /**
  * Consolidated Tools Export for MCP Server
- * 
+ *
  * Central registry of all available tools with proper typing and validation
  */
 
@@ -62,7 +62,8 @@ export const tools: Tool[] = [
   },
   {
     name: 'get_graphql_query_template',
-    description: 'Get a GraphQL query template/example for learning purposes (not for direct execution)',
+    description:
+      'Get a GraphQL query template/example for learning purposes (not for direct execution)',
     inputSchema: {
       type: 'object',
       properties: {
@@ -121,7 +122,18 @@ export const tools: Tool[] = [
         },
         type: {
           type: 'string',
-          enum: ['bar', 'line', 'pie', 'scatter', 'area', 'bubble', 'heatmap', 'network', 'tree', 'auto'],
+          enum: [
+            'bar',
+            'line',
+            'pie',
+            'scatter',
+            'area',
+            'bubble',
+            'heatmap',
+            'network',
+            'tree',
+            'auto',
+          ],
           description: 'Type of visualization (default: auto)',
         },
         title: {
@@ -324,11 +336,11 @@ export const tools: Tool[] = [
 export async function handleToolCall(name: string, args: any): Promise<any> {
   try {
     // Input validation
-    const tool = tools.find(t => t.name === name);
+    const tool = tools.find((t) => t.name === name);
     if (!tool) {
       throw new Error(`Unknown tool: ${name}`);
     }
-    
+
     // Validate required parameters
     const required = tool.inputSchema.required || [];
     for (const param of required) {
@@ -336,7 +348,7 @@ export async function handleToolCall(name: string, args: any): Promise<any> {
         throw new Error(`Missing required parameter: ${param}`);
       }
     }
-    
+
     // Execute tool based on name
     switch (name) {
       case 'execute_graphql_query':
@@ -344,25 +356,22 @@ export async function handleToolCall(name: string, args: any): Promise<any> {
           args?.query as string,
           args?.variables as Record<string, any>,
         );
-        
+
       case 'get_graphql_schema':
         return await getGraphQLSchema();
-        
+
       case 'refresh_graphql_schema':
         return await refreshGraphQLSchema();
-        
+
       case 'get_graphql_query_template':
-        return await buildGraphQLQuery(
-          args?.description as string,
-          args?.returnFields as string[]
-        );
-        
+        return await buildGraphQLQuery(args?.description as string, args?.returnFields as string[]);
+
       case 'ask_question':
         return await askQuestion(args?.question as string);
-        
+
       case 'get_database_info':
         return await getDatabaseInfo();
-        
+
       case 'download_database_schema':
         const schema = await downloadDatabaseSchema();
         return {
@@ -373,7 +382,7 @@ export async function handleToolCall(name: string, args: any): Promise<any> {
             },
           ],
         };
-        
+
       case 'create_d3_visualization':
         const vizResult = await createD3Visualization(args as any);
         return {
@@ -384,11 +393,11 @@ export async function handleToolCall(name: string, args: any): Promise<any> {
             },
           ],
         };
-        
+
       case 'generate_d3_from_description':
         const d3Result = await generateD3FromDescription(
           args?.description as string,
-          args?.data as any[]
+          args?.data as any[],
         );
         return {
           content: [
@@ -398,48 +407,41 @@ export async function handleToolCall(name: string, args: any): Promise<any> {
             },
           ],
         };
-        
+
       case 'get_transaction_history':
         return await getTransactionHistory(
           args?.accountId as string,
           args?.limit as number,
           args?.order as 'asc' | 'desc',
         );
-        
+
       case 'get_token_balances':
         return await getTokenBalances(
           args?.accountId as string,
           args?.tokenId as string | undefined,
         );
-        
+
       case 'execute_json_rpc':
-        return await executeJsonRpcMethod(
-          args?.method as string,
-          args?.params as any[]
-        );
-        
+        return await executeJsonRpcMethod(args?.method as string, args?.params as any[]);
+
       case 'get_chain_id':
         return await getChainId();
-        
+
       case 'get_block_by_number':
         return await getBlockByNumber(
           args?.blockNumber as string,
           args?.fullTransactions as boolean,
         );
-        
+
       case 'get_transaction_by_hash':
         return await getTransactionByHash(args?.transactionHash as string);
-        
+
       case 'eth_call':
-        return await ethCall(
-          args?.to as string,
-          args?.data as string,
-          args?.blockNumber as string
-        );
-        
+        return await ethCall(args?.to as string, args?.data as string, args?.blockNumber as string);
+
       case 'list_json_rpc_methods':
         return await listJsonRpcMethods();
-        
+
       default:
         throw new Error(`Tool not implemented: ${name}`);
     }
