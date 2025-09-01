@@ -3,11 +3,18 @@
  */
 
 import nodemailer from 'nodemailer';
+// @ts-ignore - no types available for mailgun transport
+import mg from 'nodemailer-mailgun-transport';
 import { writeFileSync, appendFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 // Email configuration
 const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@hgraph.ai';
+const MAILGUN_API_KEY = process.env.MAILGUN_API_KEY || '';
+const MAILGUN_DOMAIN = process.env.MAILGUN_DOMAIN || '';
+const USE_MAILGUN = !!(MAILGUN_API_KEY && MAILGUN_DOMAIN);
+
+// Fallback SMTP configuration
 const SMTP_HOST = process.env.SMTP_HOST || 'localhost';
 const SMTP_PORT = parseInt(process.env.SMTP_PORT || '1025', 10);
 const SMTP_USER = process.env.SMTP_USER || '';
@@ -23,20 +30,32 @@ if (!existsSync(LOG_FILE)) {
 }
 
 // Create transporter
-const transporter = nodemailer.createTransport({
-  host: SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_SECURE,
-  auth: SMTP_USER && SMTP_PASS ? {
-    user: SMTP_USER,
-    pass: SMTP_PASS,
-  } : undefined,
-  // For development/testing without real SMTP
-  ignoreTLS: true,
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+const transporter = USE_MAILGUN 
+  ? nodemailer.createTransport(mg({
+      auth: {
+        api_key: MAILGUN_API_KEY,
+        domain: MAILGUN_DOMAIN,
+      },
+    }))
+  : nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_SECURE,
+      auth: SMTP_USER && SMTP_PASS ? {
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      } : undefined,
+      // For development/testing without real SMTP
+      ignoreTLS: true,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
+
+// Log which email service is being used
+console.log(USE_MAILGUN 
+  ? `📧 Email service: Mailgun (domain: ${MAILGUN_DOMAIN})`
+  : `📧 Email service: SMTP (${SMTP_HOST}:${SMTP_PORT})`);
 
 /**
  * Log email authentication attempts
