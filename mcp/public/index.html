@@ -181,7 +181,41 @@
         // Handle code input fields
         const codeInputs = document.querySelectorAll('.code-input');
         codeInputs.forEach((input, index) => {
+            // Handle paste event
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = e.clipboardData.getData('text');
+                const digits = pastedData.replace(/\D/g, '').slice(0, 6);
+                
+                // Fill all inputs with the pasted digits
+                for (let i = 0; i < Math.min(digits.length, codeInputs.length); i++) {
+                    codeInputs[i].value = digits[i];
+                }
+                
+                // Focus the next empty input or submit if all filled
+                if (digits.length === 6) {
+                    document.getElementById('codeForm').dispatchEvent(new Event('submit'));
+                } else if (digits.length < codeInputs.length) {
+                    codeInputs[digits.length].focus();
+                }
+            });
+            
             input.addEventListener('input', (e) => {
+                // Handle multiple characters (for browsers that don't trigger paste)
+                if (e.target.value.length > 1) {
+                    const digits = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    for (let i = 0; i < Math.min(digits.length, codeInputs.length - index); i++) {
+                        codeInputs[index + i].value = digits[i];
+                    }
+                    if (digits.length === 6) {
+                        document.getElementById('codeForm').dispatchEvent(new Event('submit'));
+                    } else if (index + digits.length < codeInputs.length) {
+                        codeInputs[index + digits.length].focus();
+                    }
+                    return;
+                }
+                
+                // Normal single character input
                 if (e.target.value && index < codeInputs.length - 1) {
                     codeInputs[index + 1].focus();
                 }
