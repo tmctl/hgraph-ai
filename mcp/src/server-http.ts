@@ -241,24 +241,85 @@ app.post('/register', (req, res) => {
 /**
  * Root POST endpoint - Handle MCP client registration/initialization (BEFORE auth middleware)
  */
-app.post('/', (req, res) => {
-  // Check if this is an MCP initialization request
-  if (req.body && req.body.method === 'initialize') {
-    res.status(400).json({
-      jsonrpc: '2.0',
-      id: req.body.id || null,
-      error: {
-        code: -32600,
-        message:
-          'MCP protocol requires SSE connection. Use /sse endpoint first, then /rpc for requests.',
-        data: {
-          sse_endpoint: '/sse',
-          rpc_endpoint: '/rpc',
-          documentation: 'https://spec.modelcontextprotocol.io/specification/transport/',
+app.post('/', async (req, res) => {
+  // Handle MCP JSON-RPC requests directly for Claude.ai web
+  if (req.body && (req.body.jsonrpc === '2.0' || req.body.method)) {
+    try {
+      const request = req.body;
+      
+      // Handle initialize request
+      if (request.method === 'initialize') {
+        // Accept any protocol version for now
+        const clientVersion = request.params?.protocolVersion || '1.0.0';
+        res.json({
+          jsonrpc: '2.0',
+          id: request.id,
+          result: {
+            protocolVersion: clientVersion, // Echo back the client's version
+            capabilities: {
+              tools: {
+                listChanged: false
+              },
+              resources: {
+                listChanged: false
+              },
+              prompts: {
+                listChanged: false
+              }
+            },
+            serverInfo: {
+              name: 'hgraph-mcp-server',
+              version: '1.0.0',
+            },
+          },
+        });
+        return;
+      }
+      
+      // Handle tool list request
+      if (request.method === 'tools/list') {
+        const toolsList = Object.values(tools).map(tool => ({
+          name: tool.name,
+          description: tool.description,
+          inputSchema: tool.inputSchema
+        }));
+        res.json({
+          jsonrpc: '2.0',
+          id: request.id,
+          result: {
+            tools: toolsList
+          }
+        });
+        return;
+      }
+      
+      // Handle tool call request
+      if (request.method === 'tools/call') {
+        const { name, arguments: args } = request.params;
+        const result = await handleToolCall(name, args);
+        res.json({
+          jsonrpc: '2.0',
+          id: request.id,
+          result
+        });
+        return;
+      }
+      
+      // Handle other MCP requests via the server
+      const response = await mcpServer.handleRequest(request);
+      res.json(response);
+      return;
+    } catch (error: any) {
+      res.json({
+        jsonrpc: '2.0',
+        id: req.body.id || null,
+        error: {
+          code: -32603,
+          message: error.message || 'Internal error',
         },
-      },
-    });
-    return;
+      });
+      return;
+    }
   }
 
   // Default response for other POST requests
