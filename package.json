@@ -20,7 +20,8 @@
     "test:watch": "cd mcp && jest --watch",
     "test:coverage": "cd mcp && jest --coverage",
     "test:integration": "cd mcp && jest tests/integration",
-    "test:unit": "cd mcp && jest tests/unit"
+    "test:unit": "cd mcp && jest tests/unit",
+    "download:schema": "cd mcp && node download-schema.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.59.0",

@@ -108,7 +108,7 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
   const client = await createConnection(config);
 
   try {
-    // Query to get all table schemas
+    // Query to get all table schemas (excluding legacy balance tables - balances are in entity table)
     const schemaQuery = `
       SELECT 
         t.table_name,
@@ -123,12 +123,14 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
         AND t.table_schema = c.table_schema
       WHERE t.table_schema = 'public'
         AND t.table_type = 'BASE TABLE'
+        AND t.table_name NOT LIKE 'account_balance%'
+        AND t.table_name NOT LIKE 'token_balance%'
       ORDER BY t.table_name, c.ordinal_position;
     `;
 
     const schemaResult = await client.query<TableSchema>(schemaQuery);
 
-    // Query to get foreign key relationships
+    // Query to get foreign key relationships (excluding legacy balance tables - balances are in entity table)
     const relationshipsQuery = `
       SELECT
         tc.table_name,
@@ -143,7 +145,11 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
         ON ccu.constraint_name = tc.constraint_name
         AND ccu.table_schema = tc.table_schema
       WHERE tc.constraint_type = 'FOREIGN KEY'
-        AND tc.table_schema = 'public';
+        AND tc.table_schema = 'public'
+        AND tc.table_name NOT LIKE 'account_balance%'
+        AND tc.table_name NOT LIKE 'token_balance%'
+        AND ccu.table_name NOT LIKE 'account_balance%'
+        AND ccu.table_name NOT LIKE 'token_balance%';
     `;
 
     const relationshipsResult = await client.query(relationshipsQuery);
@@ -155,6 +161,11 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
     };
 
     for (const row of schemaResult.rows) {
+      // Skip legacy balance tables (balances are now in entity table)
+      if (row.table_name.startsWith('account_balance') || row.table_name.startsWith('token_balance')) {
+        continue;
+      }
+
       if (!schema.tables[row.table_name]) {
         schema.tables[row.table_name] = { columns: {} };
       }
