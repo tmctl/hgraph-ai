@@ -1,65 +1,68 @@
-# Hgraph AI - MCP Server for Hedera Blockchain
+# Hgraph AI - Simplified MCP Server for Hedera Blockchain
 
 ## Overview
 
-Hgraph AI is a Model Context Protocol (MCP) server that provides AI assistants with comprehensive access to Hedera blockchain data. It integrates with hgraph's GraphQL, REST, and JSON-RPC APIs to enable natural language queries, data analysis, and blockchain exploration through AI interfaces like Claude.
+Hgraph AI is a streamlined Model Context Protocol (MCP) server that provides AI assistants with direct SQL access to Hedera blockchain data. The server exposes a PostgreSQL database schema and a single execution tool, enabling client LLMs to generate and execute their own SQL queries for maximum flexibility.
 
-## Key Features
+## Key Design Philosophy
 
-### 🔗 Hedera Blockchain Integration
+**Client-Side Intelligence**: Unlike traditional approaches, this MCP server does NOT perform natural language to SQL conversion. Instead, it provides the database schema and lets the client LLM (Claude, GPT, etc.) generate SQL queries directly. This approach:
 
-- **Complete Data Access**: Query accounts, tokens, transactions, and smart contracts
-- **Multiple API Endpoints**: GraphQL, REST, and JSON-RPC support
-- **Real-time Data**: Access to live Hedera network information
-- **Natural Language Queries**: AI-powered database queries in plain English
-
-### 🤖 MCP Protocol Support
-
-- **Tools**: 17+ blockchain analysis and query tools
-- **Resources**: Dynamic access to schemas, documentation, and data
-- **Prompts**: 8 pre-built templates for common blockchain analysis tasks
-- **Dual Transport**: Both stdio (Claude Desktop) and HTTP/SSE (web apps) modes
-
-### 📊 Advanced Capabilities
-
-- **D3.js Visualizations**: Generate interactive blockchain data visualizations
-- **SQL Query Generation**: Natural language to SQL for complex database queries
-- **Schema Introspection**: Full GraphQL schema exploration and documentation
-- **Transaction Analysis**: Deep dive into Hedera transaction histories and patterns
+- Leverages the client LLM's full capabilities
+- Eliminates translation layer complexity
+- Provides maximum query flexibility
+- Reduces server-side dependencies
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────┐
-│        AI Assistant (Claude/etc)        │
-│         MCP Client Interface            │
+│     AI Assistant (Claude/GPT/etc)       │
+│   [Generates SQL from user questions]   │
 └─────────────────────────────────────────┘
                     │
-            MCP Protocol (stdio/HTTP)
+                SQL Query
                     ▼
 ┌─────────────────────────────────────────┐
 │          Hgraph MCP Server              │
-│    Tools | Resources | Prompts          │
+│    • execute_query tool                 │
+│    • database schema resource           │
 └─────────────────────────────────────────┘
                     │
-        ┌───────────┴───────────┐
-        ▼                       ▼
-┌──────────────┐        ┌──────────────────┐
-│  Hgraph APIs │        │  Hedera Network  │
-│   GraphQL    │◄───────┤   Blockchain     │
-│   REST/RPC   │        │    Mirror Node   │
-│   Database   │        │    PostgreSQL    │
-└──────────────┘        └──────────────────┘
+                SQL Execution
+                    ▼
+┌─────────────────────────────────────────┐
+│      PostgreSQL Database                │
+│   Hedera Blockchain Mirror Node Data    │
+└─────────────────────────────────────────┘
 ```
+
+## Available Capabilities
+
+### Tool
+
+- **`execute_query`**: Executes SQL queries and returns formatted results
+  - Input: SQL query string
+  - Output: Query results with execution time and row count
+
+### Resource
+
+- **`hgraph://schema/database`**: Complete PostgreSQL database schema
+  - Table definitions
+  - Column types and constraints
+  - Foreign key relationships
+
+### No Prompts
+
+The server intentionally provides no prompts, allowing client LLMs full control over query generation.
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ and npm
-- Hgraph API key (get from hgraph.io)
-- Optional: PostgreSQL database for natural language queries
-- Optional: Anthropic API key for enhanced SQL generation
+- PostgreSQL database with Hedera mirror node data
+- Access credentials for the database
 
 ### Installation
 
@@ -71,159 +74,194 @@ cd hgraph-ai
 # Install dependencies
 npm install
 
+# Build the server
+npm run build:mcp
+
 # Set up environment variables
 cp mcp/.env.example mcp/.env
-# Edit .env with your hgraph API key and database config
-
-# Start MCP server (choose mode)
-npm run dev:mcp          # Stdio mode (for Claude Desktop)
-npm run dev:mcp-http     # HTTP mode (for web applications)
+# Edit .env with your database credentials
 ```
 
 ### Configuration
 
-Create a `.env` file in the `mcp` directory with the following variables:
+Create a `.env` file in the `mcp` directory:
 
 ```env
 # Server Configuration
-MCP_PORT=3000
+MCP_PORT=3001
 
-# Hgraph API Configuration
-HGRAPH_GRAPHQL_URL=https://mainnet.hedera.api.hgraph.io/v1/graphql
-HGRAPH_REST_URL=https://mainnet.hedera.api.hgraph.io/v1/pk_prod_ab2c41b848c0b568e96a31ef0ca2f2fbaa549470/api/v1
-HGRAPH_API_KEY=your-hgraph-api-key-here
-
-# Database Configuration (for natural language queries)
-DB_HOST=your-hgraph-database-host
+# Database Configuration (REQUIRED)
+DB_HOST=your-postgres-host
 DB_PORT=5432
 DB_DATABASE=hgraph
 DB_USERNAME=your-username
 DB_PASSWORD=your-password
 DB_SSL=true
-
-# Optional: Anthropic API for enhanced SQL generation
-ANTHROPIC_API_KEY=your-anthropic-api-key-here
 ```
 
 ## Usage
 
-### MCP Server Modes
-
-The MCP server can run in two modes:
-
-#### 1. Stdio Mode (for Claude Desktop)
+### Starting the Server
 
 ```bash
-npm run dev:mcp          # Development
-npm run start:mcp        # Production
-```
-
-Configure in Claude Desktop's settings to connect to the MCP server.
-
-#### 2. HTTP/SSE Mode (for Web Applications)
-
-```bash
-npm run dev:mcp-http     # Development (default port 3000)
-MCP_PORT=8080 npm run dev:mcp-http  # Custom port
-```
-
-### MCP HTTP Server API
-
-The HTTP server provides MCP protocol over HTTP with Server-Sent Events:
-
-- `GET /` - Server information and capabilities
-- `GET /health` - Health check endpoint
-- `GET /sse` - SSE connection for MCP protocol
-- `POST /message` - MCP JSON-RPC message endpoint
-- OAuth 2.0 authentication endpoints (`/oauth/*`)
-
-### MCP Capabilities
-
-#### Tools (17 available)
-
-- GraphQL query execution
-- Natural language database queries
-- Transaction history and token balances
-- JSON-RPC methods (read-only)
-- D3.js visualization generation
-
-#### Resources
-
-- GraphQL and database schemas
-- API documentation
-- Dynamic data access (accounts, tokens, contracts)
-
-#### Prompts (8 templates)
-
-- Account analysis
-- Token portfolio
-- Transaction investigation
-- Smart contract auditing
-- Network statistics
-
-#### Available MCP Tools
-
-**Account & Network Tools:**
-
-- `get_account_balance` - Check HBAR and token balances
-- `get_account_info` - Account details and metadata
-- `get_network_stats` - Network performance and statistics
-- `search_accounts` - Find accounts by criteria
-
-**Transaction & Token Tools:**
-
-- `get_account_transactions` - Transaction history
-- `get_transaction_details` - Detailed transaction info
-- `get_token_info` - Token metadata and supply
-- `get_token_balances` - Token holdings across accounts
-
-**Smart Contract & Query Tools:**
-
-- `execute_graphql_query` - Direct GraphQL queries
-- `execute_jsonrpc_call` - JSON-RPC method execution
-- `ask_question` - Natural language database queries
-- `generate_d3_visualization` - Create data visualizations
-
-**Utility Tools:**
-
-- `get_graphql_schema` - Schema introspection
-- `format_sql_query` - SQL formatting and validation
-- `get_database_schema` - Database structure info
-
-### Usage Examples
-
-#### With Claude Desktop (Stdio Mode)
-
-1. Start the MCP server:
-
-```bash
+# Stdio mode (for Claude Desktop)
 npm run dev:mcp
+
+# HTTP mode (for web applications)
+npm run dev:mcp-http
+
+# Production mode
+npm run build:mcp
+npm run start:mcp-http
 ```
 
-2. Add to Claude Desktop configuration:
+### For Client LLM Developers
 
-```json
-{
-  "mcpServers": {
-    "hgraph-ai": {
-      "command": "node",
-      "args": ["/path/to/hgraph-ai/mcp/dist/index.js"]
-    }
-  }
-}
+When connecting your LLM to this MCP server, follow these patterns for best results:
+
+#### 1. First, Get the Schema
+
+```
+User: "What tables are available?"
+LLM should: Request the database schema resource
 ```
 
-#### With HTTP/SSE Mode
+#### 2. Generate SQL Queries
 
-```bash
-# Check server health
-curl http://localhost:3000/health
-
-# MCP protocol over HTTP
-curl -X POST http://localhost:3000/message \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "get_network_stats", "arguments": {}}}'
 ```
+User: "Show me the top 10 accounts by balance"
+LLM should generate:
+SELECT account_id, balance
+FROM account
+ORDER BY balance DESC
+LIMIT 10;
+```
+
+#### 3. Handle Hedera-Specific Concepts
+
+Important mappings for SQL generation:
+
+- **Account IDs**: Stored as strings like '0.0.123456'
+- **Balances**: Stored in tinybars (1 HBAR = 100,000,000 tinybars)
+- **Timestamps**: Use `consensus_timestamp` for transaction ordering
+- **Token IDs**: Follow same format as account IDs
+
+### Example Query Patterns
+
+#### Account Queries
+
+```sql
+-- Get account balance
+SELECT account_id, balance, created_timestamp
+FROM account
+WHERE account_id = '0.0.123456';
+
+-- Top accounts by balance
+SELECT account_id, balance / 100000000.0 as hbar_balance
+FROM account
+ORDER BY balance DESC
+LIMIT 10;
+```
+
+#### Transaction Queries
+
+```sql
+-- Recent transactions for an account
+SELECT transaction_id, consensus_timestamp, result, charged_tx_fee
+FROM transaction
+WHERE payer_account_id = '0.0.123456'
+ORDER BY consensus_timestamp DESC
+LIMIT 20;
+
+-- Failed transactions in last hour
+SELECT * FROM transaction
+WHERE result != 'SUCCESS'
+  AND consensus_timestamp > NOW() - INTERVAL '1 hour'
+LIMIT 100;
+```
+
+#### Token Queries
+
+```sql
+-- Token balances for an account
+SELECT t.token_id, t.name, t.symbol, tb.balance
+FROM token_balance tb
+JOIN token t ON tb.token_id = t.token_id
+WHERE tb.account_id = '0.0.123456';
+
+-- Token transfer history
+SELECT * FROM transfer
+WHERE token_id = '0.0.456789'
+  AND consensus_timestamp > NOW() - INTERVAL '24 hours'
+ORDER BY consensus_timestamp DESC;
+```
+
+## Common Database Tables
+
+Key tables available in the schema:
+
+- **account**: Account information and balances
+- **transaction**: All network transactions
+- **transfer**: HBAR and token transfers
+- **token**: Token definitions and metadata
+- **token_balance**: Current token holdings by account
+- **contract**: Smart contract information
+- **contract_action**: Contract execution logs
+- **topic_message**: HCS topic messages
+
+## Best Practices for Client LLMs
+
+### 1. Always Add LIMIT
+
+```sql
+-- Good: Prevents overwhelming results
+SELECT * FROM transaction LIMIT 100;
+
+-- Bad: Could return millions of rows
+SELECT * FROM transaction;
+```
+
+### 2. Use Indexes Efficiently
+
+```sql
+-- Good: Uses indexed timestamp column
+WHERE consensus_timestamp > '2024-01-01'
+
+-- Less efficient: Function on indexed column
+WHERE DATE(consensus_timestamp) = '2024-01-01'
+```
+
+### 3. Handle NULL Values
+
+```sql
+-- Check for NULL explicitly
+WHERE token_id IS NOT NULL
+```
+
+### 4. Join Tables Carefully
+
+```sql
+-- Good: Specific join conditions
+FROM account a
+JOIN transaction t ON a.account_id = t.payer_account_id
+WHERE a.balance > 0
+LIMIT 100;
+```
+
+## Error Handling
+
+The server validates queries for safety:
+
+- Only SELECT queries are allowed
+- Dangerous keywords (INSERT, UPDATE, DELETE, DROP) are blocked
+- Table existence is verified
+- Results are limited to prevent overwhelming responses
+
+Common error responses:
+
+- `"Only SELECT queries are allowed"`
+- `"Table 'xyz' does not exist in the database"`
+- `"Query contains forbidden keyword: DELETE"`
 
 ## Development
 
@@ -231,99 +269,74 @@ curl -X POST http://localhost:3000/message \
 
 - **Runtime**: Node.js 18+ with TypeScript
 - **Protocol**: Model Context Protocol (MCP) 1.0
+- **Database**: PostgreSQL
 - **Transport**: Stdio and HTTP/SSE
-- **Blockchain**: Hedera Hashgraph network
-- **APIs**: Hgraph GraphQL, REST, JSON-RPC
-- **Database**: PostgreSQL (optional, for natural language queries)
-- **AI Integration**: Anthropic SDK (optional, for enhanced SQL generation)
-- **HTTP Server**: Express.js with OAuth 2.0 authentication
-- **Testing**: Jest with comprehensive test suites
 
 ### Project Structure
 
 ```
-hgraph-ai/
-├── mcp/                   # MCP server implementation
-│   ├── src/
-│   │   ├── index.ts       # Stdio MCP server entry point
-│   │   ├── server-http.ts # HTTP/SSE MCP server
-│   │   ├── tools/         # 17+ blockchain analysis tools
-│   │   │   ├── account.ts    # Account queries and balances
-│   │   │   ├── transactions.ts # Transaction history
-│   │   │   ├── tokens.ts     # Token information
-│   │   │   ├── graphql.ts    # GraphQL query execution
-│   │   │   ├── database.ts   # Natural language SQL queries
-│   │   │   └── *.ts         # Other specialized tools
-│   │   ├── resources/     # MCP resources (schemas, docs)
-│   │   ├── prompts/       # 8 pre-built analysis templates
-│   │   ├── routes/        # OAuth and authentication routes
-│   │   ├── middleware/    # Authentication and security
-│   │   ├── transport/     # SSE transport implementation
-│   │   ├── models/        # Data models and types
-│   │   └── utils/         # Utility functions
-│   ├── tests/            # Comprehensive test suites
-│   │   ├── unit/         # Unit tests for tools
-│   │   └── integration/  # Integration tests
-│   ├── dist/             # Compiled JavaScript output
-│   └── *.config.*        # Configuration files
-└── package.json          # Project configuration
+mcp/
+├── src/
+│   ├── index.ts           # Stdio server entry
+│   ├── server-http.ts     # HTTP/SSE server
+│   ├── tools/
+│   │   └── index.ts       # execute_query tool
+│   ├── resources/
+│   │   └── index.ts       # Database schema resource
+│   └── schema/
+│       └── database-schema.json  # Cached schema
+├── dist/                  # Compiled output
+└── tests/                 # Test suites
 ```
 
-## Available Scripts
+### Available Scripts
 
 ```bash
-# Development
-npm run dev:mcp          # Start stdio MCP server
-npm run dev:mcp-http     # Start HTTP MCP server
-
-# Production
-npm run build:mcp        # Compile TypeScript to JavaScript
-npm run start:mcp        # Run compiled stdio server
-npm run start:mcp-http   # Run compiled HTTP server
-
-# Testing
-npm test                 # Run all tests
-npm run test:watch       # Run tests in watch mode
-npm run test:coverage    # Generate coverage report
-npm run test:unit        # Run unit tests only
-npm run test:integration # Run integration tests only
-
-# Code Quality
-npm run lint:mcp         # Lint TypeScript code
-npm run format           # Format code with Prettier
-npm run format:check     # Check code formatting
+npm run dev:mcp          # Development stdio server
+npm run dev:mcp-http     # Development HTTP server
+npm run build:mcp        # Build TypeScript
+npm run test             # Run tests
+npm run format           # Format code
 ```
 
-## Roadmap
+## Tips for Success
 
-- [x] Core MCP protocol implementation
-- [x] Hedera blockchain integration
-- [x] Natural language database queries
-- [x] OAuth 2.0 authentication
-- [x] Comprehensive test coverage
-- [ ] Additional blockchain networks
-- [ ] Enhanced visualization capabilities
-- [ ] Performance optimizations
-- [ ] Advanced analytics tools
+### For LLM Implementers
 
-## Contributing
+1. **Cache the schema**: Request it once per session
+2. **Start simple**: Begin with basic SELECT queries
+3. **Build complexity**: Gradually add JOINs and conditions
+4. **Use EXPLAIN**: For complex queries, consider EXPLAIN ANALYZE
+5. **Handle errors gracefully**: Parse error messages for hints
 
-We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+### Query Optimization
 
-## License
+1. **Use specific columns** instead of SELECT \*
+2. **Filter early** with WHERE clauses
+3. **Limit results** appropriately (default 100 rows)
+4. **Use indexes** by filtering on indexed columns
+5. **Avoid expensive operations** like large DISTINCT or GROUP BY without limits
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
+## Security
+
+- **Read-only access**: Only SELECT queries permitted
+- **Query validation**: All queries are sanitized
+- **No credentials**: The server never exposes database credentials
+- **Result limiting**: Automatic result size limits
 
 ## Support
 
 - Documentation: [docs.hgraph.com](https://docs.hgraph.com)
 - MCP Protocol: [modelcontextprotocol.io](https://modelcontextprotocol.io)
-- Hedera Network: [hedera.com](https://hedera.com)
 - Issues: [GitHub Issues](https://github.com/hgraph/hgraph-ai/issues)
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
 
 ## Disclaimer
 
-This MCP server provides read-only access to Hedera blockchain data through hgraph's APIs. No transactions are executed or private keys handled. Users should verify critical information independently and understand that AI-generated analysis may contain errors.
+This MCP server provides read-only access to Hedera blockchain data. Users should verify critical information independently. The client LLM is responsible for generating appropriate SQL queries based on user requests.
 
 ---
 

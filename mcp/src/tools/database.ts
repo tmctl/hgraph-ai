@@ -1,7 +1,6 @@
 /**
  * Database Tools for MCP Server
  *
- * Provides safe, read-only database access with natural language queries
  * Following MCP best practices - returns data, not raw SQL
  */
 
