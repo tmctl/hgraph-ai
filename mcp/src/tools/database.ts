@@ -31,12 +31,10 @@ interface DatabaseConfig {
 }
 
 interface TableSchema {
+  table_schema: string;
   table_name: string;
   column_name: string;
   data_type: string;
-  is_nullable: string;
-  column_default: string | null;
-  character_maximum_length: number | null;
 }
 
 interface DatabaseSchema {
@@ -45,16 +43,27 @@ interface DatabaseSchema {
       columns: {
         [columnName: string]: {
           data_type: string;
-          is_nullable: boolean;
-          column_default: string | null;
-          max_length: number | null;
         };
+      };
+      relationships?: {
+        object_relationships?: Array<{
+          name: string;
+          table: string;
+          column_mapping: Record<string, string>;
+        }>;
+        array_relationships?: Array<{
+          name: string;
+          table: string;
+          column_mapping: Record<string, string>;
+        }>;
       };
     };
   };
   relationships: Array<{
+    table_schema?: string;
     table_name: string;
     column_name: string;
+    foreign_table_schema?: string;
     foreign_table_name: string;
     foreign_column_name: string;
   }>;
@@ -108,33 +117,36 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
   const client = await createConnection(config);
 
   try {
-    // Query to get all table schemas (excluding legacy balance tables - balances are in entity table)
+    // Query to get all table schemas from both public and ecosystem schemas
+    // (excluding legacy tables and partitioned hash tables)
     const schemaQuery = `
       SELECT 
+        t.table_schema,
         t.table_name,
         c.column_name,
-        c.data_type,
-        c.is_nullable,
-        c.column_default,
-        c.character_maximum_length
+        c.data_type
       FROM information_schema.tables t
       JOIN information_schema.columns c 
         ON t.table_name = c.table_name 
         AND t.table_schema = c.table_schema
-      WHERE t.table_schema = 'public'
+      WHERE t.table_schema IN ('public', 'ecosystem')
         AND t.table_type = 'BASE TABLE'
         AND t.table_name NOT LIKE 'account_balance%'
         AND t.table_name NOT LIKE 'token_balance%'
-      ORDER BY t.table_name, c.ordinal_position;
+        AND t.table_name NOT LIKE 'transaction_hash_%'
+      ORDER BY t.table_schema, t.table_name, c.ordinal_position;
     `;
 
     const schemaResult = await client.query<TableSchema>(schemaQuery);
 
-    // Query to get foreign key relationships (excluding legacy balance tables - balances are in entity table)
+    // Query to get foreign key relationships from both schemas
+    // (excluding legacy tables and partitioned hash tables)
     const relationshipsQuery = `
       SELECT
+        tc.table_schema,
         tc.table_name,
         kcu.column_name,
+        ccu.table_schema AS foreign_table_schema,
         ccu.table_name AS foreign_table_name,
         ccu.column_name AS foreign_column_name
       FROM information_schema.table_constraints AS tc
@@ -145,11 +157,13 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
         ON ccu.constraint_name = tc.constraint_name
         AND ccu.table_schema = tc.table_schema
       WHERE tc.constraint_type = 'FOREIGN KEY'
-        AND tc.table_schema = 'public'
+        AND tc.table_schema IN ('public', 'ecosystem')
         AND tc.table_name NOT LIKE 'account_balance%'
         AND tc.table_name NOT LIKE 'token_balance%'
+        AND tc.table_name NOT LIKE 'transaction_hash_%'
         AND ccu.table_name NOT LIKE 'account_balance%'
-        AND ccu.table_name NOT LIKE 'token_balance%';
+        AND ccu.table_name NOT LIKE 'token_balance%'
+        AND ccu.table_name NOT LIKE 'transaction_hash_%';
     `;
 
     const relationshipsResult = await client.query(relationshipsQuery);
@@ -161,22 +175,31 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
     };
 
     for (const row of schemaResult.rows) {
-      // Skip legacy balance tables (balances are now in entity table)
-      if (row.table_name.startsWith('account_balance') || row.table_name.startsWith('token_balance')) {
+      // Skip legacy tables and partitioned hash tables
+      if (
+        row.table_name.startsWith('account_balance') ||
+        row.table_name.startsWith('token_balance') ||
+        row.table_name.startsWith('transaction_hash_')
+      ) {
         continue;
       }
 
-      if (!schema.tables[row.table_name]) {
-        schema.tables[row.table_name] = { columns: {} };
+      // Create fully qualified table name with schema prefix for ecosystem tables
+      const qualifiedTableName = row.table_schema === 'ecosystem' 
+        ? `ecosystem.${row.table_name}` 
+        : row.table_name;
+
+      if (!schema.tables[qualifiedTableName]) {
+        schema.tables[qualifiedTableName] = { columns: {} };
       }
 
-      schema.tables[row.table_name].columns[row.column_name] = {
+      schema.tables[qualifiedTableName].columns[row.column_name] = {
         data_type: row.data_type,
-        is_nullable: row.is_nullable === 'YES',
-        column_default: row.column_default,
-        max_length: row.character_maximum_length,
       };
     }
+
+    // Enhance schema with GraphQL relationship mappings
+    await enhanceSchemaWithGraphQLRelationships(schema);
 
     // Cache the schema
     CACHED_SCHEMA = schema;
@@ -222,6 +245,66 @@ async function getOrFetchSchema(): Promise<DatabaseSchema> {
 
   // Download fresh schema
   return downloadDatabaseSchema();
+}
+
+/**
+ * Enhance database schema with GraphQL relationship mappings
+ */
+async function enhanceSchemaWithGraphQLRelationships(schema: DatabaseSchema): Promise<void> {
+  try {
+    const graphqlSchemaPath = join(process.cwd(), 'src/schema/graphql-schema.json');
+    if (!existsSync(graphqlSchemaPath)) {
+      console.warn('GraphQL schema file not found, skipping relationship enhancement');
+      return;
+    }
+
+    const graphqlSchemaData = JSON.parse(readFileSync(graphqlSchemaPath, 'utf-8'));
+    const tables = graphqlSchemaData?.sources?.[0]?.tables || [];
+
+    for (const tableConfig of tables) {
+      const tableName = tableConfig.table.name;
+      const tableSchema = tableConfig.table.schema || 'public';
+      const qualifiedTableName = tableSchema === 'ecosystem' ? `ecosystem.${tableName}` : tableName;
+
+      // Skip if table not in our schema (filtered out)
+      if (!schema.tables[qualifiedTableName]) {
+        continue;
+      }
+
+      // Initialize relationships if not exists
+      if (!schema.tables[qualifiedTableName].relationships) {
+        schema.tables[qualifiedTableName].relationships = {};
+      }
+
+      // Process object relationships (one-to-one)
+      if (tableConfig.object_relationships) {
+        schema.tables[qualifiedTableName].relationships!.object_relationships = 
+          tableConfig.object_relationships.map((rel: any) => ({
+            name: rel.name,
+            table: rel.using?.manual_configuration?.remote_table?.schema === 'ecosystem' 
+              ? `ecosystem.${rel.using.manual_configuration.remote_table.name}`
+              : rel.using?.manual_configuration?.remote_table?.name || '',
+            column_mapping: rel.using?.manual_configuration?.column_mapping || {},
+          }));
+      }
+
+      // Process array relationships (one-to-many)
+      if (tableConfig.array_relationships) {
+        schema.tables[qualifiedTableName].relationships!.array_relationships = 
+          tableConfig.array_relationships.map((rel: any) => ({
+            name: rel.name,
+            table: rel.using?.manual_configuration?.remote_table?.schema === 'ecosystem'
+              ? `ecosystem.${rel.using.manual_configuration.remote_table.name}`
+              : rel.using?.manual_configuration?.remote_table?.name || '',
+            column_mapping: rel.using?.manual_configuration?.column_mapping || {},
+          }));
+      }
+    }
+
+    console.log('✅ Enhanced schema with GraphQL relationship mappings');
+  } catch (error) {
+    console.warn('Warning: Could not enhance schema with GraphQL relationships:', error);
+  }
 }
 
 /**
@@ -584,9 +667,7 @@ export async function getDatabaseInfo() {
       // Show first few columns as example
       const columns = Object.entries(tableInfo.columns).slice(0, 10);
       for (const [colName, colInfo] of columns) {
-        output += `- **${colName}**: ${colInfo.data_type}`;
-        if (!colInfo.is_nullable) output += ' (required)';
-        output += '\n';
+        output += `- **${colName}**: ${colInfo.data_type}\n`;
       }
 
       if (columnCount > 10) {
