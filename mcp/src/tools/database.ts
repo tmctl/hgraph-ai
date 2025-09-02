@@ -40,6 +40,9 @@ interface TableSchema {
 interface DatabaseSchema {
   tables: {
     [tableName: string]: {
+      description?: string;
+      commonQueries?: string[];
+      keyFields?: string[];
       columns: {
         [columnName: string]: {
           data_type: string;
@@ -198,8 +201,9 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
       };
     }
 
-    // Enhance schema with GraphQL relationship mappings
+    // Enhance schema with GraphQL relationship mappings and semantic metadata
     await enhanceSchemaWithGraphQLRelationships(schema);
+    await addSemanticMetadata(schema);
 
     // Cache the schema
     CACHED_SCHEMA = schema;
@@ -305,6 +309,118 @@ async function enhanceSchemaWithGraphQLRelationships(schema: DatabaseSchema): Pr
   } catch (error) {
     console.warn('Warning: Could not enhance schema with GraphQL relationships:', error);
   }
+}
+
+/**
+ * Add semantic metadata to help external models understand Hedera data structures
+ */
+async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
+  const HEDERA_TABLE_METADATA: Record<string, {
+    description: string;
+    commonQueries: string[];
+    keyFields: string[];
+  }> = {
+    entity: {
+      description: "All Hedera entities (accounts, tokens, contracts, topics). Contains current balances in tinybars (1 HBAR = 100,000,000 tinybars)",
+      commonQueries: [
+        "SELECT * FROM entity WHERE id = 123456 -- Get account info by ID",
+        "SELECT id, balance, balance_timestamp FROM entity WHERE balance > 100000000000 ORDER BY balance DESC LIMIT 10 -- Top accounts by balance",
+        "SELECT id, type, created_timestamp FROM entity WHERE type = 'ACCOUNT' AND created_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 -- New accounts"
+      ],
+      keyFields: ["id", "num", "realm", "shard", "balance", "type", "created_timestamp"]
+    },
+    transaction: {
+      description: "All Hedera network transactions with consensus timestamps in nanoseconds since epoch",
+      commonQueries: [
+        "SELECT * FROM transaction WHERE payer_account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent transactions for account",
+        "SELECT type, COUNT(*) FROM transaction WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 GROUP BY type -- Transaction types last hour",
+        "SELECT * FROM transaction WHERE result != 22 ORDER BY consensus_timestamp DESC LIMIT 10 -- Failed transactions (22 = SUCCESS)"
+      ],
+      keyFields: ["consensus_timestamp", "payer_account_id", "type", "result", "charged_tx_fee"]
+    },
+    token: {
+      description: "HTS (Hedera Token Service) tokens including fungible and non-fungible tokens",
+      commonQueries: [
+        "SELECT token_id, name, symbol, total_supply, decimals FROM token WHERE type = 'FUNGIBLE_COMMON' ORDER BY created_timestamp DESC LIMIT 10 -- Recent fungible tokens",
+        "SELECT * FROM token WHERE name ILIKE '%USDC%' OR symbol ILIKE '%USDC%' -- Find USDC tokens",
+        "SELECT token_id, name, COUNT(*) as nft_count FROM token t JOIN nft n ON t.token_id = n.token_id WHERE type = 'NON_FUNGIBLE_UNIQUE' GROUP BY token_id, name ORDER BY nft_count DESC -- NFT collections by size"
+      ],
+      keyFields: ["token_id", "name", "symbol", "type", "total_supply", "decimals", "treasury_account_id"]
+    },
+    crypto_transfer: {
+      description: "HBAR transfers between accounts (amounts in tinybars)",
+      commonQueries: [
+        "SELECT * FROM crypto_transfer WHERE entity_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- HBAR transfers for account",
+        "SELECT entity_id, SUM(amount) as net_amount FROM crypto_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY entity_id ORDER BY net_amount DESC -- Net HBAR flow last 24h",
+        "SELECT * FROM crypto_transfer WHERE amount > 100000000000 ORDER BY consensus_timestamp DESC -- Large HBAR transfers (>1000 HBAR)"
+      ],
+      keyFields: ["entity_id", "amount", "consensus_timestamp", "payer_account_id"]
+    },
+    token_transfer: {
+      description: "Token transfers (both fungible and NFT) between accounts",
+      commonQueries: [
+        "SELECT * FROM token_transfer WHERE account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Token transfers for account",
+        "SELECT token_id, SUM(amount) as volume FROM token_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY token_id ORDER BY volume DESC -- Token volume last 24h",
+        "SELECT * FROM token_transfer WHERE token_id = 456789 ORDER BY consensus_timestamp DESC LIMIT 100 -- Transfers for specific token"
+      ],
+      keyFields: ["token_id", "account_id", "amount", "consensus_timestamp"]
+    },
+    nft: {
+      description: "Non-fungible tokens (NFTs) with metadata and ownership",
+      commonQueries: [
+        "SELECT * FROM nft WHERE account_id = 123456 -- NFTs owned by account",
+        "SELECT token_id, COUNT(*) as nft_count FROM nft WHERE account_id IS NOT NULL GROUP BY token_id ORDER BY nft_count DESC -- NFT holdings by collection",
+        "SELECT * FROM nft WHERE token_id = 456789 ORDER BY serial_number -- All NFTs in collection"
+      ],
+      keyFields: ["token_id", "serial_number", "account_id", "created_timestamp", "metadata"]
+    },
+    contract_result: {
+      description: "Smart contract execution results including gas usage and function calls",
+      commonQueries: [
+        "SELECT * FROM contract_result WHERE contract_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent contract calls",
+        "SELECT contract_id, AVG(gas_used) as avg_gas FROM contract_result GROUP BY contract_id ORDER BY avg_gas DESC -- Gas usage by contract",
+        "SELECT * FROM contract_result WHERE error_message IS NOT NULL ORDER BY consensus_timestamp DESC -- Failed contract calls"
+      ],
+      keyFields: ["contract_id", "consensus_timestamp", "gas_used", "function_result", "error_message"]
+    },
+    topic_message: {
+      description: "HCS (Hedera Consensus Service) messages published to topics",
+      commonQueries: [
+        "SELECT * FROM topic_message WHERE topic_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent messages for topic",
+        "SELECT topic_id, COUNT(*) as message_count FROM topic_message GROUP BY topic_id ORDER BY message_count DESC -- Most active topics",
+        "SELECT * FROM topic_message WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 ORDER BY consensus_timestamp DESC -- Recent HCS messages"
+      ],
+      keyFields: ["topic_id", "consensus_timestamp", "sequence_number", "message", "payer_account_id"]
+    },
+    "ecosystem.metric": {
+      description: "Aggregated network metrics and analytics with time periods",
+      commonQueries: [
+        "SELECT name, period, total FROM ecosystem.metric WHERE name = 'transaction_count' ORDER BY timestamp_range DESC -- Transaction count metrics",
+        "SELECT * FROM ecosystem.metric m JOIN ecosystem.metric_description md ON m.name = md.name -- Metrics with descriptions",
+        "SELECT name, SUM(total) as total_value FROM ecosystem.metric GROUP BY name ORDER BY total_value DESC -- Aggregate metrics"
+      ],
+      keyFields: ["name", "period", "timestamp_range", "total"]
+    },
+    "ecosystem.metric_description": {
+      description: "Descriptions and methodology for ecosystem metrics",
+      commonQueries: [
+        "SELECT * FROM ecosystem.metric_description -- All available metrics",
+        "SELECT * FROM ecosystem.metric_description WHERE name ILIKE '%transaction%' -- Transaction-related metrics"
+      ],
+      keyFields: ["name", "description", "methodology"]
+    }
+  };
+
+  // Apply metadata to matching tables
+  for (const [tableName, metadata] of Object.entries(HEDERA_TABLE_METADATA)) {
+    if (schema.tables[tableName]) {
+      schema.tables[tableName].description = metadata.description;
+      schema.tables[tableName].commonQueries = metadata.commonQueries;
+      schema.tables[tableName].keyFields = metadata.keyFields;
+    }
+  }
+
+  console.log('✅ Added semantic metadata for Hedera-specific tables');
 }
 
 /**
