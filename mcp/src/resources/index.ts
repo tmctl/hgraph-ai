@@ -45,13 +45,24 @@ export async function listResourceTemplates(): Promise<ResourceTemplate[]> {
  * Read a resource by URI
  */
 export async function readResource(uri: string): Promise<{ content: any; mimeType: string }> {
-  // Parse URI
+  // Parse URI - handle hgraph://schema/database format
+  if (uri === 'hgraph://schema/database') {
+    return readSchemaResource('database');
+  }
+
+  // Parse URI for more complex paths
   const url = new URL(uri);
-  const [, type, ...pathParts] = url.pathname.split('/');
+  const pathParts = url.pathname.split('/').filter((part) => part !== '');
+
+  if (pathParts.length === 0) {
+    throw new Error(`Invalid resource URI: ${uri}`);
+  }
+
+  const [type, ...restParts] = pathParts;
 
   switch (type) {
     case 'schema':
-      return readSchemaResource(pathParts.join('/'));
+      return readSchemaResource(restParts.join('/') || 'database');
 
     default:
       throw new Error(`Unknown resource type: ${type}`);

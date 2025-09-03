@@ -7,7 +7,6 @@
 import { Client } from 'pg';
 import { format } from 'sql-formatter';
 import { z } from 'zod';
-import Anthropic from '@anthropic-ai/sdk';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
@@ -188,9 +187,8 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
       }
 
       // Create fully qualified table name with schema prefix for ecosystem tables
-      const qualifiedTableName = row.table_schema === 'ecosystem' 
-        ? `ecosystem.${row.table_name}` 
-        : row.table_name;
+      const qualifiedTableName =
+        row.table_schema === 'ecosystem' ? `ecosystem.${row.table_name}` : row.table_name;
 
       if (!schema.tables[qualifiedTableName]) {
         schema.tables[qualifiedTableName] = { columns: {} };
@@ -282,24 +280,26 @@ async function enhanceSchemaWithGraphQLRelationships(schema: DatabaseSchema): Pr
 
       // Process object relationships (one-to-one)
       if (tableConfig.object_relationships) {
-        schema.tables[qualifiedTableName].relationships!.object_relationships = 
+        schema.tables[qualifiedTableName].relationships!.object_relationships =
           tableConfig.object_relationships.map((rel: any) => ({
             name: rel.name,
-            table: rel.using?.manual_configuration?.remote_table?.schema === 'ecosystem' 
-              ? `ecosystem.${rel.using.manual_configuration.remote_table.name}`
-              : rel.using?.manual_configuration?.remote_table?.name || '',
+            table:
+              rel.using?.manual_configuration?.remote_table?.schema === 'ecosystem'
+                ? `ecosystem.${rel.using.manual_configuration.remote_table.name}`
+                : rel.using?.manual_configuration?.remote_table?.name || '',
             column_mapping: rel.using?.manual_configuration?.column_mapping || {},
           }));
       }
 
       // Process array relationships (one-to-many)
       if (tableConfig.array_relationships) {
-        schema.tables[qualifiedTableName].relationships!.array_relationships = 
+        schema.tables[qualifiedTableName].relationships!.array_relationships =
           tableConfig.array_relationships.map((rel: any) => ({
             name: rel.name,
-            table: rel.using?.manual_configuration?.remote_table?.schema === 'ecosystem'
-              ? `ecosystem.${rel.using.manual_configuration.remote_table.name}`
-              : rel.using?.manual_configuration?.remote_table?.name || '',
+            table:
+              rel.using?.manual_configuration?.remote_table?.schema === 'ecosystem'
+                ? `ecosystem.${rel.using.manual_configuration.remote_table.name}`
+                : rel.using?.manual_configuration?.remote_table?.name || '',
             column_mapping: rel.using?.manual_configuration?.column_mapping || {},
           }));
       }
@@ -315,100 +315,125 @@ async function enhanceSchemaWithGraphQLRelationships(schema: DatabaseSchema): Pr
  * Add semantic metadata to help external models understand Hedera data structures
  */
 async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
-  const HEDERA_TABLE_METADATA: Record<string, {
-    description: string;
-    commonQueries: string[];
-    keyFields: string[];
-  }> = {
+  const HEDERA_TABLE_METADATA: Record<
+    string,
+    {
+      description: string;
+      commonQueries: string[];
+      keyFields: string[];
+    }
+  > = {
     entity: {
-      description: "All Hedera entities (accounts, tokens, contracts, topics). Contains current balances in tinybars (1 HBAR = 100,000,000 tinybars)",
+      description:
+        'All Hedera entities (accounts, tokens, contracts, topics). Contains current balances in tinybars (1 HBAR = 100,000,000 tinybars)',
       commonQueries: [
-        "SELECT * FROM entity WHERE id = 123456 -- Get account info by ID",
-        "SELECT id, balance, balance_timestamp FROM entity WHERE balance > 100000000000 ORDER BY balance DESC LIMIT 10 -- Top accounts by balance",
-        "SELECT id, type, created_timestamp FROM entity WHERE type = 'ACCOUNT' AND created_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 -- New accounts"
+        'SELECT * FROM entity WHERE id = 123456 -- Get account info by ID',
+        'SELECT id, balance, balance_timestamp FROM entity WHERE balance > 100000000000 ORDER BY balance DESC LIMIT 10 -- Top accounts by balance',
+        "SELECT id, type, created_timestamp FROM entity WHERE type = 'ACCOUNT' AND created_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 -- New accounts",
       ],
-      keyFields: ["id", "num", "realm", "shard", "balance", "type", "created_timestamp"]
+      keyFields: ['id', 'num', 'realm', 'shard', 'balance', 'type', 'created_timestamp'],
     },
     transaction: {
-      description: "All Hedera network transactions with consensus timestamps in nanoseconds since epoch",
+      description:
+        'All Hedera network transactions with consensus timestamps in nanoseconds since epoch',
       commonQueries: [
-        "SELECT * FROM transaction WHERE payer_account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent transactions for account",
+        'SELECT * FROM transaction WHERE payer_account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent transactions for account',
         "SELECT type, COUNT(*) FROM transaction WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 GROUP BY type -- Transaction types last hour",
-        "SELECT * FROM transaction WHERE result != 22 ORDER BY consensus_timestamp DESC LIMIT 10 -- Failed transactions (22 = SUCCESS)"
+        'SELECT * FROM transaction WHERE result != 22 ORDER BY consensus_timestamp DESC LIMIT 10 -- Failed transactions (22 = SUCCESS)',
       ],
-      keyFields: ["consensus_timestamp", "payer_account_id", "type", "result", "charged_tx_fee"]
+      keyFields: ['consensus_timestamp', 'payer_account_id', 'type', 'result', 'charged_tx_fee'],
     },
     token: {
-      description: "HTS (Hedera Token Service) tokens including fungible and non-fungible tokens",
+      description: 'HTS (Hedera Token Service) tokens including fungible and non-fungible tokens',
       commonQueries: [
         "SELECT token_id, name, symbol, total_supply, decimals FROM token WHERE type = 'FUNGIBLE_COMMON' ORDER BY created_timestamp DESC LIMIT 10 -- Recent fungible tokens",
         "SELECT * FROM token WHERE name ILIKE '%USDC%' OR symbol ILIKE '%USDC%' -- Find USDC tokens",
-        "SELECT token_id, name, COUNT(*) as nft_count FROM token t JOIN nft n ON t.token_id = n.token_id WHERE type = 'NON_FUNGIBLE_UNIQUE' GROUP BY token_id, name ORDER BY nft_count DESC -- NFT collections by size"
+        "SELECT token_id, name, COUNT(*) as nft_count FROM token t JOIN nft n ON t.token_id = n.token_id WHERE type = 'NON_FUNGIBLE_UNIQUE' GROUP BY token_id, name ORDER BY nft_count DESC -- NFT collections by size",
       ],
-      keyFields: ["token_id", "name", "symbol", "type", "total_supply", "decimals", "treasury_account_id"]
+      keyFields: [
+        'token_id',
+        'name',
+        'symbol',
+        'type',
+        'total_supply',
+        'decimals',
+        'treasury_account_id',
+      ],
     },
     crypto_transfer: {
-      description: "HBAR transfers between accounts (amounts in tinybars)",
+      description: 'HBAR transfers between accounts (amounts in tinybars)',
       commonQueries: [
-        "SELECT * FROM crypto_transfer WHERE entity_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- HBAR transfers for account",
+        'SELECT * FROM crypto_transfer WHERE entity_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- HBAR transfers for account',
         "SELECT entity_id, SUM(amount) as net_amount FROM crypto_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY entity_id ORDER BY net_amount DESC -- Net HBAR flow last 24h",
-        "SELECT * FROM crypto_transfer WHERE amount > 100000000000 ORDER BY consensus_timestamp DESC -- Large HBAR transfers (>1000 HBAR)"
+        'SELECT * FROM crypto_transfer WHERE amount > 100000000000 ORDER BY consensus_timestamp DESC -- Large HBAR transfers (>1000 HBAR)',
       ],
-      keyFields: ["entity_id", "amount", "consensus_timestamp", "payer_account_id"]
+      keyFields: ['entity_id', 'amount', 'consensus_timestamp', 'payer_account_id'],
     },
     token_transfer: {
-      description: "Token transfers (both fungible and NFT) between accounts",
+      description: 'Token transfers (both fungible and NFT) between accounts',
       commonQueries: [
-        "SELECT * FROM token_transfer WHERE account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Token transfers for account",
+        'SELECT * FROM token_transfer WHERE account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Token transfers for account',
         "SELECT token_id, SUM(amount) as volume FROM token_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY token_id ORDER BY volume DESC -- Token volume last 24h",
-        "SELECT * FROM token_transfer WHERE token_id = 456789 ORDER BY consensus_timestamp DESC LIMIT 100 -- Transfers for specific token"
+        'SELECT * FROM token_transfer WHERE token_id = 456789 ORDER BY consensus_timestamp DESC LIMIT 100 -- Transfers for specific token',
       ],
-      keyFields: ["token_id", "account_id", "amount", "consensus_timestamp"]
+      keyFields: ['token_id', 'account_id', 'amount', 'consensus_timestamp'],
     },
     nft: {
-      description: "Non-fungible tokens (NFTs) with metadata and ownership",
+      description: 'Non-fungible tokens (NFTs) with metadata and ownership',
       commonQueries: [
-        "SELECT * FROM nft WHERE account_id = 123456 -- NFTs owned by account",
-        "SELECT token_id, COUNT(*) as nft_count FROM nft WHERE account_id IS NOT NULL GROUP BY token_id ORDER BY nft_count DESC -- NFT holdings by collection",
-        "SELECT * FROM nft WHERE token_id = 456789 ORDER BY serial_number -- All NFTs in collection"
+        'SELECT * FROM nft WHERE account_id = 123456 -- NFTs owned by account',
+        'SELECT token_id, COUNT(*) as nft_count FROM nft WHERE account_id IS NOT NULL GROUP BY token_id ORDER BY nft_count DESC -- NFT holdings by collection',
+        'SELECT * FROM nft WHERE token_id = 456789 ORDER BY serial_number -- All NFTs in collection',
       ],
-      keyFields: ["token_id", "serial_number", "account_id", "created_timestamp", "metadata"]
+      keyFields: ['token_id', 'serial_number', 'account_id', 'created_timestamp', 'metadata'],
     },
     contract_result: {
-      description: "Smart contract execution results including gas usage and function calls",
+      description: 'Smart contract execution results including gas usage and function calls',
       commonQueries: [
-        "SELECT * FROM contract_result WHERE contract_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent contract calls",
-        "SELECT contract_id, AVG(gas_used) as avg_gas FROM contract_result GROUP BY contract_id ORDER BY avg_gas DESC -- Gas usage by contract",
-        "SELECT * FROM contract_result WHERE error_message IS NOT NULL ORDER BY consensus_timestamp DESC -- Failed contract calls"
+        'SELECT * FROM contract_result WHERE contract_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent contract calls',
+        'SELECT contract_id, AVG(gas_used) as avg_gas FROM contract_result GROUP BY contract_id ORDER BY avg_gas DESC -- Gas usage by contract',
+        'SELECT * FROM contract_result WHERE error_message IS NOT NULL ORDER BY consensus_timestamp DESC -- Failed contract calls',
       ],
-      keyFields: ["contract_id", "consensus_timestamp", "gas_used", "function_result", "error_message"]
+      keyFields: [
+        'contract_id',
+        'consensus_timestamp',
+        'gas_used',
+        'function_result',
+        'error_message',
+      ],
     },
     topic_message: {
-      description: "HCS (Hedera Consensus Service) messages published to topics",
+      description: 'HCS (Hedera Consensus Service) messages published to topics',
       commonQueries: [
-        "SELECT * FROM topic_message WHERE topic_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent messages for topic",
-        "SELECT topic_id, COUNT(*) as message_count FROM topic_message GROUP BY topic_id ORDER BY message_count DESC -- Most active topics",
-        "SELECT * FROM topic_message WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 ORDER BY consensus_timestamp DESC -- Recent HCS messages"
+        'SELECT * FROM topic_message WHERE topic_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent messages for topic',
+        'SELECT topic_id, COUNT(*) as message_count FROM topic_message GROUP BY topic_id ORDER BY message_count DESC -- Most active topics',
+        "SELECT * FROM topic_message WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 ORDER BY consensus_timestamp DESC -- Recent HCS messages",
       ],
-      keyFields: ["topic_id", "consensus_timestamp", "sequence_number", "message", "payer_account_id"]
+      keyFields: [
+        'topic_id',
+        'consensus_timestamp',
+        'sequence_number',
+        'message',
+        'payer_account_id',
+      ],
     },
-    "ecosystem.metric": {
-      description: "Aggregated network metrics and analytics with time periods",
+    'ecosystem.metric': {
+      description: 'Aggregated network metrics and analytics with time periods',
       commonQueries: [
         "SELECT name, period, total FROM ecosystem.metric WHERE name = 'transaction_count' ORDER BY timestamp_range DESC -- Transaction count metrics",
-        "SELECT * FROM ecosystem.metric m JOIN ecosystem.metric_description md ON m.name = md.name -- Metrics with descriptions",
-        "SELECT name, SUM(total) as total_value FROM ecosystem.metric GROUP BY name ORDER BY total_value DESC -- Aggregate metrics"
+        'SELECT * FROM ecosystem.metric m JOIN ecosystem.metric_description md ON m.name = md.name -- Metrics with descriptions',
+        'SELECT name, SUM(total) as total_value FROM ecosystem.metric GROUP BY name ORDER BY total_value DESC -- Aggregate metrics',
       ],
-      keyFields: ["name", "period", "timestamp_range", "total"]
+      keyFields: ['name', 'period', 'timestamp_range', 'total'],
     },
-    "ecosystem.metric_description": {
-      description: "Descriptions and methodology for ecosystem metrics",
+    'ecosystem.metric_description': {
+      description: 'Descriptions and methodology for ecosystem metrics',
       commonQueries: [
-        "SELECT * FROM ecosystem.metric_description -- All available metrics",
-        "SELECT * FROM ecosystem.metric_description WHERE name ILIKE '%transaction%' -- Transaction-related metrics"
+        'SELECT * FROM ecosystem.metric_description -- All available metrics',
+        "SELECT * FROM ecosystem.metric_description WHERE name ILIKE '%transaction%' -- Transaction-related metrics",
       ],
-      keyFields: ["name", "description", "methodology"]
-    }
+      keyFields: ['name', 'description', 'methodology'],
+    },
   };
 
   // Apply metadata to matching tables
@@ -421,187 +446,6 @@ async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
   }
 
   console.log('✅ Added semantic metadata for Hedera-specific tables');
-}
-
-/**
- * Generate natural language summary of query results
- */
-async function generateNaturalLanguageSummary(
-  question: string,
-  sqlQuery: string,
-  results: any[],
-  executionTime: number,
-): Promise<string> {
-  const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || '',
-  });
-
-  // Prepare results summary for the prompt
-  const resultsSample = results.slice(0, 10);
-  const resultsJson = JSON.stringify(resultsSample, null, 2);
-
-  const prompt = `Given this database query and results, provide a natural language summary:
-
-Original Question: "${question}"
-
-SQL Query Executed:
-${sqlQuery}
-
-Query Results (${results.length} total rows, showing first ${resultsSample.length}):
-${resultsJson}
-
-Execution Time: ${executionTime}ms
-
-Please provide a clear, concise natural language summary that:
-1. Directly answers the user's question
-2. Highlights key findings from the data
-3. Mentions any important patterns or insights
-4. Is written in a conversational tone
-5. Includes specific numbers/values from the results when relevant
-
-Keep the response focused and under 150 words.`;
-
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 300,
-      temperature: 0.3,
-      system:
-        "You are a helpful data analyst. Provide clear, concise summaries of database query results in natural language. Focus on answering the user's question directly.",
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    });
-
-    return response.content[0].type === 'text'
-      ? response.content[0].text.trim()
-      : 'Unable to generate summary.';
-  } catch (error) {
-    console.error('Error generating natural language summary:', error);
-    return 'Query executed successfully. See the results table above for details.';
-  }
-}
-
-/**
- * Convert natural language to SQL using Anthropic Claude
- */
-async function naturalLanguageToSQL(question: string, schema: DatabaseSchema): Promise<string> {
-  const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || '',
-  });
-
-  // Create a simplified schema description for the prompt
-  const schemaDescription = Object.entries(schema.tables)
-    .map(([tableName, tableInfo]) => {
-      const columns = Object.entries(tableInfo.columns)
-        .map(([colName, colInfo]) => `${colName} (${colInfo.data_type})`)
-        .join(', ');
-      return `${tableName}: ${columns}`;
-    })
-    .join('\n');
-
-  const prompt = `Given the following PostgreSQL database schema:
-
-${schemaDescription}
-
-Foreign Key Relationships:
-${schema.relationships
-  .map(
-    (r) => `${r.table_name}.${r.column_name} -> ${r.foreign_table_name}.${r.foreign_column_name}`,
-  )
-  .join('\n')}
-
-Convert this question to a SQL SELECT query:
-"${question}"
-
-Rules:
-1. Only generate SELECT queries (no INSERT, UPDATE, DELETE)
-2. Use proper JOIN syntax when needed
-3. Include appropriate WHERE clauses
-4. Limit results to 100 rows by default
-5. Use table aliases for clarity
-6. Return ONLY the SQL query, no explanations
-
-SQL Query:`;
-
-  try {
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 500,
-      temperature: 0,
-      system:
-        'You are a SQL expert. Generate only valid PostgreSQL SELECT queries. Return only the SQL code, no explanations or markdown formatting.',
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    });
-
-    const sqlQuery = response.content[0].type === 'text' ? response.content[0].text.trim() : '';
-
-    // Clean up the query
-    return sqlQuery
-      .replace(/```sql/gi, '')
-      .replace(/```/g, '')
-      .trim();
-  } catch (error) {
-    // Fallback to a simple pattern-based approach if Claude fails
-    console.warn('Claude API failed, using fallback SQL generation:', error);
-    return fallbackNaturalLanguageToSQL(question, schema);
-  }
-}
-
-/**
- * Fallback SQL generation without AI
- */
-function fallbackNaturalLanguageToSQL(question: string, schema: DatabaseSchema): string {
-  const lowerQuestion = question.toLowerCase();
-  const tables = Object.keys(schema.tables);
-
-  // Find mentioned tables
-  const mentionedTables = tables.filter(
-    (table) =>
-      lowerQuestion.includes(table.toLowerCase()) ||
-      lowerQuestion.includes(table.replace(/_/g, ' ').toLowerCase()),
-  );
-
-  if (mentionedTables.length === 0 && tables.length > 0) {
-    // Default to a common table if none mentioned
-    if (tables.includes('account')) mentionedTables.push('account');
-    else if (tables.includes('transaction')) mentionedTables.push('transaction');
-    else mentionedTables.push(tables[0]);
-  }
-
-  const table = mentionedTables[0] || 'account';
-
-  // Determine limit
-  let limit = 10;
-  const limitMatch = question.match(/(\d+)/);
-  if (limitMatch) {
-    limit = Math.min(parseInt(limitMatch[1]), 100);
-  }
-
-  // Build basic query
-  if (lowerQuestion.includes('count') || lowerQuestion.includes('how many')) {
-    return `SELECT COUNT(*) as count FROM ${table} LIMIT ${limit};`;
-  } else if (lowerQuestion.includes('latest') || lowerQuestion.includes('recent')) {
-    const timeColumn = Object.keys(schema.tables[table]?.columns || {}).find(
-      (col) => col.includes('timestamp') || col.includes('created'),
-    );
-    if (timeColumn) {
-      return `SELECT * FROM ${table} ORDER BY ${timeColumn} DESC LIMIT ${limit};`;
-    }
-  } else if (lowerQuestion.includes('balance')) {
-    return `SELECT * FROM ${table} WHERE balance > 0 ORDER BY balance DESC LIMIT ${limit};`;
-  }
-
-  // Default query
-  return `SELECT * FROM ${table} LIMIT ${limit};`;
 }
 
 /**
@@ -649,15 +493,12 @@ function validateSQLQuery(query: string, schema: DatabaseSchema): boolean {
 }
 
 /**
- * Main function: Ask a question in natural language and get data
+ * Execute a SQL query directly against the database
  */
-export async function askQuestion(question: string) {
+export async function executeQuery(sqlQuery: string) {
   try {
-    // Get database schema
+    // Get database schema for validation
     const schema = await getOrFetchSchema();
-
-    // Convert natural language to SQL
-    let sqlQuery = await naturalLanguageToSQL(question, schema);
 
     // Validate the query
     validateSQLQuery(sqlQuery, schema);
@@ -681,26 +522,14 @@ export async function askQuestion(question: string) {
 
       // Prepare the response
       let output = '# Database Query Result\n\n';
-      output += `**Question:** ${question}\n\n`;
-      output += '## Generated SQL Query\n```sql\n';
+      output += '## SQL Query\n```sql\n';
       output += formattedQuery;
       output += '\n```\n\n';
       output += `**Execution Time:** ${executionTime}ms\n`;
       output += `**Rows Returned:** ${result.rows.length}\n\n`;
 
       if (result.rows.length > 0) {
-        // Generate natural language summary
-        const naturalLanguageSummary = await generateNaturalLanguageSummary(
-          question,
-          sqlQuery,
-          result.rows,
-          executionTime,
-        );
-
-        output += '## Natural Language Summary\n\n';
-        output += naturalLanguageSummary + '\n\n';
-
-        output += '## Results Table\n\n';
+        output += '## Results\n\n';
 
         // For small result sets, show as table
         if (result.rows.length <= 10) {
@@ -727,8 +556,6 @@ export async function askQuestion(question: string) {
           output += '\n```\n';
         }
       } else {
-        output += '## Natural Language Summary\n\n';
-        output += 'No data was found matching your query. The database returned zero results.\n\n';
         output += '## Results\n\nNo data found matching your query.\n';
       }
 
@@ -745,7 +572,7 @@ export async function askQuestion(question: string) {
     }
   } catch (error: any) {
     // Return error but don't expose sensitive information
-    let errorMessage = 'Failed to process your question';
+    let errorMessage = 'Failed to execute query';
 
     if (error.message.includes('forbidden keyword')) {
       errorMessage = error.message;
@@ -763,6 +590,14 @@ export async function askQuestion(question: string) {
 
     throw new Error(errorMessage);
   }
+}
+
+/**
+ * Legacy function kept for backwards compatibility
+ * Simply delegates to executeQuery
+ */
+export async function askQuestion(question: string) {
+  return executeQuery(question);
 }
 
 /**

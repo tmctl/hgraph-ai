@@ -61,12 +61,7 @@
         "SELECT * FROM ecosystem.metric m JOIN ecosystem.metric_description md ON m.name = md.name -- Metrics with descriptions",
         "SELECT name, SUM(total) as total_value FROM ecosystem.metric GROUP BY name ORDER BY total_value DESC -- Aggregate metrics"
       ],
-      "keyFields": [
-        "name",
-        "period",
-        "timestamp_range",
-        "total"
-      ]
+      "keyFields": ["name", "period", "timestamp_range", "total"]
     },
     "ecosystem.metric_description": {
       "columns": {
@@ -86,11 +81,7 @@
         "SELECT * FROM ecosystem.metric_description -- All available metrics",
         "SELECT * FROM ecosystem.metric_description WHERE name ILIKE '%transaction%' -- Transaction-related metrics"
       ],
-      "keyFields": [
-        "name",
-        "description",
-        "methodology"
-      ]
+      "keyFields": ["name", "description", "methodology"]
     },
     "ecosystem.transaction_count_by_type": {
       "columns": {
@@ -645,12 +636,7 @@
         "SELECT entity_id, SUM(amount) as net_amount FROM crypto_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY entity_id ORDER BY net_amount DESC -- Net HBAR flow last 24h",
         "SELECT * FROM crypto_transfer WHERE amount > 100000000000 ORDER BY consensus_timestamp DESC -- Large HBAR transfers (>1000 HBAR)"
       ],
-      "keyFields": [
-        "entity_id",
-        "amount",
-        "consensus_timestamp",
-        "payer_account_id"
-      ]
+      "keyFields": ["entity_id", "amount", "consensus_timestamp", "payer_account_id"]
     },
     "custom_fee": {
       "columns": {
@@ -832,15 +818,7 @@
         "SELECT id, balance, balance_timestamp FROM entity WHERE balance > 100000000000 ORDER BY balance DESC LIMIT 10 -- Top accounts by balance",
         "SELECT id, type, created_timestamp FROM entity WHERE type = 'ACCOUNT' AND created_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 -- New accounts"
       ],
-      "keyFields": [
-        "id",
-        "num",
-        "realm",
-        "shard",
-        "balance",
-        "type",
-        "created_timestamp"
-      ]
+      "keyFields": ["id", "num", "realm", "shard", "balance", "type", "created_timestamp"]
     },
     "entity_history": {
       "columns": {
@@ -1290,13 +1268,7 @@
         "SELECT token_id, COUNT(*) as nft_count FROM nft WHERE account_id IS NOT NULL GROUP BY token_id ORDER BY nft_count DESC -- NFT holdings by collection",
         "SELECT * FROM nft WHERE token_id = 456789 ORDER BY serial_number -- All NFTs in collection"
       ],
-      "keyFields": [
-        "token_id",
-        "serial_number",
-        "account_id",
-        "created_timestamp",
-        "metadata"
-      ]
+      "keyFields": ["token_id", "serial_number", "account_id", "created_timestamp", "metadata"]
     },
     "nft_allowance": {
       "columns": {
@@ -2203,12 +2175,7 @@
         "SELECT token_id, SUM(amount) as volume FROM token_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY token_id ORDER BY volume DESC -- Token volume last 24h",
         "SELECT * FROM token_transfer WHERE token_id = 456789 ORDER BY consensus_timestamp DESC LIMIT 100 -- Transfers for specific token"
       ],
-      "keyFields": [
-        "token_id",
-        "account_id",
-        "amount",
-        "consensus_timestamp"
-      ]
+      "keyFields": ["token_id", "account_id", "amount", "consensus_timestamp"]
     },
     "topic": {
       "columns": {
@@ -2474,13 +2441,7 @@
         "SELECT type, COUNT(*) FROM transaction WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 GROUP BY type -- Transaction types last hour",
         "SELECT * FROM transaction WHERE result != 22 ORDER BY consensus_timestamp DESC LIMIT 10 -- Failed transactions (22 = SUCCESS)"
       ],
-      "keyFields": [
-        "consensus_timestamp",
-        "payer_account_id",
-        "type",
-        "result",
-        "charged_tx_fee"
-      ]
+      "keyFields": ["consensus_timestamp", "payer_account_id", "type", "result", "charged_tx_fee"]
     },
     "transaction_hash": {
       "columns": {
