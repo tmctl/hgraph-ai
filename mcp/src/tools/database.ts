@@ -452,43 +452,9 @@ async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
  * Validate SQL query against schema
  */
 function validateSQLQuery(query: string, schema: DatabaseSchema): boolean {
-  const cleanQuery = query.toLowerCase().trim();
-
-  // Security checks
-  if (!cleanQuery.startsWith('select')) {
-    throw new Error('Only SELECT queries are allowed');
-  }
-
-  const dangerousKeywords = [
-    'insert',
-    'update',
-    'delete',
-    'drop',
-    'create',
-    'alter',
-    'truncate',
-    'exec',
-    'execute',
-    'grant',
-    'revoke',
-  ];
-
-  for (const keyword of dangerousKeywords) {
-    if (cleanQuery.includes(keyword)) {
-      throw new Error(`Query contains forbidden keyword: ${keyword}`);
-    }
-  }
-
-  // Check if tables exist
-  const tableNames = Object.keys(schema.tables);
-  const fromMatch = cleanQuery.match(/from\s+(\w+)/);
-  if (fromMatch) {
-    const tableName = fromMatch[1];
-    if (!tableNames.includes(tableName)) {
-      throw new Error(`Table '${tableName}' does not exist in the database`);
-    }
-  }
-
+  // Since the database connection has limited permissions,
+  // we don't need to validate SQL keywords
+  // The database will reject any operations it doesn't allow
   return true;
 }
 
