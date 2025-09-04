@@ -9,6 +9,8 @@ import { format } from 'sql-formatter';
 import { z } from 'zod';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { validateQuery, quickValidate, suggestFixes } from './queryValidator.js';
+import { getQuerySuggestions, generateQueryCompletion } from './queryAutoComplete.js';
 
 // Database configuration schema
 const DatabaseConfigSchema = z.object({
@@ -45,6 +47,10 @@ interface DatabaseSchema {
       columns: {
         [columnName: string]: {
           data_type: string;
+          udt_name?: string; // User-defined type name
+          enum_values?: string[]; // Possible values for enum types
+          is_nullable?: boolean;
+          column_default?: string;
         };
       };
       relationships?: {
@@ -69,6 +75,14 @@ interface DatabaseSchema {
     foreign_table_name: string;
     foreign_column_name: string;
   }>;
+  types?: {
+    [typeName: string]: {
+      type: 'enum' | 'composite';
+      values?: string[]; // For enum types
+      fields?: Record<string, string>; // For composite types
+      description?: string;
+    };
+  };
 }
 
 // Cache for database schema
@@ -119,14 +133,17 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
   const client = await createConnection(config);
 
   try {
-    // Query to get all table schemas from both public and ecosystem schemas
+    // Query to get all table schemas with detailed column information
     // (excluding legacy tables and partitioned hash tables)
     const schemaQuery = `
       SELECT 
         t.table_schema,
         t.table_name,
         c.column_name,
-        c.data_type
+        c.data_type,
+        c.udt_name,
+        c.is_nullable,
+        c.column_default
       FROM information_schema.tables t
       JOIN information_schema.columns c 
         ON t.table_name = c.table_name 
@@ -139,7 +156,22 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
       ORDER BY t.table_schema, t.table_name, c.ordinal_position;
     `;
 
-    const schemaResult = await client.query<TableSchema>(schemaQuery);
+    const schemaResult = await client.query(schemaQuery);
+
+    // Query to get enum types and their values
+    const enumTypesQuery = `
+      SELECT 
+        t.typname as type_name,
+        n.nspname as schema_name,
+        array_agg(e.enumlabel ORDER BY e.enumsortorder) as enum_values
+      FROM pg_type t
+      JOIN pg_enum e ON t.oid = e.enumtypid
+      JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+      WHERE n.nspname IN ('public', 'ecosystem')
+      GROUP BY t.typname, n.nspname;
+    `;
+
+    const enumTypesResult = await client.query(enumTypesQuery);
 
     // Query to get foreign key relationships from both schemas
     // (excluding legacy tables and partitioned hash tables)
@@ -174,7 +206,34 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
     const schema: DatabaseSchema = {
       tables: {},
       relationships: relationshipsResult.rows,
+      types: {},
     };
+
+    // Process enum types
+    for (const enumType of enumTypesResult.rows) {
+      const typeName =
+        enumType.schema_name === 'ecosystem'
+          ? `ecosystem.${enumType.type_name}`
+          : enumType.type_name;
+
+      // Parse enum values - they come as a string like "{VALUE1,VALUE2,VALUE3}"
+      let enumValues: string[] = [];
+      if (typeof enumType.enum_values === 'string') {
+        // Remove curly braces and split by comma
+        enumValues = enumType.enum_values
+          .replace(/^{|}$/g, '')
+          .split(',')
+          .filter((v: string) => v.length > 0);
+      } else if (Array.isArray(enumType.enum_values)) {
+        enumValues = enumType.enum_values;
+      }
+
+      schema.types![typeName] = {
+        type: 'enum',
+        values: enumValues,
+        description: getEnumTypeDescription(enumType.type_name),
+      };
+    }
 
     for (const row of schemaResult.rows) {
       // Skip legacy tables and partitioned hash tables
@@ -194,8 +253,22 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
         schema.tables[qualifiedTableName] = { columns: {} };
       }
 
+      // Get enum values if this is a user-defined type
+      let enumValues: string[] | undefined;
+      if (row.data_type === 'USER-DEFINED' && row.udt_name) {
+        const udtName =
+          row.table_schema === 'ecosystem' ? `ecosystem.${row.udt_name}` : row.udt_name;
+        if (schema.types![udtName]) {
+          enumValues = schema.types![udtName].values;
+        }
+      }
+
       schema.tables[qualifiedTableName].columns[row.column_name] = {
         data_type: row.data_type,
+        udt_name: row.udt_name,
+        enum_values: enumValues,
+        is_nullable: row.is_nullable === 'YES',
+        column_default: row.column_default,
       };
     }
 
@@ -312,6 +385,26 @@ async function enhanceSchemaWithGraphQLRelationships(schema: DatabaseSchema): Pr
 }
 
 /**
+ * Get description for known enum types
+ */
+function getEnumTypeDescription(typeName: string): string {
+  const typeDescriptions: Record<string, string> = {
+    entity_type: 'Type of Hedera entity (ACCOUNT, CONTRACT, FILE, TOPIC, TOKEN, SCHEDULE)',
+    key_type: 'Type of cryptographic key (ED25519, ECDSA_SECP256K1, etc.)',
+    transaction_result: 'Result code for transaction execution',
+    transaction_type: 'Type of Hedera transaction operation',
+    token_type: 'Type of token (FUNGIBLE_COMMON, NON_FUNGIBLE_UNIQUE)',
+    token_supply_type: 'Token supply type (INFINITE, FINITE)',
+    token_freeze_status: 'Token freeze status for an account',
+    token_kyc_status: 'Token KYC status for an account',
+    schedule_signature_type: 'Type of signature for scheduled transaction',
+    response_code: 'Response code from Hedera network',
+  };
+
+  return typeDescriptions[typeName] || `Enum type: ${typeName}`;
+}
+
+/**
  * Add semantic metadata to help external models understand Hedera data structures
  */
 async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
@@ -330,8 +423,20 @@ async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
         'SELECT * FROM entity WHERE id = 123456 -- Get account info by ID',
         'SELECT id, balance, balance_timestamp FROM entity WHERE balance > 100000000000 ORDER BY balance DESC LIMIT 10 -- Top accounts by balance',
         "SELECT id, type, created_timestamp FROM entity WHERE type = 'ACCOUNT' AND created_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 -- New accounts",
+        'SELECT id, alias, staked_node_id, stake_period_start FROM entity WHERE staked_node_id IS NOT NULL -- Staking accounts',
+        'SELECT COUNT(*) as total_accounts, SUM(balance) as total_balance FROM entity WHERE deleted = false -- Network totals',
       ],
-      keyFields: ['id', 'num', 'realm', 'shard', 'balance', 'type', 'created_timestamp'],
+      keyFields: [
+        'id',
+        'num',
+        'realm',
+        'shard',
+        'balance',
+        'type',
+        'created_timestamp',
+        'alias',
+        'key',
+      ],
     },
     transaction: {
       description:
@@ -340,8 +445,18 @@ async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
         'SELECT * FROM transaction WHERE payer_account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent transactions for account',
         "SELECT type, COUNT(*) FROM transaction WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 GROUP BY type -- Transaction types last hour",
         'SELECT * FROM transaction WHERE result != 22 ORDER BY consensus_timestamp DESC LIMIT 10 -- Failed transactions (22 = SUCCESS)',
+        'SELECT payer_account_id, COUNT(*) as tx_count, SUM(charged_tx_fee) as total_fees FROM transaction GROUP BY payer_account_id ORDER BY tx_count DESC LIMIT 10 -- Top transactors',
+        "SELECT DATE_TRUNC('hour', to_timestamp(consensus_timestamp/1000000000)) as hour, COUNT(*) as tx_count FROM transaction WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY hour ORDER BY hour -- Hourly transaction volume",
       ],
-      keyFields: ['consensus_timestamp', 'payer_account_id', 'type', 'result', 'charged_tx_fee'],
+      keyFields: [
+        'consensus_timestamp',
+        'payer_account_id',
+        'type',
+        'result',
+        'charged_tx_fee',
+        'transaction_id',
+        'valid_start_timestamp',
+      ],
     },
     token: {
       description: 'HTS (Hedera Token Service) tokens including fungible and non-fungible tokens',
@@ -349,6 +464,8 @@ async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
         "SELECT token_id, name, symbol, total_supply, decimals FROM token WHERE type = 'FUNGIBLE_COMMON' ORDER BY created_timestamp DESC LIMIT 10 -- Recent fungible tokens",
         "SELECT * FROM token WHERE name ILIKE '%USDC%' OR symbol ILIKE '%USDC%' -- Find USDC tokens",
         "SELECT token_id, name, COUNT(*) as nft_count FROM token t JOIN nft n ON t.token_id = n.token_id WHERE type = 'NON_FUNGIBLE_UNIQUE' GROUP BY token_id, name ORDER BY nft_count DESC -- NFT collections by size",
+        'SELECT t.token_id, t.name, COUNT(DISTINCT tb.account_id) as holders FROM token t JOIN token_balance tb ON t.token_id = tb.token_id WHERE tb.balance > 0 GROUP BY t.token_id, t.name ORDER BY holders DESC LIMIT 10 -- Top tokens by holder count',
+        'SELECT token_id, name, symbol, total_supply, (total_supply * 1.0 / POWER(10, decimals)) as adjusted_supply FROM token WHERE decimals > 0 ORDER BY adjusted_supply DESC LIMIT 10 -- Tokens by adjusted supply',
       ],
       keyFields: [
         'token_id',
@@ -358,6 +475,8 @@ async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
         'total_supply',
         'decimals',
         'treasury_account_id',
+        'freeze_key',
+        'kyc_key',
       ],
     },
     crypto_transfer: {
@@ -366,8 +485,10 @@ async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
         'SELECT * FROM crypto_transfer WHERE entity_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- HBAR transfers for account',
         "SELECT entity_id, SUM(amount) as net_amount FROM crypto_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY entity_id ORDER BY net_amount DESC -- Net HBAR flow last 24h",
         'SELECT * FROM crypto_transfer WHERE amount > 100000000000 ORDER BY consensus_timestamp DESC -- Large HBAR transfers (>1000 HBAR)',
+        'SELECT entity_id, SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as received, SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as sent FROM crypto_transfer GROUP BY entity_id HAVING SUM(amount) != 0 ORDER BY received DESC LIMIT 20 -- Account HBAR flow analysis',
+        "SELECT COUNT(DISTINCT entity_id) as active_accounts, SUM(ABS(amount))/2 as total_volume FROM crypto_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 -- Hourly HBAR volume",
       ],
-      keyFields: ['entity_id', 'amount', 'consensus_timestamp', 'payer_account_id'],
+      keyFields: ['entity_id', 'amount', 'consensus_timestamp', 'payer_account_id', 'is_approval'],
     },
     token_transfer: {
       description: 'Token transfers (both fungible and NFT) between accounts',
@@ -384,8 +505,19 @@ async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
         'SELECT * FROM nft WHERE account_id = 123456 -- NFTs owned by account',
         'SELECT token_id, COUNT(*) as nft_count FROM nft WHERE account_id IS NOT NULL GROUP BY token_id ORDER BY nft_count DESC -- NFT holdings by collection',
         'SELECT * FROM nft WHERE token_id = 456789 ORDER BY serial_number -- All NFTs in collection',
+        'SELECT n.*, t.name as collection_name, t.symbol FROM nft n JOIN token t ON n.token_id = t.token_id WHERE n.account_id = 123456 -- NFTs with collection info',
+        'SELECT account_id, COUNT(DISTINCT token_id) as collections, COUNT(*) as total_nfts FROM nft WHERE account_id IS NOT NULL GROUP BY account_id ORDER BY total_nfts DESC LIMIT 10 -- Top NFT collectors',
+        'SELECT token_id, MIN(serial_number) as min_serial, MAX(serial_number) as max_serial, COUNT(*) as minted FROM nft GROUP BY token_id ORDER BY minted DESC -- NFT collection stats',
       ],
-      keyFields: ['token_id', 'serial_number', 'account_id', 'created_timestamp', 'metadata'],
+      keyFields: [
+        'token_id',
+        'serial_number',
+        'account_id',
+        'created_timestamp',
+        'metadata',
+        'spender',
+        'delegating_spender',
+      ],
     },
     contract_result: {
       description: 'Smart contract execution results including gas usage and function calls',
@@ -446,6 +578,29 @@ async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
   }
 
   console.log('✅ Added semantic metadata for Hedera-specific tables');
+
+  // Add commonly used enum value meanings
+  if (schema.types) {
+    // Add descriptions for entity_type values
+    if (schema.types['entity_type']) {
+      schema.types['entity_type'].description =
+        'Entity types: ACCOUNT (user/contract account), CONTRACT (smart contract), ' +
+        'FILE (file service), TOPIC (consensus service), TOKEN (HTS token), SCHEDULE (scheduled tx)';
+    }
+
+    // Add descriptions for transaction result codes
+    if (schema.types['transaction_result'] || schema.types['response_code']) {
+      const resultDesc =
+        'Common codes: 22=SUCCESS, 11=INVALID_TRANSACTION, ' +
+        '9=INSUFFICIENT_PAYER_BALANCE, 15=INSUFFICIENT_TX_FEE, 10=INVALID_ACCOUNT_ID';
+      if (schema.types['transaction_result']) {
+        schema.types['transaction_result'].description = resultDesc;
+      }
+      if (schema.types['response_code']) {
+        schema.types['response_code'].description = resultDesc;
+      }
+    }
+  }
 }
 
 /**
@@ -466,16 +621,65 @@ export async function executeQuery(sqlQuery: string) {
     // Get database schema for validation
     const schema = await getOrFetchSchema();
 
-    // Validate the query
-    validateSQLQuery(sqlQuery, schema);
+    // Pre-validate the query
+    const validation = validateQuery(sqlQuery);
 
-    // Format the query for readability
-    let formattedQuery: string;
-    try {
-      formattedQuery = format(sqlQuery, { language: 'postgresql' });
-    } catch {
-      formattedQuery = sqlQuery;
+    if (!validation.valid) {
+      // Return validation errors
+      let errorOutput = '# Query Validation Failed\n\n';
+      errorOutput += '## Errors\n';
+      for (const error of validation.errors) {
+        errorOutput += `- **${error.type}**: ${error.message}\n`;
+        if (error.suggestion) {
+          errorOutput += `  - Suggestion: ${error.suggestion}\n`;
+        }
+      }
+
+      // Suggest fixes
+      if (validation.errors.length > 0) {
+        const fixes = suggestFixes(sqlQuery, validation.errors[0]);
+        if (fixes.length > 0) {
+          errorOutput += '\n## Suggested Fixes\n```sql\n';
+          errorOutput += fixes[0];
+          errorOutput += '\n```\n';
+        }
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: errorOutput,
+          },
+        ],
+      };
     }
+
+    // Show warnings if any
+    let warningText = '';
+    if (validation.warnings.length > 0) {
+      warningText = '## ⚠️ Warnings\n';
+      for (const warning of validation.warnings) {
+        warningText += `- ${warning.message}\n`;
+      }
+      warningText += '\n';
+    }
+
+    // Show suggestions if any
+    let suggestionText = '';
+    if (validation.suggestions.length > 0) {
+      suggestionText = '## 💡 Optimization Suggestions\n';
+      for (const suggestion of validation.suggestions) {
+        suggestionText += `- ${suggestion.message}\n`;
+        if (suggestion.example) {
+          suggestionText += `  Example: \`${suggestion.example}\`\n`;
+        }
+      }
+      suggestionText += '\n';
+    }
+
+    // Use formatted query if available
+    const formattedQuery = validation.formattedQuery || sqlQuery;
 
     // Execute the query
     const config = getDatabaseConfig();
@@ -488,6 +692,11 @@ export async function executeQuery(sqlQuery: string) {
 
       // Prepare the response
       let output = '# Database Query Result\n\n';
+
+      // Include warnings and suggestions if any
+      if (warningText) output += warningText;
+      if (suggestionText) output += suggestionText;
+
       output += '## SQL Query\n```sql\n';
       output += formattedQuery;
       output += '\n```\n\n';

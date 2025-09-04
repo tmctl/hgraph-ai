@@ -3,45 +3,78 @@
     "ecosystem._nft_collection_sales_volume": {
       "columns": {
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "collection_name": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": true,
+          "column_default": null
         },
         "nft_period": {
-          "data_type": "timestamp without time zone"
+          "data_type": "timestamp without time zone",
+          "udt_name": "timestamp",
+          "is_nullable": true,
+          "column_default": null
         },
         "total": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       }
     },
     "ecosystem._nft_collection_sales_volume_total": {
       "columns": {
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "collection_name": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": true,
+          "column_default": null
         },
         "total": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       }
     },
     "ecosystem.metric": {
       "columns": {
         "name": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": true,
+          "column_default": null
         },
         "period": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": true,
+          "column_default": null
         },
         "total": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -66,13 +99,22 @@
     "ecosystem.metric_description": {
       "columns": {
         "name": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": false,
+          "column_default": null
         },
         "description": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": true,
+          "column_default": null
         },
         "methodology": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {},
@@ -86,10 +128,16 @@
     "ecosystem.transaction_count_by_type": {
       "columns": {
         "type": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": true,
+          "column_default": null
         },
         "total": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -97,31 +145,60 @@
     "_transfer": {
       "columns": {
         "type": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "transfer_type",
+          "enum_values": ["hbar", "fungible_token", "non_fungible_token", "staking_reward"],
+          "is_nullable": true,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "serial_number": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "sender_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "receiver_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "is_approval": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "errata": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "errata_type",
+          "enum_values": ["INSERT", "DELETE"],
+          "is_nullable": true,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -154,19 +231,34 @@
     "address_book": {
       "columns": {
         "start_consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "end_consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "file_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "node_count": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "file_data": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {
@@ -184,28 +276,52 @@
     "address_book_entry": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "memo": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": true,
+          "column_default": null
         },
         "public_key": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": true,
+          "column_default": null
         },
         "node_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "node_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "node_cert_hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "description": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": true,
+          "column_default": null
         },
         "stake": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -223,19 +339,34 @@
     "address_book_service_endpoint": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "ip_address_v4": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": "''::character varying"
         },
         "node_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "port": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "domain_name": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": "''::character varying"
         }
       },
       "relationships": {}
@@ -243,22 +374,40 @@
     "assessed_custom_fee": {
       "columns": {
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "collector_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "effective_payer_account_ids": {
-          "data_type": "ARRAY"
+          "data_type": "ARRAY",
+          "udt_name": "_int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -266,16 +415,28 @@
     "contract": {
       "columns": {
         "id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "file_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "initcode": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "runtime_bytecode": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -283,55 +444,107 @@
     "contract_action": {
       "columns": {
         "call_depth": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "call_type": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "caller": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "caller_type": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "entity_type",
+          "enum_values": ["UNKNOWN", "ACCOUNT", "CONTRACT", "FILE", "TOPIC", "TOKEN", "SCHEDULE"],
+          "is_nullable": true,
+          "column_default": "'CONTRACT'::entity_type"
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "gas": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "gas_used": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "index": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "input": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "recipient_account": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "recipient_address": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "recipient_contract": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "result_data": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "result_data_type": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "value": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "call_operation_type": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -339,43 +552,82 @@
     "contract_log": {
       "columns": {
         "bloom": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "contract_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "data": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "index": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "topic0": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "topic1": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "topic2": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "topic3": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "root_contract_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "transaction_hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "transaction_index": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -383,61 +635,118 @@
     "contract_result": {
       "columns": {
         "function_parameters": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "gas_limit": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "function_result": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "gas_used": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "bloom": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "call_result": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "contract_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "created_contract_ids": {
-          "data_type": "ARRAY"
+          "data_type": "ARRAY",
+          "udt_name": "_int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "error_message": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": true,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "sender_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "failed_initcode": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "transaction_hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "transaction_index": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "transaction_result": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         },
         "transaction_nonce": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "gas_consumed": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {},
@@ -458,19 +767,34 @@
     "contract_state": {
       "columns": {
         "contract_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "modified_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "slot": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "value": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -478,25 +802,46 @@
     "contract_state_change": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "contract_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "slot": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "value_read": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "value_written": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "migration": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         }
       },
       "relationships": {}
@@ -504,57 +849,102 @@
     "contract_transaction": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "contract_ids": {
-          "data_type": "ARRAY"
+          "data_type": "ARRAY",
+          "udt_name": "_int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "contract_transaction_hash": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "transaction_result": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "crypto_allowance": {
       "columns": {
         "amount_granted": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "owner": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         }
       },
       "relationships": {}
@@ -562,22 +952,40 @@
     "crypto_allowance_history": {
       "columns": {
         "amount_granted": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "owner": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         }
       },
       "relationships": {}
@@ -585,22 +993,41 @@
     "crypto_transfer": {
       "columns": {
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "is_approval": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "errata": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "errata_type",
+          "enum_values": ["INSERT", "DELETE"],
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -634,26 +1061,43 @@
       "commonQueries": [
         "SELECT * FROM crypto_transfer WHERE entity_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- HBAR transfers for account",
         "SELECT entity_id, SUM(amount) as net_amount FROM crypto_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY entity_id ORDER BY net_amount DESC -- Net HBAR flow last 24h",
-        "SELECT * FROM crypto_transfer WHERE amount > 100000000000 ORDER BY consensus_timestamp DESC -- Large HBAR transfers (>1000 HBAR)"
+        "SELECT * FROM crypto_transfer WHERE amount > 100000000000 ORDER BY consensus_timestamp DESC -- Large HBAR transfers (>1000 HBAR)",
+        "SELECT entity_id, SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as received, SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as sent FROM crypto_transfer GROUP BY entity_id HAVING SUM(amount) != 0 ORDER BY received DESC LIMIT 20 -- Account HBAR flow analysis",
+        "SELECT COUNT(DISTINCT entity_id) as active_accounts, SUM(ABS(amount))/2 as total_volume FROM crypto_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 -- Hourly HBAR volume"
       ],
-      "keyFields": ["entity_id", "amount", "consensus_timestamp", "payer_account_id"]
+      "keyFields": ["entity_id", "amount", "consensus_timestamp", "payer_account_id", "is_approval"]
     },
     "custom_fee": {
       "columns": {
         "fixed_fees": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         },
         "fractional_fees": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         },
         "royalty_fees": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -661,107 +1105,207 @@
     "custom_fee_history": {
       "columns": {
         "fixed_fees": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         },
         "fractional_fees": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         },
         "royalty_fees": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "entity": {
       "columns": {
         "auto_renew_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "auto_renew_period": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "deleted": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "expiration_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "memo": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": false,
+          "column_default": "''::text"
         },
         "num": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "public_key": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": true,
+          "column_default": null
         },
         "proxy_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "realm": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "shard": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "receiver_sig_required": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "max_automatic_token_associations": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "type": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "entity_type",
+          "enum_values": ["UNKNOWN", "ACCOUNT", "CONTRACT", "FILE", "TOPIC", "TOKEN", "SCHEDULE"],
+          "is_nullable": false,
+          "column_default": "'UNKNOWN'::entity_type"
         },
         "alias": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "ethereum_nonce": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": "0"
         },
         "evm_address": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "decline_reward": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "staked_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "staked_node_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": "'-1'::integer"
         },
         "stake_period_start": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": "'-1'::integer"
         },
         "obtainer_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "permanent_removal": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "balance": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "balance_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -816,95 +1360,192 @@
       "commonQueries": [
         "SELECT * FROM entity WHERE id = 123456 -- Get account info by ID",
         "SELECT id, balance, balance_timestamp FROM entity WHERE balance > 100000000000 ORDER BY balance DESC LIMIT 10 -- Top accounts by balance",
-        "SELECT id, type, created_timestamp FROM entity WHERE type = 'ACCOUNT' AND created_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 -- New accounts"
+        "SELECT id, type, created_timestamp FROM entity WHERE type = 'ACCOUNT' AND created_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 -- New accounts",
+        "SELECT id, alias, staked_node_id, stake_period_start FROM entity WHERE staked_node_id IS NOT NULL -- Staking accounts",
+        "SELECT COUNT(*) as total_accounts, SUM(balance) as total_balance FROM entity WHERE deleted = false -- Network totals"
       ],
-      "keyFields": ["id", "num", "realm", "shard", "balance", "type", "created_timestamp"]
+      "keyFields": [
+        "id",
+        "num",
+        "realm",
+        "shard",
+        "balance",
+        "type",
+        "created_timestamp",
+        "alias",
+        "key"
+      ]
     },
     "entity_history": {
       "columns": {
         "auto_renew_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "auto_renew_period": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "deleted": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "expiration_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "memo": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": false,
+          "column_default": "''::text"
         },
         "num": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "public_key": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": true,
+          "column_default": null
         },
         "proxy_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "realm": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "shard": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "receiver_sig_required": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "max_automatic_token_associations": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "type": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "entity_type",
+          "enum_values": ["UNKNOWN", "ACCOUNT", "CONTRACT", "FILE", "TOPIC", "TOKEN", "SCHEDULE"],
+          "is_nullable": false,
+          "column_default": "'UNKNOWN'::entity_type"
         },
         "alias": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "ethereum_nonce": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": "0"
         },
         "evm_address": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "decline_reward": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "staked_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "staked_node_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": "'-1'::integer"
         },
         "stake_period_start": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": "'-1'::integer"
         },
         "obtainer_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "permanent_removal": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "balance": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "balance_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -912,25 +1553,46 @@
     "entity_stake": {
       "columns": {
         "end_stake_period": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "pending_reward": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staked_node_id_start": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staked_to_me": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "stake_total_start": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -938,111 +1600,210 @@
     "entity_stake_history": {
       "columns": {
         "end_stake_period": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "pending_reward": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staked_node_id_start": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staked_to_me": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "stake_total_start": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "entity_transaction": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "result": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         },
         "type": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "ethereum_transaction": {
       "columns": {
         "access_list": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "call_data_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "call_data": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "chain_id": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "data": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "gas_limit": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "gas_price": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "max_fee_per_gas": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "max_gas_allowance": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "max_priority_fee_per_gas": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "nonce": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "recovery_id": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": true,
+          "column_default": null
         },
         "signature_r": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "signature_s": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "signature_v": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "to_address": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "type": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         },
         "value": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -1050,163 +1811,298 @@
     "file_data": {
       "columns": {
         "file_data": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "transaction_type": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "flyway_schema_history": {
       "columns": {
         "installed_rank": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "version": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": true,
+          "column_default": null
         },
         "description": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "type": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "script": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "checksum": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "installed_by": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "installed_on": {
-          "data_type": "timestamp without time zone"
+          "data_type": "timestamp without time zone",
+          "udt_name": "timestamp",
+          "is_nullable": false,
+          "column_default": "now()"
         },
         "execution_time": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "success": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "interval_count": {
       "columns": {
         "starting_at": {
-          "data_type": "timestamp without time zone"
+          "data_type": "timestamp without time zone",
+          "udt_name": "timestamp",
+          "is_nullable": true,
+          "column_default": null
         },
         "ending_at": {
-          "data_type": "timestamp without time zone"
+          "data_type": "timestamp without time zone",
+          "udt_name": "timestamp",
+          "is_nullable": true,
+          "column_default": null
         },
         "count": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       }
     },
     "live_hash": {
       "columns": {
         "livehash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "migration_timestamp": {
       "columns": {
         "int8": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       }
     },
     "network_freeze": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "end_time": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "file_hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "file_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "start_time": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "type": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "network_stake": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "epoch_day": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "max_staking_reward_rate_per_hbar": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "node_reward_fee_denominator": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "node_reward_fee_numerator": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "stake_total": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staking_period": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staking_period_duration": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staking_periods_stored": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staking_reward_fee_denominator": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staking_reward_fee_numerator": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staking_reward_rate": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staking_start_threshold": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "max_stake_rewarded": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "max_total_reward": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "reserved_staking_rewards": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "reward_balance_threshold": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "unreserved_staking_reward_balance": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         }
       },
       "relationships": {}
@@ -1214,31 +2110,58 @@
     "nft": {
       "columns": {
         "account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "deleted": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": "false"
         },
         "metadata": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "serial_number": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "delegating_spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {
@@ -1266,29 +2189,58 @@
       "commonQueries": [
         "SELECT * FROM nft WHERE account_id = 123456 -- NFTs owned by account",
         "SELECT token_id, COUNT(*) as nft_count FROM nft WHERE account_id IS NOT NULL GROUP BY token_id ORDER BY nft_count DESC -- NFT holdings by collection",
-        "SELECT * FROM nft WHERE token_id = 456789 ORDER BY serial_number -- All NFTs in collection"
+        "SELECT * FROM nft WHERE token_id = 456789 ORDER BY serial_number -- All NFTs in collection",
+        "SELECT n.*, t.name as collection_name, t.symbol FROM nft n JOIN token t ON n.token_id = t.token_id WHERE n.account_id = 123456 -- NFTs with collection info",
+        "SELECT account_id, COUNT(DISTINCT token_id) as collections, COUNT(*) as total_nfts FROM nft WHERE account_id IS NOT NULL GROUP BY account_id ORDER BY total_nfts DESC LIMIT 10 -- Top NFT collectors",
+        "SELECT token_id, MIN(serial_number) as min_serial, MAX(serial_number) as max_serial, COUNT(*) as minted FROM nft GROUP BY token_id ORDER BY minted DESC -- NFT collection stats"
       ],
-      "keyFields": ["token_id", "serial_number", "account_id", "created_timestamp", "metadata"]
+      "keyFields": [
+        "token_id",
+        "serial_number",
+        "account_id",
+        "created_timestamp",
+        "metadata",
+        "spender",
+        "delegating_spender"
+      ]
     },
     "nft_allowance": {
       "columns": {
         "approved_for_all": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": null
         },
         "owner": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -1296,22 +2248,40 @@
     "nft_allowance_history": {
       "columns": {
         "approved_for_all": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": null
         },
         "owner": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -1319,37 +2289,70 @@
     "nft_history": {
       "columns": {
         "account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "deleted": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": "false"
         },
         "metadata": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "serial_number": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "delegating_spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "start_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "end_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -1374,84 +2377,156 @@
     "node": {
       "columns": {
         "admin_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "deleted": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "node_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "decline_reward": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "grpc_proxy_endpoint": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         }
       }
     },
     "node_history": {
       "columns": {
         "admin_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "deleted": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "node_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "decline_reward": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "grpc_proxy_endpoint": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         }
       }
     },
     "node_stake": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "epoch_day": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "node_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "reward_rate": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "stake": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "stake_rewarded": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "staking_period": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "max_stake": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "min_stake": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "stake_not_rewarded": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -1459,19 +2534,34 @@
     "non_fee_transfer": {
       "columns": {
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "is_approval": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -1479,151 +2569,286 @@
     "prng": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "range": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "prng_bytes": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "prng_number": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "reconciliation_job": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "count": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "error": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": false,
+          "column_default": "''::text"
         },
         "timestamp_end": {
-          "data_type": "timestamp with time zone"
+          "data_type": "timestamp with time zone",
+          "udt_name": "timestamptz",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_start": {
-          "data_type": "timestamp with time zone"
+          "data_type": "timestamp with time zone",
+          "udt_name": "timestamptz",
+          "is_nullable": false,
+          "column_default": null
         },
         "status": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "record_file": {
       "columns": {
         "name": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "load_start": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "load_end": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "hash": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "prev_hash": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "consensus_start": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "consensus_end": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "count": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "digest_algorithm": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "hapi_version_major": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "hapi_version_minor": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "hapi_version_patch": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "version": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "file_hash": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "bytes": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "index": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "gas_used": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": "'-1'::integer"
         },
         "logs_bloom": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "size": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "sidecar_count": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "node_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "software_version_major": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "software_version_minor": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "software_version_patch": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "round_start": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "round_end": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       }
     },
     "schedule": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "creator_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "executed_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "schedule_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "transaction_body": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "expiration_time": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "wait_for_expiry": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         }
       },
       "relationships": {}
@@ -1631,47 +2856,86 @@
     "sidecar_file": {
       "columns": {
         "bytes": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "count": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "consensus_end": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "hash_algorithm": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "id": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": null
         },
         "name": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "size": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "types": {
-          "data_type": "ARRAY"
+          "data_type": "ARRAY",
+          "udt_name": "_int4",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "staking_reward_transfer": {
       "columns": {
         "account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {
@@ -1689,76 +2953,151 @@
     "token": {
       "columns": {
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "decimals": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "freeze_default": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "freeze_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "initial_supply": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "kyc_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "name": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "supply_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "symbol": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "total_supply": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "treasury_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "wipe_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "max_supply": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "'9223372036854775807'::bigint"
         },
         "supply_type": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "token_supply_type",
+          "enum_values": ["INFINITE", "FINITE"],
+          "is_nullable": false,
+          "column_default": "'INFINITE'::token_supply_type"
         },
         "type": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "token_type",
+          "enum_values": ["FUNGIBLE_COMMON", "NON_FUNGIBLE_UNIQUE"],
+          "is_nullable": false,
+          "column_default": "'FUNGIBLE_COMMON'::token_type"
         },
         "fee_schedule_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "pause_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "pause_status": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "token_pause_status",
+          "enum_values": ["NOT_APPLICABLE", "PAUSED", "UNPAUSED"],
+          "is_nullable": false,
+          "column_default": "'NOT_APPLICABLE'::token_pause_status"
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "freeze_status": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         },
         "kyc_status": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         },
         "metadata": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "metadata_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -1820,7 +3159,9 @@
       "commonQueries": [
         "SELECT token_id, name, symbol, total_supply, decimals FROM token WHERE type = 'FUNGIBLE_COMMON' ORDER BY created_timestamp DESC LIMIT 10 -- Recent fungible tokens",
         "SELECT * FROM token WHERE name ILIKE '%USDC%' OR symbol ILIKE '%USDC%' -- Find USDC tokens",
-        "SELECT token_id, name, COUNT(*) as nft_count FROM token t JOIN nft n ON t.token_id = n.token_id WHERE type = 'NON_FUNGIBLE_UNIQUE' GROUP BY token_id, name ORDER BY nft_count DESC -- NFT collections by size"
+        "SELECT token_id, name, COUNT(*) as nft_count FROM token t JOIN nft n ON t.token_id = n.token_id WHERE type = 'NON_FUNGIBLE_UNIQUE' GROUP BY token_id, name ORDER BY nft_count DESC -- NFT collections by size",
+        "SELECT t.token_id, t.name, COUNT(DISTINCT tb.account_id) as holders FROM token t JOIN token_balance tb ON t.token_id = tb.token_id WHERE tb.balance > 0 GROUP BY t.token_id, t.name ORDER BY holders DESC LIMIT 10 -- Top tokens by holder count",
+        "SELECT token_id, name, symbol, total_supply, (total_supply * 1.0 / POWER(10, decimals)) as adjusted_supply FROM token WHERE decimals > 0 ORDER BY adjusted_supply DESC LIMIT 10 -- Tokens by adjusted supply"
       ],
       "keyFields": [
         "token_id",
@@ -1829,40 +3170,72 @@
         "type",
         "total_supply",
         "decimals",
-        "treasury_account_id"
+        "treasury_account_id",
+        "freeze_key",
+        "kyc_key"
       ]
     },
     "token_account": {
       "columns": {
         "account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "associated": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "automatic_association": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "freeze_status": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": true,
+          "column_default": null
         },
         "kyc_status": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "balance": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "balance_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -1897,34 +3270,64 @@
     "token_account_history": {
       "columns": {
         "account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "associated": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "automatic_association": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "freeze_status": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": true,
+          "column_default": null
         },
         "kyc_status": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "balance": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "balance_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -1932,25 +3335,47 @@
     "token_airdrop": {
       "columns": {
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "receiver_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "sender_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "serial_number": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "state": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "airdrop_state",
+          "enum_values": ["CANCELLED", "CLAIMED", "PENDING"],
+          "is_nullable": false,
+          "column_default": "'PENDING'::airdrop_state"
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {
@@ -1968,25 +3393,47 @@
     "token_airdrop_history": {
       "columns": {
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "receiver_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "sender_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "serial_number": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "state": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "airdrop_state",
+          "enum_values": ["CANCELLED", "CLAIMED", "PENDING"],
+          "is_nullable": false,
+          "column_default": "'PENDING'::airdrop_state"
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -1994,25 +3441,46 @@
     "token_allowance": {
       "columns": {
         "amount_granted": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "owner": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         }
       },
       "relationships": {
@@ -2030,25 +3498,46 @@
     "token_allowance_history": {
       "columns": {
         "amount_granted": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "owner": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "spender": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         }
       },
       "relationships": {}
@@ -2056,76 +3545,151 @@
     "token_history": {
       "columns": {
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "decimals": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "freeze_default": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "freeze_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "initial_supply": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "kyc_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "name": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "supply_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "symbol": {
-          "data_type": "character varying"
+          "data_type": "character varying",
+          "udt_name": "varchar",
+          "is_nullable": false,
+          "column_default": null
         },
         "total_supply": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "treasury_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "wipe_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "max_supply": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": "'9223372036854775807'::bigint"
         },
         "supply_type": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "token_supply_type",
+          "enum_values": ["INFINITE", "FINITE"],
+          "is_nullable": false,
+          "column_default": "'INFINITE'::token_supply_type"
         },
         "type": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "token_type",
+          "enum_values": ["FUNGIBLE_COMMON", "NON_FUNGIBLE_UNIQUE"],
+          "is_nullable": false,
+          "column_default": "'FUNGIBLE_COMMON'::token_type"
         },
         "fee_schedule_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "pause_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "pause_status": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "token_pause_status",
+          "enum_values": ["NOT_APPLICABLE", "PAUSED", "UNPAUSED"],
+          "is_nullable": false,
+          "column_default": "'NOT_APPLICABLE'::token_pause_status"
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "freeze_status": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         },
         "kyc_status": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         },
         "metadata": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "metadata_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -2133,22 +3697,40 @@
     "token_transfer": {
       "columns": {
         "token_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "amount": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "is_approval": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -2180,25 +3762,46 @@
     "topic": {
       "columns": {
         "admin_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "fee_exempt_key_list": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "fee_schedule_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "submit_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {
@@ -2216,62 +3819,116 @@
     "topic_history": {
       "columns": {
         "admin_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "created_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "fee_exempt_key_list": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "fee_schedule_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "submit_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         }
       }
     },
     "topic_message": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "message": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "running_hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "sequence_number": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "running_hash_version": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": true,
+          "column_default": null
         },
         "chunk_num": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "chunk_total": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "valid_start_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "topic_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "initial_transaction_id": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -2302,16 +3959,28 @@
     "topic_message_lookup": {
       "columns": {
         "partition": {
-          "data_type": "text"
+          "data_type": "text",
+          "udt_name": "text",
+          "is_nullable": false,
+          "column_default": null
         },
         "sequence_number_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "timestamp_range": {
-          "data_type": "int8range"
+          "data_type": "int8range",
+          "udt_name": "int8range",
+          "is_nullable": false,
+          "column_default": null
         },
         "topic_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         }
       },
       "relationships": {}
@@ -2319,79 +3988,155 @@
     "transaction": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "type": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         },
         "result": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "valid_start_ns": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "valid_duration_seconds": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "node_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "initial_balance": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": "0"
         },
         "max_fee": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "charged_tx_fee": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "memo": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "transaction_hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "transaction_bytes": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "scheduled": {
-          "data_type": "boolean"
+          "data_type": "boolean",
+          "udt_name": "bool",
+          "is_nullable": false,
+          "column_default": "false"
         },
         "nonce": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": false,
+          "column_default": "0"
         },
         "parent_consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "errata": {
-          "data_type": "USER-DEFINED"
+          "data_type": "USER-DEFINED",
+          "udt_name": "errata_type",
+          "enum_values": ["INSERT", "DELETE"],
+          "is_nullable": true,
+          "column_default": null
         },
         "index": {
-          "data_type": "integer"
+          "data_type": "integer",
+          "udt_name": "int4",
+          "is_nullable": true,
+          "column_default": null
         },
         "nft_transfer": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         },
         "itemized_transfer": {
-          "data_type": "jsonb"
+          "data_type": "jsonb",
+          "udt_name": "jsonb",
+          "is_nullable": true,
+          "column_default": null
         },
         "transaction_record_bytes": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "max_custom_fees": {
-          "data_type": "ARRAY"
+          "data_type": "ARRAY",
+          "udt_name": "_bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "batch_key": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": true,
+          "column_default": null
         },
         "inner_transactions": {
-          "data_type": "ARRAY"
+          "data_type": "ARRAY",
+          "udt_name": "_int8",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {
@@ -2439,46 +4184,130 @@
       "commonQueries": [
         "SELECT * FROM transaction WHERE payer_account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent transactions for account",
         "SELECT type, COUNT(*) FROM transaction WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 GROUP BY type -- Transaction types last hour",
-        "SELECT * FROM transaction WHERE result != 22 ORDER BY consensus_timestamp DESC LIMIT 10 -- Failed transactions (22 = SUCCESS)"
+        "SELECT * FROM transaction WHERE result != 22 ORDER BY consensus_timestamp DESC LIMIT 10 -- Failed transactions (22 = SUCCESS)",
+        "SELECT payer_account_id, COUNT(*) as tx_count, SUM(charged_tx_fee) as total_fees FROM transaction GROUP BY payer_account_id ORDER BY tx_count DESC LIMIT 10 -- Top transactors",
+        "SELECT DATE_TRUNC('hour', to_timestamp(consensus_timestamp/1000000000)) as hour, COUNT(*) as tx_count FROM transaction WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY hour ORDER BY hour -- Hourly transaction volume"
       ],
-      "keyFields": ["consensus_timestamp", "payer_account_id", "type", "result", "charged_tx_fee"]
+      "keyFields": [
+        "consensus_timestamp",
+        "payer_account_id",
+        "type",
+        "result",
+        "charged_tx_fee",
+        "transaction_id",
+        "valid_start_timestamp"
+      ]
     },
     "transaction_hash": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "hash": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "payer_account_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "distribution_id": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": true,
+          "column_default": null
         }
       }
     },
     "transaction_signature": {
       "columns": {
         "consensus_timestamp": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": false,
+          "column_default": null
         },
         "public_key_prefix": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "entity_id": {
-          "data_type": "bigint"
+          "data_type": "bigint",
+          "udt_name": "int8",
+          "is_nullable": true,
+          "column_default": null
         },
         "signature": {
-          "data_type": "bytea"
+          "data_type": "bytea",
+          "udt_name": "bytea",
+          "is_nullable": false,
+          "column_default": null
         },
         "type": {
-          "data_type": "smallint"
+          "data_type": "smallint",
+          "udt_name": "int2",
+          "is_nullable": true,
+          "column_default": null
         }
       },
       "relationships": {}
     }
   },
-  "relationships": []
+  "relationships": [],
+  "types": {
+    "airdrop_state": {
+      "type": "enum",
+      "values": ["CANCELLED", "CLAIMED", "PENDING"],
+      "description": "Enum type: airdrop_state"
+    },
+    "entity_type": {
+      "type": "enum",
+      "values": ["UNKNOWN", "ACCOUNT", "CONTRACT", "FILE", "TOPIC", "TOKEN", "SCHEDULE"],
+      "description": "Entity types: ACCOUNT (user/contract account), CONTRACT (smart contract), FILE (file service), TOPIC (consensus service), TOKEN (HTS token), SCHEDULE (scheduled tx)"
+    },
+    "errata_type": {
+      "type": "enum",
+      "values": ["INSERT", "DELETE"],
+      "description": "Enum type: errata_type"
+    },
+    "interval_granularity": {
+      "type": "enum",
+      "values": ["hour", "day", "week", "month", "quarter", "year"],
+      "description": "Enum type: interval_granularity"
+    },
+    "order_by_consensus_timestamp": {
+      "type": "enum",
+      "values": ["asc", "desc"],
+      "description": "Enum type: order_by_consensus_timestamp"
+    },
+    "token_pause_status": {
+      "type": "enum",
+      "values": ["NOT_APPLICABLE", "PAUSED", "UNPAUSED"],
+      "description": "Enum type: token_pause_status"
+    },
+    "token_supply_type": {
+      "type": "enum",
+      "values": ["INFINITE", "FINITE"],
+      "description": "Token supply type (INFINITE, FINITE)"
+    },
+    "token_type": {
+      "type": "enum",
+      "values": ["FUNGIBLE_COMMON", "NON_FUNGIBLE_UNIQUE"],
+      "description": "Type of token (FUNGIBLE_COMMON, NON_FUNGIBLE_UNIQUE)"
+    },
+    "transfer_type": {
+      "type": "enum",
+      "values": ["hbar", "fungible_token", "non_fungible_token", "staking_reward"],
+      "description": "Enum type: transfer_type"
+    }
+  }
 }
