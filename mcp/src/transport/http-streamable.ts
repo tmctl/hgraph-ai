@@ -25,6 +25,11 @@ interface StreamableHTTPTransportOptions {
   corsOrigin?: string | string[];
   apiPrefix?: string;
   maxBodySize?: string;
+  authorization?: {
+    enabled?: boolean;
+    bearerToken?: string;
+    validateToken?: (token: string) => boolean | Promise<boolean>;
+  };
 }
 
 interface SSEClient {
@@ -53,7 +58,8 @@ export class StreamableHTTPTransport extends EventEmitter {
       corsOrigin: options.corsOrigin ?? '*',
       apiPrefix: options.apiPrefix ?? '/mcp',
       maxBodySize: options.maxBodySize ?? '10mb',
-    };
+      authorization: options.authorization,
+    } as Required<StreamableHTTPTransportOptions>;
 
     this.app = express();
     this.setupMiddleware();
@@ -80,6 +86,92 @@ export class StreamableHTTPTransport extends EventEmitter {
       console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
       next();
     });
+
+    // Authorization middleware
+    if (this.options.authorization?.enabled) {
+      this.app.use(this.options.apiPrefix, this.createAuthorizationMiddleware());
+    }
+  }
+
+  private createAuthorizationMiddleware() {
+    return async (req: Request, res: Response, next: express.NextFunction) => {
+      // Skip authorization for OPTIONS requests (CORS preflight)
+      if (req.method === 'OPTIONS') {
+        return next();
+      }
+
+      const authHeader = req.headers.authorization;
+
+      if (!authHeader) {
+        return res.status(401).json({
+          jsonrpc: '2.0',
+          id: null,
+          error: {
+            code: -32001,
+            message: 'Unauthorized',
+            data: 'Authorization header is required',
+          },
+        });
+      }
+
+      // Check for Bearer token
+      const bearerMatch = authHeader.match(/^Bearer\s+(\S+)$/i);
+      if (!bearerMatch) {
+        return res.status(401).json({
+          jsonrpc: '2.0',
+          id: null,
+          error: {
+            code: -32001,
+            message: 'Unauthorized',
+            data: 'Invalid authorization header format. Use: Bearer <token>',
+          },
+        });
+      }
+
+      const token = bearerMatch[1];
+
+      // Validate token
+      let isValid = false;
+      try {
+        if (this.options.authorization?.validateToken) {
+          // Use custom validation function if provided
+          isValid = await this.options.authorization.validateToken(token);
+        } else if (this.options.authorization?.bearerToken) {
+          // Simple token comparison if a static token is configured
+          isValid = token === this.options.authorization.bearerToken;
+        } else {
+          // No validation configured, accept any token (for development)
+          console.warn('Warning: No token validation configured. Accepting any token.');
+          isValid = true;
+        }
+      } catch (error) {
+        console.error('Error validating token:', error);
+        return res.status(500).json({
+          jsonrpc: '2.0',
+          id: null,
+          error: {
+            code: -32603,
+            message: 'Internal error',
+            data: 'Token validation failed',
+          },
+        });
+      }
+
+      if (!isValid) {
+        return res.status(401).json({
+          jsonrpc: '2.0',
+          id: null,
+          error: {
+            code: -32001,
+            message: 'Unauthorized',
+            data: 'Invalid or expired token',
+          },
+        });
+      }
+
+      // Token is valid, proceed to next middleware
+      next();
+    };
   }
 
   private setupRoutes(): void {
@@ -255,7 +347,7 @@ export class StreamableHTTPTransport extends EventEmitter {
 
         // Store the resolve callback for this request ID
         const requestId = request.id || `req_${Date.now()}`;
-        
+
         // Emit the message for the MCP server to handle
         this.emit('message', {
           jsonrpc: request.jsonrpc,
@@ -263,7 +355,7 @@ export class StreamableHTTPTransport extends EventEmitter {
           method: request.method,
           params: request.params,
         });
-        
+
         // Set up a one-time listener for the response
         const responseHandler = (response: JSONRPCResponse) => {
           if (response.id === requestId) {
@@ -272,7 +364,7 @@ export class StreamableHTTPTransport extends EventEmitter {
             resolve(response);
           }
         };
-        
+
         this.on('response', responseHandler);
       });
     } catch (error) {
@@ -396,7 +488,7 @@ export class StreamableHTTPTransport extends EventEmitter {
   setServer(server: Server): void {
     this.mcpServer = server;
   }
-  
+
   // Set message handler for processing requests
   setMessageHandler(handler: (message: any) => Promise<any>): void {
     this.messageHandler = handler;

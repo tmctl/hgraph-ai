@@ -1,0 +1,99 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: mcp-postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: mcp-keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_password
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+      KC_HTTP_PORT: 8080
+      KC_HEALTH_ENABLED: true
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command:
+      - start-dev
+      - --import-realm
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/realms:/opt/keycloak/data/import
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mcp-server:
+    build: .
+    container_name: mcp-server
+    environment:
+      MCP_PORT: 3001
+      MCP_HOST: 0.0.0.0
+      MCP_AUTH_ENABLED: true
+      MCP_AUTH_MODE: oauth2
+      MCP_AUTH_ISSUER: http://localhost:8080/realms/mcp
+      MCP_AUTH_AUDIENCE: mcp-api
+      # Internal network URL for JWKS fetching
+      MCP_AUTH_JWKS_URI: http://keycloak:8080/realms/mcp/protocol/openid-connect/certs
+      MCP_AUTH_DISCOVERY_BASE: http://localhost:3001
+      MCP_AUTH_TOKEN_ENDPOINT: http://localhost:8080/realms/mcp/protocol/openid-connect/token
+      MCP_AUTH_AUTHZ_ENDPOINT: http://localhost:8080/realms/mcp/protocol/openid-connect/auth
+      MCP_AUTH_REGISTRATION_ENDPOINT: http://localhost:8080/realms/mcp/clients-registrations/openid-connect
+      MCP_AUTH_ALLOWED_ALGS: RS256,ES256
+      MCP_AUTH_CLOCK_SKEW_SECONDS: 120
+      MCP_AUTH_JWKS_CACHE_TTL_SECONDS: 3600
+      MCP_SCOPE_TO_ROLE_MAP_JSON: '{"mcp.read":"reader","mcp.write":"writer","mcp.admin":"admin"}'
+      MCP_ENABLE_DCR: true
+      MCP_API_PREFIX: /mcp
+      # Database configuration (if needed)
+      DATABASE_URL: postgresql://keycloak:keycloak_password@postgres:5432/mcp_db
+    ports:
+      - "3001:3001"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - mcp-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/mcp/health', (r) => {r.statusCode === 200 ? process.exit(0) : process.exit(1)})"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+
+networks:
+  mcp-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

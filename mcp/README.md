@@ -123,12 +123,14 @@ MCP_PORT=3001 MCP_HOST=localhost npm run dev:http
 ```
 
 **Configuration:**
+
 - `MCP_PORT`: Server port (default: 3001)
 - `MCP_HOST`: Server host (default: localhost)
-- `MCP_CORS_ORIGIN`: CORS origin configuration (default: *)
+- `MCP_CORS_ORIGIN`: CORS origin configuration (default: \*)
 - `MCP_API_PREFIX`: API path prefix (default: /mcp)
 
 **Endpoints:**
+
 - `GET /mcp/health` - Health check and server status
 - `GET /mcp/sse` - Server-Sent Events stream for real-time updates
 - `POST /mcp/message` - Single JSON-RPC request endpoint
@@ -161,6 +163,7 @@ npm run test:http-client
 ```
 
 **Features:**
+
 - Full MCP protocol support over HTTP
 - Server-Sent Events for streaming responses
 - Batch request processing
