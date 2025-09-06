@@ -15,8 +15,12 @@
   ],
   "scripts": {
     "start": "node dist/index.js",
+    "start:http": "node dist/http-server.js",
+    "dev:http": "tsx src/http-server.ts",
+    "test:http-client": "tsx src/test-http-client.ts",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
+    "format": "prettier --write \"src/**/*.ts\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
