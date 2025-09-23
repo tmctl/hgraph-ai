@@ -35,9 +35,7 @@ export const WalletConnectButton: React.FC = () => {
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel>Wallet</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="font-mono text-sm">
-            {accountId}
-          </DropdownMenuItem>
+          <DropdownMenuItem className="font-mono text-sm">{accountId}</DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={disconnect}

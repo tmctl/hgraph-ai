@@ -14,7 +14,8 @@ interface WalletContextType {
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 // Get project ID from environment or use a public demo ID
-const projectId = import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || 'aca2e65174da1ef84dd332e0e60a0f8a';
+const projectId =
+  import.meta.env.VITE_WALLET_CONNECT_PROJECT_ID || 'aca2e65174da1ef84dd332e0e60a0f8a';
 
 // Initialize WalletConnect Modal
 const walletConnectModal = new WalletConnectModal({
@@ -54,17 +55,17 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (existingSessions.length > 0) {
           const lastSession = existingSessions[existingSessions.length - 1];
           setSession(lastSession);
-          
+
           // Extract Hedera account from session
           const hederaAccounts = lastSession.namespaces.hedera?.accounts;
           if (hederaAccounts && hederaAccounts.length > 0) {
             // Format: hedera:mainnet:0.0.123456
             const accountParts = hederaAccounts[0].split(':');
             const hederaAccountId = accountParts[accountParts.length - 1];
-            
+
             setAccountId(hederaAccountId);
             setIsConnected(true);
-            
+
             console.log('Restored session with account:', hederaAccountId);
           }
         }
@@ -86,7 +87,6 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           setAccountId(null);
           setIsConnected(false);
         });
-
       } catch (error) {
         console.error('Failed to initialize SignClient:', error);
       }
@@ -106,7 +106,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     setIsConnecting(true);
-    
+
     try {
       // Prepare connection parameters
       const requiredNamespaces = {
@@ -132,26 +132,26 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       // Open WalletConnect Modal with the URI
       if (uri) {
         walletConnectModal.openModal({ uri });
-        
+
         // Wait for user approval
         const sessionResult = await approval();
-        
+
         // Close modal
         walletConnectModal.closeModal();
-        
+
         // Save session
         setSession(sessionResult);
-        
+
         // Extract Hedera account from session
         const hederaAccounts = sessionResult.namespaces.hedera?.accounts;
         if (hederaAccounts && hederaAccounts.length > 0) {
           // Format: hedera:mainnet:0.0.123456
           const accountParts = hederaAccounts[0].split(':');
           const hederaAccountId = accountParts[accountParts.length - 1];
-          
+
           setAccountId(hederaAccountId);
           setIsConnected(true);
-          
+
           toast({
             title: 'Wallet Connected',
             description: `Connected to account ${hederaAccountId}`,
@@ -161,7 +161,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (error) {
       console.error('Failed to connect wallet:', error);
       walletConnectModal.closeModal();
-      
+
       toast({
         title: 'Connection Failed',
         description: error instanceof Error ? error.message : 'Failed to connect to wallet',
@@ -186,11 +186,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.error('Error disconnecting:', error);
       }
     }
-    
+
     setSession(null);
     setAccountId(null);
     setIsConnected(false);
-    
+
     toast({
       title: 'Wallet Disconnected',
       description: 'Your wallet has been disconnected',

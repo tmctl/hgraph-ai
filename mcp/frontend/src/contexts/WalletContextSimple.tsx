@@ -19,35 +19,35 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Simple connection using HashPack or other Hedera wallets via window.ethereum
   const connect = useCallback(async () => {
     setIsConnecting(true);
-    
+
     try {
       // Check if HashPack or other Hedera wallet is available
       if (typeof window !== 'undefined' && (window as any).ethereum) {
         const ethereum = (window as any).ethereum;
-        
+
         // Check if it's HashPack
         if (ethereum.isHashPack || ethereum.isHedera) {
           try {
             // Request account access
             const accounts = await ethereum.request({
-              method: 'eth_requestAccounts'
+              method: 'eth_requestAccounts',
             });
-            
+
             if (accounts && accounts.length > 0) {
               // For Hedera, we might get an EVM address, but we can also try to get Hedera account ID
               const account = accounts[0];
-              
+
               // Try to get Hedera account info if available
               if (ethereum.request) {
                 try {
                   const hederaAccount = await ethereum.request({
-                    method: 'hedera_getAccount'
+                    method: 'hedera_getAccount',
                   });
-                  
+
                   if (hederaAccount) {
                     setAccountId(hederaAccount);
                     setIsConnected(true);
-                    
+
                     toast({
                       title: 'Wallet Connected',
                       description: `Connected to account ${hederaAccount}`,
@@ -58,11 +58,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                   console.log('Could not get Hedera account, using EVM address');
                 }
               }
-              
+
               // Fallback to EVM address
               setAccountId(account);
               setIsConnected(true);
-              
+
               toast({
                 title: 'Wallet Connected',
                 description: `Connected to ${account.slice(0, 6)}...${account.slice(-4)}`,
@@ -87,7 +87,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           description: 'Please install HashPack wallet extension',
           variant: 'destructive',
         });
-        
+
         // Open HashPack website
         window.open('https://www.hashpack.app/download', '_blank');
       }
@@ -106,7 +106,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const disconnect = useCallback(() => {
     setAccountId(null);
     setIsConnected(false);
-    
+
     toast({
       title: 'Wallet Disconnected',
       description: 'Your wallet has been disconnected',
@@ -117,15 +117,18 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).ethereum) {
       const ethereum = (window as any).ethereum;
-      
+
       if (ethereum.isHashPack || ethereum.isHedera) {
         // Check if already connected
-        ethereum.request({ method: 'eth_accounts' }).then((accounts: string[]) => {
-          if (accounts && accounts.length > 0) {
-            setAccountId(accounts[0]);
-            setIsConnected(true);
-          }
-        }).catch(console.error);
+        ethereum
+          .request({ method: 'eth_accounts' })
+          .then((accounts: string[]) => {
+            if (accounts && accounts.length > 0) {
+              setAccountId(accounts[0]);
+              setIsConnected(true);
+            }
+          })
+          .catch(console.error);
       }
     }
   }, []);

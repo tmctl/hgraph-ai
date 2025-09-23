@@ -1,5 +1,12 @@
-import { useState, useCallback } from 'react';
-import { createClaudeAPI, ClaudeMessage, ClaudeAPIError, ClaudeResponse } from '@/lib/claude';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import {
+  createClaudeAPI,
+  ClaudeMessage,
+  ClaudeAPIError,
+  ClaudeResponse,
+  ClaudeAPI,
+} from '@/lib/claude';
+import { useKeycloak } from '@/contexts/KeycloakContext';
 
 export interface MessageMetadata {
   sqlQuery?: string | null;
@@ -9,7 +16,11 @@ export interface MessageMetadata {
 
 export interface UseClaude {
   sendMessage: (message: string, systemPrompt?: string, accountId?: string) => Promise<string>;
-  sendMessageWithMetadata: (message: string, systemPrompt?: string, accountId?: string) => Promise<{ response: string; metadata?: MessageMetadata }>;
+  sendMessageWithMetadata: (
+    message: string,
+    systemPrompt?: string,
+    accountId?: string,
+  ) => Promise<{ response: string; metadata?: MessageMetadata }>;
   isLoading: boolean;
   error: string | null;
   clearError: () => void;
@@ -18,11 +29,16 @@ export interface UseClaude {
 }
 
 export const useClaude = (): UseClaude => {
+  const { token } = useKeycloak();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [conversationHistory, setConversationHistory] = useState<
-    ClaudeMessage[]
-  >([]);
+  const [conversationHistory, setConversationHistory] = useState<ClaudeMessage[]>([]);
+  const claudeApiRef = useRef<ClaudeAPI | null>(null);
+
+  // Initialize or update the API instance with the current token
+  useEffect(() => {
+    claudeApiRef.current = createClaudeAPI(undefined, token);
+  }, [token]);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -38,12 +54,14 @@ export const useClaude = (): UseClaude => {
       setError(null);
 
       try {
-        const claude = createClaudeAPI();
-        const response = await claude.chat(
+        if (!claudeApiRef.current) {
+          throw new Error('Claude API not initialized');
+        }
+        const response = await claudeApiRef.current.chat(
           message,
           conversationHistory,
           systemPrompt,
-          accountId
+          accountId,
         );
 
         // Update conversation history
@@ -70,21 +88,27 @@ export const useClaude = (): UseClaude => {
         setIsLoading(false);
       }
     },
-    [conversationHistory]
+    [conversationHistory],
   );
 
   const sendMessageWithMetadata = useCallback(
-    async (message: string, systemPrompt?: string, accountId?: string): Promise<{ response: string; metadata?: MessageMetadata }> => {
+    async (
+      message: string,
+      systemPrompt?: string,
+      accountId?: string,
+    ): Promise<{ response: string; metadata?: MessageMetadata }> => {
       setIsLoading(true);
       setError(null);
 
       try {
-        const claude = createClaudeAPI();
-        const fullResponse = await claude.chatWithMetadata(
+        if (!claudeApiRef.current) {
+          throw new Error('Claude API not initialized');
+        }
+        const fullResponse = await claudeApiRef.current.chatWithMetadata(
           message,
           conversationHistory,
           systemPrompt,
-          accountId
+          accountId,
         );
 
         // Update conversation history
@@ -96,11 +120,13 @@ export const useClaude = (): UseClaude => {
 
         return {
           response: fullResponse.response,
-          metadata: fullResponse.mcpData ? {
-            sqlQuery: fullResponse.mcpData.sqlQuery,
-            queryDescription: fullResponse.mcpData.queryDescription,
-            queryResults: fullResponse.mcpData.queryResults,
-          } : undefined
+          metadata: fullResponse.mcpData
+            ? {
+                sqlQuery: fullResponse.mcpData.sqlQuery,
+                queryDescription: fullResponse.mcpData.queryDescription,
+                queryResults: fullResponse.mcpData.queryResults,
+              }
+            : undefined,
         };
       } catch (err) {
         let errorMessage = 'An unexpected error occurred';
@@ -118,7 +144,7 @@ export const useClaude = (): UseClaude => {
         setIsLoading(false);
       }
     },
-    [conversationHistory]
+    [conversationHistory],
   );
 
   return {
@@ -131,4 +157,3 @@ export const useClaude = (): UseClaude => {
     clearHistory,
   };
 };
-

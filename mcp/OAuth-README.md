@@ -3,6 +3,7 @@
 This document describes the OAuth 2.1/OIDC implementation for the MCP server, replacing basic authentication with a standards-compliant authorization system using Keycloak.
 
 ## Table of Contents
+
 - [Quick Start](#quick-start)
 - [Architecture](#architecture)
 - [Configuration](#configuration)
@@ -115,16 +116,19 @@ MCP_AUTH_TOKEN=legacy-token              # Basic auth token for hybrid mode
 The repository includes a pre-configured realm (`keycloak/realms/mcp-realm.json`) with:
 
 #### Clients
+
 - **mcp-api**: Confidential client for server-to-server
 - **mcp-public-client**: Public client for browser flows (PKCE required)
 - **mcp-service-client**: Service account for automation
 
 #### Scopes
+
 - `mcp.read`: Read access to MCP resources
 - `mcp.write`: Write access to MCP resources
 - `mcp.admin`: Administrative access
 
 #### Test Users
+
 - `test-user` / `test123`: Regular user
 - `admin-user` / `admin123`: Admin user
 
@@ -162,7 +166,8 @@ const codeVerifier = base64url(crypto.randomBytes(32));
 const codeChallenge = base64url(sha256(codeVerifier));
 
 // Step 2: Redirect to authorization
-window.location.href = `http://localhost:8080/realms/mcp/protocol/openid-connect/auth?` +
+window.location.href =
+  `http://localhost:8080/realms/mcp/protocol/openid-connect/auth?` +
   `response_type=code&` +
   `client_id=mcp-public-client&` +
   `redirect_uri=${encodeURIComponent('http://localhost:3001/auth/callback')}&` +
@@ -175,17 +180,20 @@ window.location.href = `http://localhost:8080/realms/mcp/protocol/openid-connect
 const params = new URLSearchParams(window.location.search);
 const code = params.get('code');
 
-const tokenResponse = await fetch('http://localhost:8080/realms/mcp/protocol/openid-connect/token', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-  body: new URLSearchParams({
-    grant_type: 'authorization_code',
-    code: code,
-    redirect_uri: 'http://localhost:3001/auth/callback',
-    client_id: 'mcp-public-client',
-    code_verifier: codeVerifier
-  })
-});
+const tokenResponse = await fetch(
+  'http://localhost:8080/realms/mcp/protocol/openid-connect/token',
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: 'http://localhost:3001/auth/callback',
+      client_id: 'mcp-public-client',
+      code_verifier: codeVerifier,
+    }),
+  },
+);
 ```
 
 ### 3. Dynamic Client Registration
@@ -257,16 +265,19 @@ tsx tests/test-oauth-flows.ts
 ### Manual Testing
 
 1. **Discovery Endpoint**:
+
 ```bash
 curl http://localhost:3001/.well-known/oauth-authorization-server | jq
 ```
 
 2. **Health Check**:
+
 ```bash
 curl http://localhost:3001/health/auth | jq
 ```
 
 3. **Token Validation**:
+
 ```bash
 # Invalid token should return 401
 curl -X POST http://localhost:3001/mcp/message \
@@ -293,6 +304,7 @@ curl -X POST http://localhost:3001/mcp/message \
 ### Token Validation
 
 The server validates:
+
 - **Signature**: Using JWKS from Keycloak
 - **Issuer**: Must match `MCP_AUTH_ISSUER`
 - **Audience**: Must contain `MCP_AUTH_AUDIENCE`
@@ -305,20 +317,24 @@ The server validates:
 ### Common Issues
 
 #### 1. "Invalid token" errors
+
 - Check token expiration: `jwt decode <token>`
 - Verify JWKS endpoint is accessible
 - Check issuer and audience match configuration
 
 #### 2. "Keycloak unreachable"
+
 - Ensure Keycloak is running: `docker-compose ps`
 - Check network connectivity between services
 - Verify Keycloak URLs in configuration
 
 #### 3. "CORS errors"
+
 - Add client origin to CORS configuration
 - Check Keycloak client web origins setting
 
 #### 4. "Scope insufficient" errors
+
 - Verify token includes required scopes
 - Check scope-to-role mapping configuration
 - Ensure client has access to scopes in Keycloak
@@ -326,6 +342,7 @@ The server validates:
 ### Debug Mode
 
 Enable detailed logging:
+
 ```bash
 DEBUG=oauth:* npm run start:oauth
 ```
@@ -333,6 +350,7 @@ DEBUG=oauth:* npm run start:oauth
 ### Keycloak Admin Console
 
 Access at http://localhost:8080/admin (admin/admin)
+
 - View/edit realm configuration
 - Manage clients and users
 - Monitor active sessions
@@ -341,11 +359,13 @@ Access at http://localhost:8080/admin (admin/admin)
 ## API Reference
 
 ### Discovery Endpoint
+
 ```
 GET /.well-known/oauth-authorization-server
 ```
 
 ### OAuth Endpoints
+
 ```
 GET /auth/login           # Initiate PKCE flow
 GET /auth/callback        # Handle authorization callback
@@ -354,7 +374,9 @@ POST /register           # Dynamic client registration
 ```
 
 ### Protected MCP Endpoints
+
 All require `Authorization: Bearer <token>` header:
+
 ```
 GET /mcp/health          # No auth required
 GET /mcp/sse            # Requires mcp.read
@@ -365,6 +387,7 @@ POST /mcp/batch         # Scope depends on methods
 ## Examples
 
 ### Node.js Client
+
 ```typescript
 import axios from 'axios';
 
@@ -375,8 +398,8 @@ const tokenResponse = await axios.post(
     grant_type: 'client_credentials',
     client_id: 'mcp-service-client',
     client_secret: process.env.CLIENT_SECRET,
-    scope: 'mcp.read mcp.write'
-  })
+    scope: 'mcp.read mcp.write',
+  }),
 );
 
 const token = tokenResponse.data.access_token;
@@ -385,11 +408,12 @@ const token = tokenResponse.data.access_token;
 const mcpResponse = await axios.post(
   'http://localhost:3001/mcp/message',
   { jsonrpc: '2.0', id: 1, method: 'tools/list' },
-  { headers: { 'Authorization': `Bearer ${token}` } }
+  { headers: { Authorization: `Bearer ${token}` } },
 );
 ```
 
 ### Python Client
+
 ```python
 import requests
 

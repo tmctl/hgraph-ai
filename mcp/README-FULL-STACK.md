@@ -1,6 +1,7 @@
 # Hgraph MCP Full Stack Application
 
 This repository now contains a complete full-stack application with:
+
 - **Backend**: MCP Server with OAuth 2.1 authentication
 - **Frontend**: React + Vite application
 - **Auth**: Keycloak for OAuth/OIDC
@@ -9,6 +10,7 @@ This repository now contains a complete full-stack application with:
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Docker and Docker Compose
 - npm or yarn
@@ -16,6 +18,7 @@ This repository now contains a complete full-stack application with:
 ### Development Setup
 
 1. **Install dependencies**:
+
 ```bash
 # Install backend dependencies
 npm install
@@ -25,12 +28,14 @@ cd frontend && npm install && cd ..
 ```
 
 2. **Start all services**:
+
 ```bash
 # Start everything (Keycloak, PostgreSQL, MCP Server, Frontend)
 npm run dev:all
 ```
 
 This will:
+
 - Start Keycloak at http://localhost:8080
 - Start MCP Server at http://localhost:3001
 - Start Frontend at http://localhost:5173
@@ -43,6 +48,7 @@ docker-compose up --build
 ```
 
 Services will be available at:
+
 - Frontend: http://localhost:5173
 - MCP Server: http://localhost:3001
 - Keycloak: http://localhost:8080
@@ -56,7 +62,7 @@ mcp/
 │   ├── tools/             # MCP tools
 │   └── ...
 ├── frontend/              # React frontend application
-│   ├── src/              
+│   ├── src/
 │   │   ├── components/   # React components
 │   │   ├── pages/        # Page components
 │   │   ├── hooks/        # Custom hooks
@@ -75,11 +81,13 @@ mcp/
 The application uses OAuth 2.1 with Keycloak:
 
 ### Default Users
+
 - **Admin**: admin/admin (Keycloak console)
 - **Test User**: test-user/test123
 - **Admin User**: admin-user/admin123
 
 ### OAuth Clients
+
 - **mcp-api**: Server-side client (mcp-api-secret)
 - **mcp-public-client**: Browser-based client (public)
 - **mcp-service-client**: Service account (mcp-service-secret)
@@ -108,6 +116,7 @@ curl -X POST http://localhost:8080/realms/mcp/protocol/openid-connect/token \
 ## 🛠️ Available Scripts
 
 ### Root Package
+
 - `npm run dev:all` - Start all services in development mode
 - `npm run dev:oauth` - Start OAuth-enabled MCP server
 - `npm run dev:frontend` - Start frontend development server
@@ -117,6 +126,7 @@ curl -X POST http://localhost:8080/realms/mcp/protocol/openid-connect/token \
 - `npm run docker:logs` - View Docker logs
 
 ### Frontend Package
+
 - `npm run dev` - Start Vite dev server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
@@ -125,7 +135,9 @@ curl -X POST http://localhost:8080/realms/mcp/protocol/openid-connect/token \
 ## 🔧 Configuration
 
 ### Backend Environment Variables
+
 Create `.env` file in root:
+
 ```env
 MCP_PORT=3001
 MCP_AUTH_ENABLED=true
@@ -137,7 +149,9 @@ MCP_AUTH_JWKS_URI=http://localhost:8080/realms/mcp/protocol/openid-connect/certs
 ```
 
 ### Frontend Environment Variables
+
 Create `.env` file in frontend/:
+
 ```env
 VITE_API_BASE_URL=http://localhost:3001
 VITE_KEYCLOAK_URL=http://localhost:8080
@@ -148,6 +162,7 @@ VITE_KEYCLOAK_CLIENT_ID=mcp-public-client
 ## 📚 API Documentation
 
 ### MCP Endpoints
+
 - `GET /.well-known/oauth-authorization-server` - OAuth discovery
 - `GET /mcp/health` - Health check
 - `POST /mcp/message` - Send MCP message
@@ -155,6 +170,7 @@ VITE_KEYCLOAK_CLIENT_ID=mcp-public-client
 - `POST /mcp/batch` - Batch operations
 
 ### Authentication Flow
+
 1. Frontend redirects to Keycloak login
 2. User authenticates with Keycloak
 3. Keycloak redirects back with authorization code
@@ -165,6 +181,7 @@ VITE_KEYCLOAK_CLIENT_ID=mcp-public-client
 ## 🐳 Docker Architecture
 
 The application uses a multi-container setup:
+
 1. **PostgreSQL**: Database for Keycloak
 2. **Keycloak**: Identity and access management
 3. **MCP Server**: Backend API with OAuth protection

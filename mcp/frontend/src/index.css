@@ -39,14 +39,26 @@ All colors MUST be HSL.
 
     --gradient-primary: linear-gradient(135deg, hsl(270 80% 60%), hsl(290 75% 65%));
     --gradient-secondary: linear-gradient(135deg, hsl(230 30% 92%), hsl(180 80% 90%));
-    --gradient-hero: linear-gradient(135deg, hsl(260 85% 20%) 0%, hsl(280 75% 35%) 30%, hsl(270 80% 60%) 70%, hsl(180 80% 60%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(260 85% 15%) 0%, hsl(280 75% 25%) 50%, hsl(270 80% 45%) 100%);
-    
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(260 85% 20%) 0%,
+      hsl(280 75% 35%) 30%,
+      hsl(270 80% 60%) 70%,
+      hsl(180 80% 60%) 100%
+    );
+    --gradient-cosmic: linear-gradient(
+      135deg,
+      hsl(260 85% 15%) 0%,
+      hsl(280 75% 25%) 50%,
+      hsl(270 80% 45%) 100%
+    );
+
     --shadow-soft: 0 4px 6px -1px hsl(270 80% 60% / 0.1), 0 2px 4px -1px hsl(270 80% 60% / 0.06);
-    --shadow-medium: 0 10px 15px -3px hsl(270 80% 60% / 0.15), 0 4px 6px -2px hsl(270 80% 60% / 0.1);
+    --shadow-medium:
+      0 10px 15px -3px hsl(270 80% 60% / 0.15), 0 4px 6px -2px hsl(270 80% 60% / 0.1);
     --shadow-large: 0 25px 50px -12px hsl(270 80% 60% / 0.25);
     --shadow-glow: 0 0 40px hsl(180 80% 60% / 0.3);
-    
+
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 
@@ -101,9 +113,20 @@ All colors MUST be HSL.
 
     --gradient-primary: linear-gradient(135deg, hsl(270 80% 60%), hsl(290 75% 65%));
     --gradient-secondary: linear-gradient(135deg, hsl(260 75% 15%), hsl(180 80% 20%));
-    --gradient-hero: linear-gradient(135deg, hsl(260 85% 8%) 0%, hsl(280 75% 15%) 30%, hsl(270 80% 35%) 70%, hsl(180 80% 40%) 100%);
-    --gradient-cosmic: linear-gradient(135deg, hsl(260 85% 5%) 0%, hsl(280 75% 12%) 50%, hsl(270 80% 25%) 100%);
-    
+    --gradient-hero: linear-gradient(
+      135deg,
+      hsl(260 85% 8%) 0%,
+      hsl(280 75% 15%) 30%,
+      hsl(270 80% 35%) 70%,
+      hsl(180 80% 40%) 100%
+    );
+    --gradient-cosmic: linear-gradient(
+      135deg,
+      hsl(260 85% 5%) 0%,
+      hsl(280 75% 12%) 50%,
+      hsl(270 80% 25%) 100%
+    );
+
     --shadow-soft: 0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -1px hsl(0 0% 0% / 0.2);
     --shadow-medium: 0 10px 15px -3px hsl(0 0% 0% / 0.4), 0 4px 6px -2px hsl(0 0% 0% / 0.3);
     --shadow-large: 0 25px 50px -12px hsl(0 0% 0% / 0.6);

@@ -1,0 +1,22 @@
+# Claude API Proxy Server
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy server files
+COPY server.js ./
+COPY mcp-http-client.js ./
+COPY .env.example ./.env.example
+COPY src/schema/database-schema.json ./src/schema/
+
+# Expose port
+EXPOSE 3002
+
+# Start the server
+CMD ["node", "server.js"]

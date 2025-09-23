@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Sparkles, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useClaude } from "@/hooks/useClaude";
+import { useState, useRef, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Send, Bot, User, Sparkles, AlertCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useClaude } from '@/hooks/useClaude';
 
 interface Message {
   id: string;
@@ -18,15 +18,15 @@ const ChatInterface = () => {
       id: '1',
       text: 'Hello! I can help you analyze Hedera blockchain data. Try asking me something like "How many NFTs do I have?" or "What is the current state of this smart contract?"',
       sender: 'bot',
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    },
   ]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { sendMessage, isLoading, error, clearError } = useClaude();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -34,10 +34,10 @@ const ChatInterface = () => {
   }, [messages]);
 
   const exampleQuestions = [
-    "How many NFTs do I have?",
-    "What is the current state of this smart contract?",
-    "Show me my account balance history",
-    "What tokens have I traded recently?"
+    'How many NFTs do I have?',
+    'What is the current state of this smart contract?',
+    'Show me my account balance history',
+    'What tokens have I traded recently?',
   ];
 
   const handleSendMessage = async () => {
@@ -47,10 +47,10 @@ const ChatInterface = () => {
       id: Date.now().toString(),
       text: inputValue,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     const currentQuestion = inputValue;
     setInputValue('');
     clearError();
@@ -63,31 +63,35 @@ Keep responses concise but informative, and use markdown formatting when helpful
 
     try {
       const responseText = await sendMessage(currentQuestion, systemPrompt);
-      
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: responseText,
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
-      setMessages(prev => [...prev, botMessage]);
+
+      setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error('Error querying Claude:', error);
-      
-      const errorText = error instanceof Error ? error.message : 'Sorry, I encountered an error while processing your query. Please try again.';
-      const isRetryable = errorText.toLowerCase().includes('traffic') || 
-                         errorText.toLowerCase().includes('try again') ||
-                         errorText.toLowerCase().includes('rate limit');
-      
+
+      const errorText =
+        error instanceof Error
+          ? error.message
+          : 'Sorry, I encountered an error while processing your query. Please try again.';
+      const isRetryable =
+        errorText.toLowerCase().includes('traffic') ||
+        errorText.toLowerCase().includes('try again') ||
+        errorText.toLowerCase().includes('rate limit');
+
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: errorText + (isRetryable ? '\n\n💡 Tip: Click your message above to retry.' : ''),
         sender: 'bot',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
-      setMessages(prev => [...prev, errorMessage]);
+
+      setMessages((prev) => [...prev, errorMessage]);
     }
   };
 
@@ -101,7 +105,10 @@ Keep responses concise but informative, and use markdown formatting when helpful
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-foreground mb-4">
-              Try the <span className="bg-gradient-primary bg-clip-text text-transparent">AI Assistant</span>
+              Try the{' '}
+              <span className="bg-gradient-primary bg-clip-text text-transparent">
+                AI Assistant
+              </span>
             </h2>
             <p className="text-xl text-muted-foreground">
               Ask questions about Hedera blockchain data in natural language
@@ -135,8 +142,8 @@ Keep responses concise but informative, and use markdown formatting when helpful
                 <div
                   key={message.id}
                   className={cn(
-                    "flex gap-3 animate-fade-in",
-                    message.sender === 'user' ? 'justify-end' : 'justify-start'
+                    'flex gap-3 animate-fade-in',
+                    message.sender === 'user' ? 'justify-end' : 'justify-start',
                   )}
                 >
                   {message.sender === 'bot' && (
@@ -144,18 +151,18 @@ Keep responses concise but informative, and use markdown formatting when helpful
                       <Bot className="w-4 h-4 text-white" />
                     </div>
                   )}
-                  
+
                   <div
                     className={cn(
-                      "max-w-xs lg:max-w-md px-4 py-2 rounded-lg",
+                      'max-w-xs lg:max-w-md px-4 py-2 rounded-lg',
                       message.sender === 'user'
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-secondary-foreground'
+                        : 'bg-secondary text-secondary-foreground',
                     )}
                   >
                     <p className="text-sm">{message.text}</p>
                   </div>
-                  
+
                   {message.sender === 'user' && (
                     <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
                       <User className="w-4 h-4 text-muted-foreground" />
@@ -163,7 +170,7 @@ Keep responses concise but informative, and use markdown formatting when helpful
                   )}
                 </div>
               ))}
-              
+
               {isLoading && (
                 <div className="flex gap-3 animate-fade-in">
                   <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center flex-shrink-0">
@@ -172,13 +179,19 @@ Keep responses concise but informative, and use markdown formatting when helpful
                   <div className="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg">
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                      <div
+                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                        style={{ animationDelay: '0.1s' }}
+                      />
+                      <div
+                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
+                        style={{ animationDelay: '0.2s' }}
+                      />
                     </div>
                   </div>
                 </div>
               )}
-              
+
               <div ref={messagesEndRef} />
             </div>
 
@@ -213,9 +226,9 @@ Keep responses concise but informative, and use markdown formatting when helpful
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   className="flex-1"
                 />
-                <Button 
-                  variant="chat" 
-                  size="sm" 
+                <Button
+                  variant="chat"
+                  size="sm"
                   onClick={handleSendMessage}
                   disabled={!inputValue.trim() || isLoading}
                 >

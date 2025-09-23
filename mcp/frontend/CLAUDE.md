@@ -70,13 +70,15 @@ src/
 The application integrates with Claude API through a backend proxy for AI-powered chat functionality:
 
 **Backend Proxy (`server.js`)**:
-- **Setup**: Copy `.env.server.example` to `.env` and add your Claude API key  
+
+- **Setup**: Copy `.env.server.example` to `.env` and add your Claude API key
 - **Server**: Express.js proxy server that handles Claude API calls (merged into main project)
 - **Endpoints**: `/health` (health check), `/api/claude` (Claude API proxy)
 - **CORS**: Configured to accept requests from frontend localhost:8080
 - **MCP Integration**: Connected via stdio transport to MCP server for enhanced context
 
 **Frontend Integration**:
+
 - **Environment**: Copy `.env.example` to `.env` and set `VITE_API_BASE_URL=http://localhost:3001`
 - **API Service**: `src/lib/claude.ts` - Client for backend proxy
 - **React Hook**: `src/hooks/useClaude.ts` - React hook for easy Claude integration
@@ -85,9 +87,10 @@ The application integrates with Claude API through a backend proxy for AI-powere
 - **System Prompts**: Specialized for Hedera blockchain analysis queries
 
 **Development Setup**:
+
 1. Install all dependencies: `npm i`
 2. Set up backend environment: `cp .env.server.example .env` and add Claude API key
-3. Set up frontend environment: `cp .env.example .env` (default values should work)  
+3. Set up frontend environment: `cp .env.example .env` (default values should work)
 4. Start both servers: `npm run dev:full`
 
 ### Development Notes

@@ -34,7 +34,11 @@ export interface ClaudeRequestOptions {
 }
 
 class ClaudeAPIError extends Error {
-  constructor(message: string, public status?: number, public code?: string) {
+  constructor(
+    message: string,
+    public status?: number,
+    public code?: string,
+  ) {
     super(message);
     this.name = 'ClaudeAPIError';
   }
@@ -42,29 +46,41 @@ class ClaudeAPIError extends Error {
 
 export class ClaudeAPI {
   private baseURL: string;
-  
-  constructor(baseURL?: string) {
+  private token?: string;
+
+  constructor(baseURL?: string, token?: string) {
     this.baseURL = baseURL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+    this.token = token;
+  }
+
+  setToken(token: string | undefined) {
+    this.token = token;
   }
 
   async sendMessage(
     message: string,
     conversationHistory: ClaudeMessage[] = [],
     systemPrompt?: string,
-    accountId?: string
+    accountId?: string,
   ): Promise<ClaudeResponse> {
     try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (this.token) {
+        headers['Authorization'] = `Bearer ${this.token}`;
+      }
+
       const response = await fetch(`${this.baseURL}/api/claude`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers,
         body: JSON.stringify({
           message,
           conversationHistory,
           systemPrompt,
-          accountId
-        })
+          accountId,
+        }),
       });
 
       const data = await response.json();
@@ -73,7 +89,7 @@ export class ClaudeAPI {
         throw new ClaudeAPIError(
           data.error || `HTTP ${response.status}: ${response.statusText}`,
           response.status,
-          data.type
+          data.type,
         );
       }
 
@@ -83,7 +99,7 @@ export class ClaudeAPI {
         throw error;
       }
       throw new ClaudeAPIError(
-        `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }
@@ -92,9 +108,14 @@ export class ClaudeAPI {
     userMessage: string,
     conversationHistory: ClaudeMessage[] = [],
     systemPrompt?: string,
-    accountId?: string
+    accountId?: string,
   ): Promise<string> {
-    const response = await this.sendMessage(userMessage, conversationHistory, systemPrompt, accountId);
+    const response = await this.sendMessage(
+      userMessage,
+      conversationHistory,
+      systemPrompt,
+      accountId,
+    );
     return response.response;
   }
 
@@ -102,14 +123,14 @@ export class ClaudeAPI {
     userMessage: string,
     conversationHistory: ClaudeMessage[] = [],
     systemPrompt?: string,
-    accountId?: string
+    accountId?: string,
   ): Promise<ClaudeResponse> {
     return await this.sendMessage(userMessage, conversationHistory, systemPrompt, accountId);
   }
 }
 
-export const createClaudeAPI = (baseURL?: string) => {
-  return new ClaudeAPI(baseURL);
+export const createClaudeAPI = (baseURL?: string, token?: string) => {
+  return new ClaudeAPI(baseURL, token);
 };
 
 export { ClaudeAPIError };

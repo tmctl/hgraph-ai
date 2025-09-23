@@ -57,6 +57,7 @@ This project is built with:
 You can deploy this project using various hosting platforms like Vercel, Netlify, or any static hosting service.
 
 Build the project for production:
+
 ```sh
 npm run build
 ```

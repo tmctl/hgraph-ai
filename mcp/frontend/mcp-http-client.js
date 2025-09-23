@@ -17,10 +17,7 @@ export class MCPHttpClient {
       if (testResponse.result) {
         this.initialized = true;
         console.log('✅ MCP HTTP client connected successfully');
-        console.log(
-          '🔧 Available tools:',
-          testResponse.result.tools?.length || 0
-        );
+        console.log('🔧 Available tools:', testResponse.result.tools?.length || 0);
         return true;
       }
 
@@ -55,9 +52,7 @@ export class MCPHttpClient {
       const data = await response.json();
 
       if (data.error) {
-        throw new Error(
-          `MCP error: ${data.error.message || JSON.stringify(data.error)}`
-        );
+        throw new Error(`MCP error: ${data.error.message || JSON.stringify(data.error)}`);
       }
 
       return data;
@@ -112,4 +107,3 @@ export class MCPHttpClient {
     console.log('🔌 MCP HTTP client closed');
   }
 }
-

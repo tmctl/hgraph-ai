@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { 
-  HederaSessionEvent, 
-  HederaJsonRpcMethod, 
-  DAppConnector, 
+import {
+  HederaSessionEvent,
+  HederaJsonRpcMethod,
+  DAppConnector,
   HederaChainId,
   ExtensionData,
-  DAppSigner
+  DAppSigner,
 } from '@hashgraph/hedera-wallet-connect';
 import { LedgerId } from '@hashgraph/sdk';
 import { toast } from '@/hooks/use-toast';
@@ -48,7 +48,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       projectId,
       Object.values(HederaJsonRpcMethod),
       [HederaSessionEvent.ChainChanged, HederaSessionEvent.AccountsChanged],
-      [network === 'mainnet' ? HederaChainId.Mainnet : HederaChainId.Testnet]
+      [network === 'mainnet' ? HederaChainId.Mainnet : HederaChainId.Testnet],
     );
 
     await connector.init();
@@ -58,11 +58,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (existingSessions && existingSessions.length > 0) {
       const session = existingSessions[0];
       if (session.namespaces?.hedera?.accounts?.[0]) {
-        const accountIdFromSession = session.namespaces.hedera.accounts[0]
-          .split(':')[2];
-        
+        const accountIdFromSession = session.namespaces.hedera.accounts[0].split(':')[2];
+
         console.log('Restored session with account ID:', accountIdFromSession);
-        
+
         setAccountId(accountIdFromSession);
         setIsConnected(true);
 
@@ -82,14 +81,15 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!projectId) {
       toast({
         title: 'Configuration Error',
-        description: 'WalletConnect Project ID is not configured. Please add VITE_WALLET_CONNECT_PROJECT_ID to your .env file.',
+        description:
+          'WalletConnect Project ID is not configured. Please add VITE_WALLET_CONNECT_PROJECT_ID to your .env file.',
         variant: 'destructive',
       });
       return;
     }
 
     setIsConnecting(true);
-    
+
     try {
       let connector = dAppConnector;
       if (!connector) {
@@ -101,11 +101,11 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
 
       const extensionData = connector.extensionsAvailable?.find(
-        (ext: ExtensionData) => ext.available
+        (ext: ExtensionData) => ext.available,
       );
 
       let session;
-      
+
       if (extensionData) {
         session = await connector.connectExtension(extensionData.id);
       } else {
@@ -120,9 +120,9 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             (approval) => {
               // This is called when the user approves the connection
               console.log('Connection approved');
-            }
+            },
           );
-          
+
           // After connection attempt, check for active sessions
           const sessions = connector.walletConnectClient?.session.getAll();
           if (sessions && sessions.length > 0) {
@@ -138,11 +138,10 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         throw new Error('Failed to establish session');
       }
 
-      const accountIdFromSession = session.namespaces.hedera.accounts[0]
-        .split(':')[2];
-      
+      const accountIdFromSession = session.namespaces.hedera.accounts[0].split(':')[2];
+
       console.log('Connected with account ID:', accountIdFromSession);
-      
+
       setAccountId(accountIdFromSession);
       setIsConnected(true);
 
@@ -171,7 +170,7 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setAccountId(null);
       setIsConnected(false);
       setSigner(null);
-      
+
       toast({
         title: 'Wallet Disconnected',
         description: 'Your wallet has been disconnected',
