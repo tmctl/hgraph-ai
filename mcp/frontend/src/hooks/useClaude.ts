@@ -6,7 +6,7 @@ import {
   ClaudeResponse,
   ClaudeAPI,
 } from '@/lib/claude';
-import { useKeycloak } from '@/contexts/KeycloakContext';
+import { oauthClient } from '@/lib/oauth';
 
 export interface MessageMetadata {
   sqlQuery?: string | null;
@@ -29,7 +29,7 @@ export interface UseClaude {
 }
 
 export const useClaude = (): UseClaude => {
-  const { token } = useKeycloak();
+  const token = oauthClient.getAccessToken();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conversationHistory, setConversationHistory] = useState<ClaudeMessage[]>([]);

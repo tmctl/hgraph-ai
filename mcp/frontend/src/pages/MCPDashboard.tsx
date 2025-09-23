@@ -5,15 +5,40 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ArrowLeft, Server, Wrench, FileText, Sparkles } from 'lucide-react';
+import { ArrowLeft, Server, Wrench, FileText, Sparkles, LogOut, Loader2 } from 'lucide-react';
 import { useMCPData } from '@/hooks/useMCPData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { oauthClient } from '@/lib/oauth';
 
 export const MCPDashboard = () => {
   const navigate = useNavigate();
   const { data, loading, error, refetch } = useMCPData();
   const [activeTab, setActiveTab] = useState('tools');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
+
+  useEffect(() => {
+    // Check authentication status and redirect if not authenticated
+    const checkAuth = () => {
+      const authenticated = oauthClient.isAuthenticated();
+      setIsAuthenticated(authenticated);
+      setAuthChecking(false);
+
+      if (!authenticated) {
+        // Store return URL for after auth
+        sessionStorage.setItem('auth_return_url', '/mcp-dashboard');
+        // Redirect to login
+        oauthClient.login();
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  const handleLogout = () => {
+    oauthClient.logout();
+  };
 
   // Parse tool parameters safely
   const parseParameters = (tool: any) => {
@@ -26,6 +51,23 @@ export const MCPDashboard = () => {
       return {};
     }
   };
+
+  // Show loading while checking authentication
+  if (authChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+          <h2 className="text-xl font-semibold">Checking authentication...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  // Only show dashboard if authenticated
+  if (!isAuthenticated) {
+    return null; // Will redirect to OAuth login
+  }
 
   if (loading) {
     return (
@@ -68,14 +110,31 @@ export const MCPDashboard = () => {
       <div className="max-w-7xl mx-auto p-8">
         {/* Header */}
         <div className="mb-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="mb-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Chat
-          </Button>
+          <div className="flex justify-between items-start mb-4">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/')}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Chat
+            </Button>
+
+            {/* Auth Status */}
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="gap-1">
+                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                Authenticated
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </div>
+          </div>
 
           <div className="flex items-center gap-3 mb-4">
             <Server className="h-8 w-8 text-primary" />
@@ -96,7 +155,11 @@ export const MCPDashboard = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <p className="text-sm text-gray-600">Connection</p>
+                <p className="text-lg font-semibold">OAuth Connected</p>
+              </div>
               <div>
                 <p className="text-sm text-gray-600">Tools Available</p>
                 <p className="text-2xl font-bold">{data?.tools?.length || 0}</p>

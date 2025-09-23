@@ -15,7 +15,10 @@
 
 ## MCP Server Best Practices
 
+- **NEVER use mock data or hardcoded values** - this is a production-ready product
 - Return processed data, not raw queries
 - No direct SQL execution exposed to clients
 - All data validation happens server-side
 - Maintain proper error handling and security
+- Always fetch real data from appropriate sources
+- Use proper environment variables for configuration, not hardcoded values

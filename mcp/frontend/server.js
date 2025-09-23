@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { MCPHttpClient } from './mcp-http-client.js';
 // Load environment variables
 dotenv.config();
 
@@ -12,7 +11,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // SQL Generation utilities
-
 const accountIdToEntityId = (accountId) => {
   const parts = accountId.split('.');
   if (parts.length !== 3) throw new Error('Invalid account ID format');
@@ -34,21 +32,26 @@ class SQLGenerator {
     const schemaText = this.formatSchemaForPrompt(schema);
 
     const systemPrompt = `You are an expert SQL generator for Hedera blockchain data.
+The user is asking: "${naturalLanguageQuery}"
 
 ${schemaText}
 
-Important Notes:
-- Account IDs in format "0.0.X" need to be converted to entity_id format for database queries
-- Balances are stored in tinybars (1 HBAR = 100,000,000 tinybars)
-- Timestamps are in nanoseconds since epoch
-- Always use proper JOINs when querying related tables
-- Use the actual table and column names from the schema provided
+CRITICAL: The database uses entity_id (bigint) instead of account_id strings for all account references.
+Account IDs like "0.0.12345" must be converted to entity_id format.
+${accountId ? `\nThe user's account is: ${accountId} (entity_id: ${accountIdToEntityId(accountId)})` : ''}
 
-Generate a PostgreSQL query. Return ONLY JSON:
+Requirements:
+1. Generate ONLY valid SQL queries
+2. Use entity_id for all account-related WHERE clauses
+3. Include appropriate JOINs when querying related tables
+4. Order results by timestamp DESC by default for time-series data
+5. Limit results to 100 unless specified otherwise
+6. Use proper date/time functions for timestamp columns
+
+Return response as JSON:
 {
-  "sql": "SELECT statement here",
-  "description": "What this query does",
-  "expectedColumns": ["column1", "column2"]
+  "sql": "the SQL query",
+  "explanation": "brief explanation of what the query does"
 }`;
 
     try {
@@ -60,16 +63,14 @@ Generate a PostgreSQL query. Return ONLY JSON:
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-opus-4-1-20250805',
-          max_tokens: 800,
-          temperature: 0.1,
+          model: 'claude-3-sonnet-20240229',
+          max_tokens: 1024,
+          temperature: 0,
           system: systemPrompt,
           messages: [
             {
               role: 'user',
-              content: accountId
-                ? `Generate SQL for: ${naturalLanguageQuery}\n\nIMPORTANT: The user's account ID is ${accountId}. When they say "my" or "I", use entity_id = ${accountId.startsWith('0.0.') ? accountId.substring(4) : accountId}`
-                : `Generate SQL for: ${naturalLanguageQuery}`,
+              content: naturalLanguageQuery,
             },
           ],
         }),
@@ -128,418 +129,204 @@ Generate a PostgreSQL query. Return ONLY JSON:
       return schemaText;
     }
 
-    // If schema is not structured, return as-is
     return `Database Schema:\n${JSON.stringify(schema, null, 2)}`;
   }
 
-  processAccountIds(sql, originalQuery) {
-    const accountIdPattern = /\b\d+\.\d+\.\d+\b/g;
-    const accountIds = originalQuery.match(accountIdPattern);
+  processAccountIds(sql, query) {
+    // Find account IDs in format x.y.z and convert them
+    const accountIdPattern = /['"]?\b(\d+)\.(\d+)\.(\d+)\b['"]?/g;
+    const matches = Array.from(query.matchAll(accountIdPattern));
 
-    if (!accountIds) return sql;
-
-    let processedSQL = sql;
-    accountIds.forEach((accountId) => {
+    let processedSql = sql;
+    matches.forEach((match) => {
+      const fullAccountId = match[0].replace(/['"]/g, '');
       try {
-        const entityId = accountIdToEntityId(accountId);
-        processedSQL = processedSQL.replace(
-          new RegExp(`'${accountId}'|"${accountId}"|${accountId}`, 'g'),
+        const entityId = accountIdToEntityId(fullAccountId);
+        // Replace in SQL, handling both quoted and unquoted versions
+        processedSql = processedSql.replace(
+          new RegExp(`['"]?${fullAccountId.replace(/\./g, '\\.')}['"]?`, 'g'),
           entityId,
         );
       } catch (error) {
-        console.warn(`Could not convert account ID ${accountId}:`, error);
+        console.warn(`Failed to convert account ID ${fullAccountId}:`, error);
       }
     });
 
-    return processedSQL;
+    return processedSql;
   }
 }
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const MCP_SERVER_URL = process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp/message';
-
-// MCP Client instance
-let mcpClient = null;
 
 // SQL Generator instance
 let sqlGenerator = null;
 
-// Middleware
+// Configure CORS
+const CORS_ORIGINS = process.env.CORS_ORIGINS?.split(',') || [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'http://localhost:8080'
+];
+
 app.use(
   cors({
-    origin: [
-      'http://localhost:8080',
-      'http://127.0.0.1:8080',
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      'http://localhost:80',
-      'http://127.0.0.1:80',
-    ],
+    origin: CORS_ORIGINS,
     credentials: true,
-  }),
+  })
 );
-app.use(express.json());
 
-// Serve static files from the dist directory (production build)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// Serve static files from the dist directory (Vite build output)
 app.use(express.static('dist'));
 
 // Serve static files from the public directory
 app.use(express.static('public'));
 
-// Initialize MCP Client
-const initializeMCPClient = async () => {
-  try {
-    console.log('🔌 Initializing MCP client via HTTP...');
-    console.log(`URL: ${MCP_SERVER_URL}`);
-
-    // Create and connect HTTP client
-    mcpClient = new MCPHttpClient(MCP_SERVER_URL);
-    await mcpClient.connect();
-
-    // List available resources, tools, and prompts
-    const resources = await mcpClient.listResources();
-    const tools = await mcpClient.listTools();
-    const prompts = await mcpClient.listPrompts();
-
-    console.log('📋 Available MCP resources:', resources.resources?.length || 0);
-    console.log('🔧 Available MCP tools:', tools.tools?.length || 0);
-    console.log('💬 Available MCP prompts:', prompts.prompts?.length || 0);
-
-    // Log tool details for debugging
-    if (tools.tools && tools.tools.length > 0) {
-      console.log('📝 Available tools:');
-      tools.tools.forEach((tool) => {
-        console.log(`  - ${tool.name}: ${tool.description}`);
-      });
-    }
-
-    return true;
-  } catch (error) {
-    console.error('❌ Failed to initialize MCP client:', error.message);
-    mcpClient = null;
-    return false;
-  }
-};
-
-// Fetch schema resource from MCP server
-const fetchSchemaResource = async () => {
-  if (!mcpClient) {
-    console.warn('⚠️ MCP client not available for schema fetch');
-    return null;
-  }
-
-  try {
-    console.log('🔍 Fetching database schema from MCP server...');
-
-    // List available resources
-    const resources = await mcpClient.listResources();
-
-    if (!resources.resources || resources.resources.length === 0) {
-      console.log('📋 No MCP resources available');
-      return null;
-    }
-
-    // Look for schema-related resources
-    const schemaResource = resources.resources.find(
-      (resource) =>
-        resource.name.toLowerCase().includes('schema') ||
-        resource.name.toLowerCase().includes('database') ||
-        resource.name.toLowerCase().includes('structure'),
-    );
-
-    if (!schemaResource) {
-      console.log(
-        '📋 Available resources:',
-        resources.resources.map((r) => `${r.name} (${r.uri})`).join(', '),
-      );
-      console.log('📋 No schema resource found, using first available resource');
-
-      // Use the first resource as fallback
-      if (resources.resources.length > 0) {
-        const firstResource = resources.resources[0];
-        console.log(`🔍 Fetching resource: ${firstResource.name}`);
-
-        const resourceContent = await mcpClient.readResource({
-          uri: firstResource.uri,
-        });
-
-        if (resourceContent && resourceContent.contents && resourceContent.contents.length > 0) {
-          const content = resourceContent.contents[0];
-          console.log('✅ Schema resource fetched successfully');
-          console.log('📄 Resource type:', content.mimeType || 'unknown');
-
-          // Return the schema for use in SQL generation
-          if (content.text) {
-            try {
-              const schema = JSON.parse(content.text);
-              console.log(
-                '📊 Parsed JSON schema with',
-                Object.keys(schema).length,
-                'top-level keys',
-              );
-              return schema;
-            } catch (parseError) {
-              // If it's not JSON, return as text
-              console.log('📝 Returning schema as text:', content.text.length, 'characters');
-              return content.text;
-            }
-          }
-        }
-      }
-      return null;
-    }
-
-    console.log(`🔍 Fetching schema resource: ${schemaResource.name} (${schemaResource.uri})`);
-
-    try {
-      const resourceContent = await mcpClient.readResource({
-        uri: schemaResource.uri,
-      });
-
-      console.log(
-        '📦 Resource content received:',
-        typeof resourceContent,
-        Object.keys(resourceContent || {}),
-      );
-
-      if (resourceContent && resourceContent.contents && resourceContent.contents.length > 0) {
-        const content = resourceContent.contents[0];
-        console.log('✅ Schema resource fetched successfully');
-        console.log('📄 Resource type:', content.mimeType || 'unknown');
-        console.log('📄 Content keys:', Object.keys(content));
-
-        // Return the schema for use in SQL generation
-        if (content.text) {
-          try {
-            const schema = JSON.parse(content.text);
-            console.log('📊 Parsed JSON schema with', Object.keys(schema).length, 'top-level keys');
-            return schema;
-          } catch (parseError) {
-            // If it's not JSON, return as text
-            console.log('📝 Returning schema as text:', content.text.length, 'characters');
-            return content.text;
-          }
-        } else if (content.blob) {
-          console.log('📄 Returning blob data');
-          return content.blob;
-        }
-      }
-    } catch (readError) {
-      console.warn('⚠️ Failed to read schema resource:', readError.message);
-
-      // Try to use the resource metadata or description instead
-      if (schemaResource.description) {
-        console.log(
-          '📋 Using resource description as schema:',
-          schemaResource.description.substring(0, 200) + '...',
-        );
-        return schemaResource.description;
-      } else {
-        console.log('📋 Resource info:', JSON.stringify(schemaResource, null, 2));
-      }
-    }
-
-    return null;
-  } catch (error) {
-    console.warn('⚠️ Failed to fetch schema resource:', error.message);
-    return null;
-  }
-};
-
-// Query MCP server via HTTP with generated SQL
-const queryMCPServer = async (message, conversationHistory = [], accountId = null) => {
-  if (!mcpClient || !sqlGenerator) {
-    console.warn('⚠️ MCP client or SQL generator not initialized');
-    return null;
-  }
-
-  try {
-    console.log('🔍 Querying MCP server via HTTP with:', message);
-
-    // Fetch fresh schema from MCP server
-    console.log('🛠️ Fetching fresh schema from MCP server...');
-    const currentSchema = await fetchSchemaResource();
-
-    // Generate SQL query using schema and Claude
-    console.log('🛠️ Generating SQL query...');
-    console.log(
-      '📊 Using schema:',
-      currentSchema ? 'Fresh MCP schema resource' : 'No schema available',
-    );
-    const sqlResult = await sqlGenerator.generateSQL(message, currentSchema, accountId);
-
-    // Replace ? placeholder with actual account ID if provided
-    if (accountId && sqlResult.sql.includes('?')) {
-      // Convert account ID to entity_id format (remove "0.0." prefix)
-      const entityId = accountId.startsWith('0.0.') ? accountId.substring(4) : accountId;
-      sqlResult.sql = sqlResult.sql.replace(/\?/g, entityId);
-      console.log(`📝 Generated SQL (with account ${accountId} -> ${entityId}):`, sqlResult.sql);
-    } else {
-      console.log('📝 Generated SQL:', sqlResult.sql);
-    }
-    console.log('📋 Query description:', sqlResult.description);
-
-    // Try to use available tools first
-    const tools = await mcpClient.listTools();
-
-    if (tools.tools && tools.tools.length > 0) {
-      // Use the first available tool with generated SQL
-      const tool = tools.tools[0];
-      console.log(`🔧 Using MCP tool: ${tool.name}`);
-
-      const result = await mcpClient.callTool({
-        name: tool.name,
-        arguments: {
-          sql: sqlResult.sql,
-          query: sqlResult.sql,
-          description: sqlResult.description,
-          message: message,
-          text: message,
-          question: message,
-          account: extractAccountId(message),
-        },
-      });
-
-      console.log('✅ MCP tool response received');
-      console.log(
-        '📦 MCP Response content:',
-        JSON.stringify(result.content, null, 2).substring(0, 500),
-      );
-
-      // Parse the result content to extract query results and actual executed SQL
-      let queryResults = null;
-      let actualExecutedSQL = null;
-
-      if (result.content && Array.isArray(result.content)) {
-        // Look for the content with the actual results
-        const resultContent = result.content.find(
-          (item) =>
-            item.type === 'text' && (item.text.includes('results') || item.text.includes('rows')),
-        );
-        if (resultContent) {
-          queryResults = resultContent.text;
-
-          // Try to extract the actual executed SQL from the results
-          const sqlMatch = queryResults.match(/```sql\n([\s\S]*?)\n```/);
-          if (sqlMatch) {
-            actualExecutedSQL = sqlMatch[1].trim();
-          }
-        } else if (result.content[0] && result.content[0].text) {
-          queryResults = result.content[0].text;
-        }
-      }
-
-      // Note: The MCP server seems to be using a fallback query instead of our generated SQL
-      // The actual SQL we generated is in sqlResult.sql
-      console.log('🔍 Our generated SQL:', sqlResult.sql);
-      if (actualExecutedSQL && actualExecutedSQL !== sqlResult.sql) {
-        console.log('⚠️ MCP executed different SQL:', actualExecutedSQL);
-        console.log('📊 This appears to be a fallback query from the MCP server');
-      }
-
-      // Create a cleaner results format
-      const cleanResults = queryResults
-        ? {
-            originalQuery: sqlResult.sql,
-            executedQuery: actualExecutedSQL || 'Unknown',
-            fullResults: queryResults,
-          }
-        : null;
-
-      return {
-        context: result.content,
-        toolUsed: tool.name,
-        sqlGenerated: sqlResult.sql,
-        sqlDescription: sqlResult.description,
-        sqlResults: cleanResults ? JSON.stringify(cleanResults, null, 2) : queryResults,
-        suggestions: [],
-      };
-    }
-
-    // Fallback to prompts if no tools available
-    const prompts = await mcpClient.listPrompts();
-    if (prompts.prompts && prompts.prompts.length > 0) {
-      const prompt = prompts.prompts[0];
-      console.log(`💬 Using MCP prompt: ${prompt.name}`);
-
-      const result = await mcpClient.getPrompt({
-        name: prompt.name,
-        arguments: {
-          query: message,
-        },
-      });
-
-      return {
-        context: result.messages,
-        promptUsed: prompt.name,
-        suggestions: [],
-      };
-    }
-
-    console.warn('⚠️ No MCP tools or prompts available');
-    return null;
-  } catch (error) {
-    console.warn('⚠️ MCP server error:', error.message);
-    return null;
-  }
-};
-
-// Extract account ID from message
-const extractAccountId = (message) => {
-  const accountPattern = /\b\d+\.\d+\.\d+\b/;
-  const match = message.match(accountPattern);
-  return match ? match[0] : null;
-};
-
 // Health check endpoint
-app.get('/health', async (req, res) => {
-  const mcpStatus = await checkMCPHealth();
+app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    message: 'Claude API proxy is running',
+    service: 'hgraph-mcp-frontend-server',
+    mcp: 'oauth-protected'
+  });
+});
+
+// MCP Status endpoint
+app.get('/api/mcp/status', async (req, res) => {
+  const mcpStatus = await checkMCPHealth();
+  res.json({
     mcp: mcpStatus,
   });
 });
 
-// MCP Server Data endpoint
+// MCP Server Data endpoint - Requires OAuth authentication
 app.get('/api/mcp/data', async (req, res) => {
   try {
-    if (!mcpClient || !mcpClient.initialized) {
-      return res.status(503).json({
-        error: 'MCP server not connected',
+    // Check for OAuth token in Authorization header
+    const authHeader = req.headers.authorization;
+    const oauthToken = authHeader && authHeader.startsWith('Bearer ')
+      ? authHeader.substring(7)
+      : null;
+
+    // Require OAuth token - no fallback to unauthenticated access
+    if (!oauthToken) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: 'Please login to access MCP server data',
         tools: [],
         resources: [],
         prompts: []
       });
     }
 
-    // Fetch all available data from MCP server
-    const [tools, resources, prompts] = await Promise.all([
-      mcpClient.listTools().catch(err => {
-        console.warn('Failed to fetch tools:', err);
-        return { tools: [] };
-      }),
-      mcpClient.listResources().catch(err => {
-        console.warn('Failed to fetch resources:', err);
-        return { resources: [] };
-      }),
-      mcpClient.listPrompts().catch(err => {
-        console.warn('Failed to fetch prompts:', err);
-        return { prompts: [] };
-      })
-    ]);
+    // Fetch from OAuth-enabled MCP server
+    if (oauthToken) {
+      try {
+        console.log('🔐 User authenticated, fetching MCP data with service token');
 
-    res.json({
-      status: 'connected',
-      tools: tools.tools || [],
-      resources: resources.resources || [],
-      prompts: prompts.prompts || []
-    });
+        // Get a service token with proper scopes
+        // Use Docker service name when running in container, localhost otherwise
+        const keycloakUrl = process.env.KEYCLOAK_URL || 'http://keycloak:8080';
+        const tokenResponse = await fetch(`${keycloakUrl}/realms/mcp/protocol/openid-connect/token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: 'grant_type=client_credentials&client_id=mcp-api&client_secret=mcp-api-secret&scope=mcp.read%20mcp.write'
+        });
+
+        if (!tokenResponse.ok) {
+          throw new Error('Failed to get service token');
+        }
+
+        const tokenData = await tokenResponse.json();
+        const serviceToken = tokenData.access_token;
+
+        // Make authenticated request to MCP server
+        // Use Docker service name when running in container
+        const mcpServerUrl = process.env.MCP_SERVER_URL || 'http://mcp-server:3001';
+
+        // Fetch tools, resources, and prompts in parallel
+        const [toolsResponse, resourcesResponse, promptsResponse] = await Promise.allSettled([
+          fetch(`${mcpServerUrl}/mcp/message`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${serviceToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 1,
+              method: 'tools/list',
+            }),
+          }),
+          fetch(`${mcpServerUrl}/mcp/message`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${serviceToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 2,
+              method: 'resources/list',
+            }),
+          }),
+          fetch(`${mcpServerUrl}/mcp/message`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${serviceToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 3,
+              method: 'prompts/list',
+            }),
+          }),
+        ]);
+
+        // Parse responses
+        const tools = toolsResponse.status === 'fulfilled' && toolsResponse.value.ok
+          ? (await toolsResponse.value.json()).result?.tools || []
+          : [];
+
+        const resources = resourcesResponse.status === 'fulfilled' && resourcesResponse.value.ok
+          ? (await resourcesResponse.value.json()).result?.resources || []
+          : [];
+
+        const prompts = promptsResponse.status === 'fulfilled' && promptsResponse.value.ok
+          ? (await promptsResponse.value.json()).result?.prompts || []
+          : [];
+
+        console.log(`✅ OAuth fetch successful - Tools: ${tools.length}, Resources: ${resources.length}, Prompts: ${prompts.length}`);
+
+        return res.json({
+          status: 'authenticated',
+          tools,
+          resources,
+          prompts,
+        });
+      } catch (err) {
+        console.error('⚠️ OAuth fetch failed:', err);
+        return res.status(503).json({
+          error: 'Failed to fetch MCP data',
+          message: 'Unable to connect to MCP server. Please try again later.',
+          tools: [],
+          resources: [],
+          prompts: []
+        });
+      }
+    }
   } catch (error) {
-    console.error('Error fetching MCP data:', error);
+    console.error('Error in MCP data endpoint:', error);
     res.status(500).json({
-      error: 'Failed to fetch MCP data',
+      error: 'Internal server error',
+      message: 'An error occurred while fetching MCP data',
       tools: [],
       resources: [],
       prompts: []
@@ -548,7 +335,14 @@ app.get('/api/mcp/data', async (req, res) => {
 });
 
 const checkMCPHealth = async () => {
-  return mcpClient && mcpClient.initialized ? 'connected' : 'disconnected';
+  // Check OAuth-protected MCP server health
+  try {
+    const mcpServerUrl = process.env.MCP_SERVER_URL || 'http://mcp-server:3001';
+    const response = await fetch(`${mcpServerUrl}/health`);
+    return response.ok ? 'connected' : 'disconnected';
+  } catch {
+    return 'disconnected';
+  }
 };
 
 // Claude API proxy endpoint
@@ -565,30 +359,27 @@ app.post('/api/claude', async (req, res) => {
       return res.status(500).json({ error: 'Claude API key not configured' });
     }
 
-    // Query MCP server for additional context
-    const mcpData = await queryMCPServer(message, conversationHistory, accountId);
+    // Build messages array from conversation history
+    const messages = [];
 
-    // Enhance system prompt with MCP data
-    let enhancedSystemPrompt =
-      systemPrompt || 'You are an AI assistant specialized in analyzing Hedera blockchain data.';
-
-    if (mcpData && mcpData.context) {
-      enhancedSystemPrompt += `\n\nAdditional context from Hedera blockchain data:\n${JSON.stringify(
-        mcpData.context,
-        null,
-        2,
-      )}`;
+    // Add conversation history if provided
+    if (conversationHistory && conversationHistory.length > 0) {
+      conversationHistory.forEach((msg) => {
+        messages.push({
+          role: msg.role,
+          content: msg.content,
+        });
+      });
     }
 
-    if (mcpData && mcpData.suggestions) {
-      enhancedSystemPrompt += `\n\nRelevant data suggestions: ${mcpData.suggestions.join(', ')}`;
-    }
+    // Add current message
+    messages.push({
+      role: 'user',
+      content: message,
+    });
 
-    // Prepare messages for Claude API
-    const messages = [...conversationHistory, { role: 'user', content: message }];
-
-    // Call Claude API
-    const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
+    // Make request to Claude API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -596,73 +387,43 @@ app.post('/api/claude', async (req, res) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-1-20250805',
-        max_tokens: 4096,
-        temperature: 0.7,
-        system: enhancedSystemPrompt,
+        model: process.env.CLAUDE_MODEL || 'claude-3-sonnet-20240229',
+        max_tokens: parseInt(process.env.CLAUDE_MAX_TOKENS) || 4096,
+        temperature: parseFloat(process.env.CLAUDE_TEMPERATURE) || 0.7,
+        system:
+          systemPrompt ||
+          `You are a helpful AI assistant with expertise in blockchain technology, specifically the Hedera network.
+You can help users understand and query Hedera blockchain data, explain transactions, accounts, tokens, and smart contracts.
+When providing SQL queries, always use proper entity_id format for account references.
+Be concise but thorough in your explanations.`,
         messages: messages,
       }),
     });
 
-    if (!claudeResponse.ok) {
-      const errorData = await claudeResponse.json().catch(() => ({}));
-      console.error('Claude API Error:', claudeResponse.status, errorData);
-
-      // Provide user-friendly error messages based on error type
-      let userMessage = errorData.error?.message || `Claude API returned ${claudeResponse.status}`;
-      const errorType = errorData.error?.type;
-
-      // Handle specific error types with better messages
-      if (claudeResponse.status === 529 || errorType === 'overloaded_error') {
-        userMessage =
-          'Claude is currently experiencing high traffic. Please wait a moment and try again. Your query has not been lost.';
-      } else if (claudeResponse.status === 401 || errorType === 'authentication_error') {
-        userMessage = 'Authentication failed. Please check your API key configuration.';
-      } else if (claudeResponse.status === 429 || errorType === 'rate_limit_error') {
-        userMessage = 'Rate limit exceeded. Please wait a few seconds before trying again.';
-      } else if (claudeResponse.status === 500 || errorType === 'internal_server_error') {
-        userMessage =
-          'Claude is experiencing technical difficulties. Please try again in a few moments.';
-      } else if (claudeResponse.status === 503 || errorType === 'service_unavailable') {
-        userMessage = 'Claude service is temporarily unavailable. Please try again later.';
-      } else if (errorType === 'invalid_request_error') {
-        userMessage = 'Your request could not be processed. Please try rephrasing your question.';
-      }
-
-      return res.status(claudeResponse.status).json({
-        error: userMessage,
-        type: errorType || 'api_error',
-        retryable: [429, 500, 502, 503, 529].includes(claudeResponse.status),
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('Claude API error:', errorData);
+      return res.status(response.status).json({
+        error: 'Failed to get response from Claude',
+        details: errorData,
       });
     }
 
-    const data = await claudeResponse.json();
+    const data = await response.json();
 
-    // Extract text response
-    let responseText = 'No response from Claude';
-    if (data.content && Array.isArray(data.content) && data.content.length > 0) {
-      const textContent = data.content.find((item) => item.type === 'text');
-      if (textContent && textContent.text) {
-        responseText = textContent.text;
-      }
+    // Extract the response text
+    const responseText = data.content?.[0]?.text;
+
+    if (!responseText) {
+      return res.status(500).json({ error: 'No response from Claude' });
     }
 
     res.json({
       response: responseText,
-      usage: data.usage || {},
-      model: data.model || 'claude-opus-4-1-20250805',
-      mcpData: mcpData
-        ? {
-            hasContext: !!mcpData.context,
-            suggestions: mcpData.suggestions || [],
-            sqlQuery: mcpData.sqlGenerated || null,
-            queryDescription: mcpData.sqlDescription || null,
-            queryResults: mcpData.sqlResults || null,
-          }
-        : null,
+      usage: data.usage,
     });
   } catch (error) {
-    console.error('Server Error:', error);
+    console.error('Error in Claude API proxy:', error);
     res.status(500).json({
       error: 'Internal server error',
       message: error.message,
@@ -670,32 +431,49 @@ app.post('/api/claude', async (req, res) => {
   }
 });
 
-// Catch-all route for client-side routing - must be after API routes
+// SQL generation endpoint
+app.post('/api/generate-sql', async (req, res) => {
+  try {
+    const { query, schema, accountId } = req.body;
+
+    if (!query) {
+      return res.status(400).json({ error: 'Query is required' });
+    }
+
+    if (!sqlGenerator) {
+      return res.status(503).json({
+        error: 'SQL generation not available',
+        message: 'Claude API key not configured',
+      });
+    }
+
+    const result = await sqlGenerator.generateSQL(query, schema, accountId);
+    res.json(result);
+  } catch (error) {
+    console.error('Error in SQL generation:', error);
+    res.status(500).json({
+      error: 'Failed to generate SQL',
+      message: error.message,
+    });
+  }
+});
+
+// Fallback to serve index.html for client-side routing
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-// Error handler
-app.use((error, req, res, next) => {
-  console.error('Unhandled error:', error);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
 // Start server
 app.listen(PORT, async () => {
-  console.log(`🚀 Claude API proxy running on http://localhost:${PORT}`);
-  console.log(`📋 Health check: http://localhost:${PORT}/health`);
-  console.log(`🤖 Claude API endpoint: http://localhost:${PORT}/api/claude`);
+  console.log(`🚀 Server running on port ${PORT}`);
 
-  // Initialize SQL Generator
-  const claudeApiKey = process.env.CLAUDE_API_KEY;
-  if (claudeApiKey) {
-    sqlGenerator = new SQLGenerator(claudeApiKey);
-    console.log('🛠️ SQL Generator initialized');
+  // Initialize SQL generator if Claude API key is present
+  if (process.env.CLAUDE_API_KEY) {
+    sqlGenerator = new SQLGenerator(process.env.CLAUDE_API_KEY);
+    console.log('✅ SQL generator initialized');
   } else {
     console.warn('⚠️ Claude API key not found - SQL generation disabled');
   }
 
-  // Initialize MCP client
-  await initializeMCPClient();
+  // MCP client initialization removed - using OAuth-protected server only
 });

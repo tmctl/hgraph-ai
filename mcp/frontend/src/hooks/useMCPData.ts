@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { oauthClient } from '@/lib/oauth';
 
 interface MCPTool {
   name: string;
@@ -40,26 +41,36 @@ export const useMCPData = () => {
     setError(null);
 
     try {
-      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
-      const response = await fetch(`${apiBaseUrl}/api/mcp/data`, {
+      // Use relative path so nginx can proxy to the Node.js server
+      // This will go through nginx proxy at the same origin
+
+      // Get OAuth authorization header if available
+      const authHeaders = oauthClient.getAuthHeader();
+
+      const response = await fetch('/api/mcp/data', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          ...authHeaders, // Include OAuth token if available
         },
       });
 
       if (!response.ok) {
-        if (response.status === 503) {
-          // MCP server not connected, but not a fatal error
-          const fallbackData = await response.json();
-          setData(fallbackData);
+        if (response.status === 401) {
+          // Authentication required - redirect to login
+          sessionStorage.setItem('auth_return_url', '/mcp-dashboard');
+          oauthClient.login();
+          return;
+        } else if (response.status === 503) {
+          // MCP server not available
+          throw new Error('MCP server is currently unavailable. Please try again later.');
         } else {
           throw new Error(`Failed to fetch MCP data: ${response.statusText}`);
         }
-      } else {
-        const mcpData = await response.json();
-        setData(mcpData);
       }
+
+      const mcpData = await response.json();
+      setData(mcpData);
     } catch (err) {
       console.error('Error fetching MCP data:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch MCP data');

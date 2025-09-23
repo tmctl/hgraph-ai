@@ -49,7 +49,9 @@ export class ClaudeAPI {
   private token?: string;
 
   constructor(baseURL?: string, token?: string) {
-    this.baseURL = baseURL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+    // Use empty string for relative paths when no baseURL provided
+    // This ensures API calls go through nginx proxy
+    this.baseURL = baseURL || import.meta.env.VITE_API_BASE_URL || '';
     this.token = token;
   }
 

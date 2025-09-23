@@ -91,47 +91,34 @@ services:
       start_period: 10s
       retries: 3
 
-  claude-api:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.api
-    container_name: mcp-claude-api
-    environment:
-      PORT: 3002
-      CLAUDE_API_KEY: ${CLAUDE_API_KEY}
-      MCP_SERVER_URL: http://mcp-server:3001/mcp
-      NODE_ENV: production
-    ports:
-      - "3002:3002"
-    depends_on:
-      mcp-server:
-        condition: service_healthy
-    networks:
-      - mcp-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: http://localhost:3002
+        VITE_API_BASE_URL: ""
     container_name: mcp-frontend
     environment:
-      VITE_API_BASE_URL: http://localhost:3002
+      NODE_ENV: production
+      PORT: 3001
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000,http://localhost:8080"
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+      MCP_SERVER_URL: http://mcp-server:3001
+      KEYCLOAK_URL: http://keycloak:8080
       VITE_KEYCLOAK_URL: http://localhost:8080
       VITE_KEYCLOAK_REALM: mcp
       VITE_KEYCLOAK_CLIENT_ID: mcp-public-client
+      VITE_OAUTH_ISSUER: http://localhost:8080/realms/mcp
+      VITE_OAUTH_CLIENT_ID: mcp-public-client
+      VITE_OAUTH_REDIRECT_URI: http://localhost:5173/auth/callback
     ports:
       - "5173:80"
+    volumes:
+      - ./frontend/.env:/app/.env:ro
     depends_on:
-      claude-api:
-        condition: service_healthy
       mcp-server:
+        condition: service_healthy
+      keycloak:
         condition: service_healthy
     networks:
       - mcp-network

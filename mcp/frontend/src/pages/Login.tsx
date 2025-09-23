@@ -1,14 +1,14 @@
 import React, { useEffect } from 'react';
-import { useKeycloak } from '@/contexts/KeycloakContext';
+import { oauthClient } from '@/lib/oauth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield } from 'lucide-react';
 
 export const Login: React.FC = () => {
-  const { isAuthenticated, login, isLoading } = useKeycloak();
   const navigate = useNavigate();
   const location = useLocation();
+  const isAuthenticated = oauthClient.isAuthenticated();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -18,17 +18,13 @@ export const Login: React.FC = () => {
     }
   }, [isAuthenticated, navigate, location]);
 
-  const handleLogin = async () => {
-    await login();
+  const handleLogin = () => {
+    // Store the return URL
+    const from = location.state?.from?.pathname || '/';
+    sessionStorage.setItem('auth_return_url', from);
+    // Initiate OAuth login
+    oauthClient.login();
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-900 dark:to-gray-800">
