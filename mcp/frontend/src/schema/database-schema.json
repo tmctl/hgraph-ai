@@ -1,0 +1,1997 @@
+{
+  "tables": {
+    "ecosystem._nft_collection_sales_volume": {
+      "columns": {
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "collection_name": {
+          "data_type": "text"
+        },
+        "nft_period": {
+          "data_type": "timestamp without time zone"
+        },
+        "total": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "ecosystem._nft_collection_sales_volume_total": {
+      "columns": {
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "collection_name": {
+          "data_type": "text"
+        },
+        "total": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "ecosystem.metric": {
+      "columns": {
+        "name": {
+          "data_type": "text"
+        },
+        "period": {
+          "data_type": "text"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "total": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "ecosystem.metric_description": {
+      "columns": {
+        "name": {
+          "data_type": "text"
+        },
+        "description": {
+          "data_type": "text"
+        },
+        "methodology": {
+          "data_type": "text"
+        }
+      }
+    },
+    "ecosystem.transaction_count_by_type": {
+      "columns": {
+        "type": {
+          "data_type": "smallint"
+        },
+        "total": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "_transfer": {
+      "columns": {
+        "type": {
+          "data_type": "USER-DEFINED"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "serial_number": {
+          "data_type": "bigint"
+        },
+        "amount": {
+          "data_type": "bigint"
+        },
+        "sender_account_id": {
+          "data_type": "bigint"
+        },
+        "receiver_account_id": {
+          "data_type": "bigint"
+        },
+        "is_approval": {
+          "data_type": "boolean"
+        },
+        "errata": {
+          "data_type": "USER-DEFINED"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "address_book": {
+      "columns": {
+        "start_consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "end_consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "file_id": {
+          "data_type": "bigint"
+        },
+        "node_count": {
+          "data_type": "integer"
+        },
+        "file_data": {
+          "data_type": "bytea"
+        }
+      }
+    },
+    "address_book_entry": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "memo": {
+          "data_type": "character varying"
+        },
+        "public_key": {
+          "data_type": "character varying"
+        },
+        "node_id": {
+          "data_type": "bigint"
+        },
+        "node_account_id": {
+          "data_type": "bigint"
+        },
+        "node_cert_hash": {
+          "data_type": "bytea"
+        },
+        "description": {
+          "data_type": "character varying"
+        },
+        "stake": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "address_book_service_endpoint": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "ip_address_v4": {
+          "data_type": "character varying"
+        },
+        "node_id": {
+          "data_type": "bigint"
+        },
+        "port": {
+          "data_type": "integer"
+        },
+        "domain_name": {
+          "data_type": "character varying"
+        }
+      }
+    },
+    "assessed_custom_fee": {
+      "columns": {
+        "amount": {
+          "data_type": "bigint"
+        },
+        "collector_account_id": {
+          "data_type": "bigint"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "effective_payer_account_ids": {
+          "data_type": "ARRAY"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "contract": {
+      "columns": {
+        "id": {
+          "data_type": "bigint"
+        },
+        "file_id": {
+          "data_type": "bigint"
+        },
+        "initcode": {
+          "data_type": "bytea"
+        },
+        "runtime_bytecode": {
+          "data_type": "bytea"
+        }
+      }
+    },
+    "contract_action": {
+      "columns": {
+        "call_depth": {
+          "data_type": "integer"
+        },
+        "call_type": {
+          "data_type": "integer"
+        },
+        "caller": {
+          "data_type": "bigint"
+        },
+        "caller_type": {
+          "data_type": "USER-DEFINED"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "gas": {
+          "data_type": "bigint"
+        },
+        "gas_used": {
+          "data_type": "bigint"
+        },
+        "index": {
+          "data_type": "integer"
+        },
+        "input": {
+          "data_type": "bytea"
+        },
+        "recipient_account": {
+          "data_type": "bigint"
+        },
+        "recipient_address": {
+          "data_type": "bytea"
+        },
+        "recipient_contract": {
+          "data_type": "bigint"
+        },
+        "result_data": {
+          "data_type": "bytea"
+        },
+        "result_data_type": {
+          "data_type": "integer"
+        },
+        "value": {
+          "data_type": "bigint"
+        },
+        "call_operation_type": {
+          "data_type": "integer"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "contract_log": {
+      "columns": {
+        "bloom": {
+          "data_type": "bytea"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "contract_id": {
+          "data_type": "bigint"
+        },
+        "data": {
+          "data_type": "bytea"
+        },
+        "index": {
+          "data_type": "integer"
+        },
+        "topic0": {
+          "data_type": "bytea"
+        },
+        "topic1": {
+          "data_type": "bytea"
+        },
+        "topic2": {
+          "data_type": "bytea"
+        },
+        "topic3": {
+          "data_type": "bytea"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "root_contract_id": {
+          "data_type": "bigint"
+        },
+        "transaction_hash": {
+          "data_type": "bytea"
+        },
+        "transaction_index": {
+          "data_type": "integer"
+        }
+      }
+    },
+    "contract_result": {
+      "columns": {
+        "function_parameters": {
+          "data_type": "bytea"
+        },
+        "gas_limit": {
+          "data_type": "bigint"
+        },
+        "function_result": {
+          "data_type": "bytea"
+        },
+        "gas_used": {
+          "data_type": "bigint"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "amount": {
+          "data_type": "bigint"
+        },
+        "bloom": {
+          "data_type": "bytea"
+        },
+        "call_result": {
+          "data_type": "bytea"
+        },
+        "contract_id": {
+          "data_type": "bigint"
+        },
+        "created_contract_ids": {
+          "data_type": "ARRAY"
+        },
+        "error_message": {
+          "data_type": "text"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "sender_id": {
+          "data_type": "bigint"
+        },
+        "failed_initcode": {
+          "data_type": "bytea"
+        },
+        "transaction_hash": {
+          "data_type": "bytea"
+        },
+        "transaction_index": {
+          "data_type": "integer"
+        },
+        "transaction_result": {
+          "data_type": "smallint"
+        },
+        "transaction_nonce": {
+          "data_type": "integer"
+        },
+        "gas_consumed": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "contract_state": {
+      "columns": {
+        "contract_id": {
+          "data_type": "bigint"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "modified_timestamp": {
+          "data_type": "bigint"
+        },
+        "slot": {
+          "data_type": "bytea"
+        },
+        "value": {
+          "data_type": "bytea"
+        }
+      }
+    },
+    "contract_state_change": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "contract_id": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "slot": {
+          "data_type": "bytea"
+        },
+        "value_read": {
+          "data_type": "bytea"
+        },
+        "value_written": {
+          "data_type": "bytea"
+        },
+        "migration": {
+          "data_type": "boolean"
+        }
+      }
+    },
+    "contract_transaction": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "entity_id": {
+          "data_type": "bigint"
+        },
+        "contract_ids": {
+          "data_type": "ARRAY"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "contract_transaction_hash": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "hash": {
+          "data_type": "bytea"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "entity_id": {
+          "data_type": "bigint"
+        },
+        "transaction_result": {
+          "data_type": "smallint"
+        }
+      }
+    },
+    "crypto_allowance": {
+      "columns": {
+        "amount_granted": {
+          "data_type": "bigint"
+        },
+        "owner": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "spender": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "amount": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "crypto_allowance_history": {
+      "columns": {
+        "amount_granted": {
+          "data_type": "bigint"
+        },
+        "owner": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "spender": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "amount": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "crypto_transfer": {
+      "columns": {
+        "entity_id": {
+          "data_type": "bigint"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "amount": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "is_approval": {
+          "data_type": "boolean"
+        },
+        "errata": {
+          "data_type": "USER-DEFINED"
+        }
+      }
+    },
+    "custom_fee": {
+      "columns": {
+        "fixed_fees": {
+          "data_type": "jsonb"
+        },
+        "fractional_fees": {
+          "data_type": "jsonb"
+        },
+        "royalty_fees": {
+          "data_type": "jsonb"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "entity_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "custom_fee_history": {
+      "columns": {
+        "fixed_fees": {
+          "data_type": "jsonb"
+        },
+        "fractional_fees": {
+          "data_type": "jsonb"
+        },
+        "royalty_fees": {
+          "data_type": "jsonb"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "entity_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "entity": {
+      "columns": {
+        "auto_renew_account_id": {
+          "data_type": "bigint"
+        },
+        "auto_renew_period": {
+          "data_type": "bigint"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "deleted": {
+          "data_type": "boolean"
+        },
+        "expiration_timestamp": {
+          "data_type": "bigint"
+        },
+        "id": {
+          "data_type": "bigint"
+        },
+        "key": {
+          "data_type": "bytea"
+        },
+        "memo": {
+          "data_type": "text"
+        },
+        "num": {
+          "data_type": "bigint"
+        },
+        "public_key": {
+          "data_type": "character varying"
+        },
+        "proxy_account_id": {
+          "data_type": "bigint"
+        },
+        "realm": {
+          "data_type": "bigint"
+        },
+        "shard": {
+          "data_type": "bigint"
+        },
+        "receiver_sig_required": {
+          "data_type": "boolean"
+        },
+        "max_automatic_token_associations": {
+          "data_type": "integer"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "type": {
+          "data_type": "USER-DEFINED"
+        },
+        "alias": {
+          "data_type": "bytea"
+        },
+        "ethereum_nonce": {
+          "data_type": "bigint"
+        },
+        "evm_address": {
+          "data_type": "bytea"
+        },
+        "decline_reward": {
+          "data_type": "boolean"
+        },
+        "staked_account_id": {
+          "data_type": "bigint"
+        },
+        "staked_node_id": {
+          "data_type": "bigint"
+        },
+        "stake_period_start": {
+          "data_type": "bigint"
+        },
+        "obtainer_id": {
+          "data_type": "bigint"
+        },
+        "permanent_removal": {
+          "data_type": "boolean"
+        },
+        "balance": {
+          "data_type": "bigint"
+        },
+        "balance_timestamp": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "entity_history": {
+      "columns": {
+        "auto_renew_account_id": {
+          "data_type": "bigint"
+        },
+        "auto_renew_period": {
+          "data_type": "bigint"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "deleted": {
+          "data_type": "boolean"
+        },
+        "expiration_timestamp": {
+          "data_type": "bigint"
+        },
+        "id": {
+          "data_type": "bigint"
+        },
+        "key": {
+          "data_type": "bytea"
+        },
+        "memo": {
+          "data_type": "text"
+        },
+        "num": {
+          "data_type": "bigint"
+        },
+        "public_key": {
+          "data_type": "character varying"
+        },
+        "proxy_account_id": {
+          "data_type": "bigint"
+        },
+        "realm": {
+          "data_type": "bigint"
+        },
+        "shard": {
+          "data_type": "bigint"
+        },
+        "receiver_sig_required": {
+          "data_type": "boolean"
+        },
+        "max_automatic_token_associations": {
+          "data_type": "integer"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "type": {
+          "data_type": "USER-DEFINED"
+        },
+        "alias": {
+          "data_type": "bytea"
+        },
+        "ethereum_nonce": {
+          "data_type": "bigint"
+        },
+        "evm_address": {
+          "data_type": "bytea"
+        },
+        "decline_reward": {
+          "data_type": "boolean"
+        },
+        "staked_account_id": {
+          "data_type": "bigint"
+        },
+        "staked_node_id": {
+          "data_type": "bigint"
+        },
+        "stake_period_start": {
+          "data_type": "bigint"
+        },
+        "obtainer_id": {
+          "data_type": "bigint"
+        },
+        "permanent_removal": {
+          "data_type": "boolean"
+        },
+        "balance": {
+          "data_type": "bigint"
+        },
+        "balance_timestamp": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "entity_stake": {
+      "columns": {
+        "end_stake_period": {
+          "data_type": "bigint"
+        },
+        "id": {
+          "data_type": "bigint"
+        },
+        "pending_reward": {
+          "data_type": "bigint"
+        },
+        "staked_node_id_start": {
+          "data_type": "bigint"
+        },
+        "staked_to_me": {
+          "data_type": "bigint"
+        },
+        "stake_total_start": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        }
+      }
+    },
+    "entity_stake_history": {
+      "columns": {
+        "end_stake_period": {
+          "data_type": "bigint"
+        },
+        "id": {
+          "data_type": "bigint"
+        },
+        "pending_reward": {
+          "data_type": "bigint"
+        },
+        "staked_node_id_start": {
+          "data_type": "bigint"
+        },
+        "staked_to_me": {
+          "data_type": "bigint"
+        },
+        "stake_total_start": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        }
+      }
+    },
+    "entity_transaction": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "entity_id": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "result": {
+          "data_type": "smallint"
+        },
+        "type": {
+          "data_type": "smallint"
+        }
+      }
+    },
+    "ethereum_transaction": {
+      "columns": {
+        "access_list": {
+          "data_type": "bytea"
+        },
+        "call_data_id": {
+          "data_type": "bigint"
+        },
+        "call_data": {
+          "data_type": "bytea"
+        },
+        "chain_id": {
+          "data_type": "bytea"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "data": {
+          "data_type": "bytea"
+        },
+        "gas_limit": {
+          "data_type": "bigint"
+        },
+        "gas_price": {
+          "data_type": "bytea"
+        },
+        "hash": {
+          "data_type": "bytea"
+        },
+        "max_fee_per_gas": {
+          "data_type": "bytea"
+        },
+        "max_gas_allowance": {
+          "data_type": "bigint"
+        },
+        "max_priority_fee_per_gas": {
+          "data_type": "bytea"
+        },
+        "nonce": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "recovery_id": {
+          "data_type": "smallint"
+        },
+        "signature_r": {
+          "data_type": "bytea"
+        },
+        "signature_s": {
+          "data_type": "bytea"
+        },
+        "signature_v": {
+          "data_type": "bytea"
+        },
+        "to_address": {
+          "data_type": "bytea"
+        },
+        "type": {
+          "data_type": "smallint"
+        },
+        "value": {
+          "data_type": "bytea"
+        }
+      }
+    },
+    "file_data": {
+      "columns": {
+        "file_data": {
+          "data_type": "bytea"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "entity_id": {
+          "data_type": "bigint"
+        },
+        "transaction_type": {
+          "data_type": "smallint"
+        }
+      }
+    },
+    "flyway_schema_history": {
+      "columns": {
+        "installed_rank": {
+          "data_type": "integer"
+        },
+        "version": {
+          "data_type": "character varying"
+        },
+        "description": {
+          "data_type": "character varying"
+        },
+        "type": {
+          "data_type": "character varying"
+        },
+        "script": {
+          "data_type": "character varying"
+        },
+        "checksum": {
+          "data_type": "integer"
+        },
+        "installed_by": {
+          "data_type": "character varying"
+        },
+        "installed_on": {
+          "data_type": "timestamp without time zone"
+        },
+        "execution_time": {
+          "data_type": "integer"
+        },
+        "success": {
+          "data_type": "boolean"
+        }
+      }
+    },
+    "interval_count": {
+      "columns": {
+        "starting_at": {
+          "data_type": "timestamp without time zone"
+        },
+        "ending_at": {
+          "data_type": "timestamp without time zone"
+        },
+        "count": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "live_hash": {
+      "columns": {
+        "livehash": {
+          "data_type": "bytea"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "migration_timestamp": {
+      "columns": {
+        "int8": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "network_freeze": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "end_time": {
+          "data_type": "bigint"
+        },
+        "file_hash": {
+          "data_type": "bytea"
+        },
+        "file_id": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "start_time": {
+          "data_type": "bigint"
+        },
+        "type": {
+          "data_type": "smallint"
+        }
+      }
+    },
+    "network_stake": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "epoch_day": {
+          "data_type": "bigint"
+        },
+        "max_staking_reward_rate_per_hbar": {
+          "data_type": "bigint"
+        },
+        "node_reward_fee_denominator": {
+          "data_type": "bigint"
+        },
+        "node_reward_fee_numerator": {
+          "data_type": "bigint"
+        },
+        "stake_total": {
+          "data_type": "bigint"
+        },
+        "staking_period": {
+          "data_type": "bigint"
+        },
+        "staking_period_duration": {
+          "data_type": "bigint"
+        },
+        "staking_periods_stored": {
+          "data_type": "bigint"
+        },
+        "staking_reward_fee_denominator": {
+          "data_type": "bigint"
+        },
+        "staking_reward_fee_numerator": {
+          "data_type": "bigint"
+        },
+        "staking_reward_rate": {
+          "data_type": "bigint"
+        },
+        "staking_start_threshold": {
+          "data_type": "bigint"
+        },
+        "max_stake_rewarded": {
+          "data_type": "bigint"
+        },
+        "max_total_reward": {
+          "data_type": "bigint"
+        },
+        "reserved_staking_rewards": {
+          "data_type": "bigint"
+        },
+        "reward_balance_threshold": {
+          "data_type": "bigint"
+        },
+        "unreserved_staking_reward_balance": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "nft": {
+      "columns": {
+        "account_id": {
+          "data_type": "bigint"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "deleted": {
+          "data_type": "boolean"
+        },
+        "metadata": {
+          "data_type": "bytea"
+        },
+        "serial_number": {
+          "data_type": "bigint"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "delegating_spender": {
+          "data_type": "bigint"
+        },
+        "spender": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        }
+      }
+    },
+    "nft_allowance": {
+      "columns": {
+        "approved_for_all": {
+          "data_type": "boolean"
+        },
+        "owner": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "spender": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "nft_allowance_history": {
+      "columns": {
+        "approved_for_all": {
+          "data_type": "boolean"
+        },
+        "owner": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "spender": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "nft_history": {
+      "columns": {
+        "account_id": {
+          "data_type": "bigint"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "deleted": {
+          "data_type": "boolean"
+        },
+        "metadata": {
+          "data_type": "bytea"
+        },
+        "serial_number": {
+          "data_type": "bigint"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "delegating_spender": {
+          "data_type": "bigint"
+        },
+        "spender": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "start_timestamp": {
+          "data_type": "bigint"
+        },
+        "end_timestamp": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "node": {
+      "columns": {
+        "admin_key": {
+          "data_type": "bytea"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "deleted": {
+          "data_type": "boolean"
+        },
+        "node_id": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "decline_reward": {
+          "data_type": "boolean"
+        },
+        "grpc_proxy_endpoint": {
+          "data_type": "jsonb"
+        }
+      }
+    },
+    "node_history": {
+      "columns": {
+        "admin_key": {
+          "data_type": "bytea"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "deleted": {
+          "data_type": "boolean"
+        },
+        "node_id": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "decline_reward": {
+          "data_type": "boolean"
+        },
+        "grpc_proxy_endpoint": {
+          "data_type": "jsonb"
+        }
+      }
+    },
+    "node_stake": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "epoch_day": {
+          "data_type": "bigint"
+        },
+        "node_id": {
+          "data_type": "bigint"
+        },
+        "reward_rate": {
+          "data_type": "bigint"
+        },
+        "stake": {
+          "data_type": "bigint"
+        },
+        "stake_rewarded": {
+          "data_type": "bigint"
+        },
+        "staking_period": {
+          "data_type": "bigint"
+        },
+        "max_stake": {
+          "data_type": "bigint"
+        },
+        "min_stake": {
+          "data_type": "bigint"
+        },
+        "stake_not_rewarded": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "non_fee_transfer": {
+      "columns": {
+        "entity_id": {
+          "data_type": "bigint"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "amount": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "is_approval": {
+          "data_type": "boolean"
+        }
+      }
+    },
+    "prng": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "range": {
+          "data_type": "integer"
+        },
+        "prng_bytes": {
+          "data_type": "bytea"
+        },
+        "prng_number": {
+          "data_type": "integer"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "reconciliation_job": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "count": {
+          "data_type": "bigint"
+        },
+        "error": {
+          "data_type": "text"
+        },
+        "timestamp_end": {
+          "data_type": "timestamp with time zone"
+        },
+        "timestamp_start": {
+          "data_type": "timestamp with time zone"
+        },
+        "status": {
+          "data_type": "smallint"
+        }
+      }
+    },
+    "record_file": {
+      "columns": {
+        "name": {
+          "data_type": "character varying"
+        },
+        "load_start": {
+          "data_type": "bigint"
+        },
+        "load_end": {
+          "data_type": "bigint"
+        },
+        "hash": {
+          "data_type": "character varying"
+        },
+        "prev_hash": {
+          "data_type": "character varying"
+        },
+        "consensus_start": {
+          "data_type": "bigint"
+        },
+        "consensus_end": {
+          "data_type": "bigint"
+        },
+        "count": {
+          "data_type": "bigint"
+        },
+        "digest_algorithm": {
+          "data_type": "integer"
+        },
+        "hapi_version_major": {
+          "data_type": "integer"
+        },
+        "hapi_version_minor": {
+          "data_type": "integer"
+        },
+        "hapi_version_patch": {
+          "data_type": "integer"
+        },
+        "version": {
+          "data_type": "integer"
+        },
+        "file_hash": {
+          "data_type": "character varying"
+        },
+        "bytes": {
+          "data_type": "bytea"
+        },
+        "index": {
+          "data_type": "bigint"
+        },
+        "gas_used": {
+          "data_type": "bigint"
+        },
+        "logs_bloom": {
+          "data_type": "bytea"
+        },
+        "size": {
+          "data_type": "integer"
+        },
+        "sidecar_count": {
+          "data_type": "integer"
+        },
+        "node_id": {
+          "data_type": "bigint"
+        },
+        "software_version_major": {
+          "data_type": "integer"
+        },
+        "software_version_minor": {
+          "data_type": "integer"
+        },
+        "software_version_patch": {
+          "data_type": "integer"
+        },
+        "round_start": {
+          "data_type": "bigint"
+        },
+        "round_end": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "schedule": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "creator_account_id": {
+          "data_type": "bigint"
+        },
+        "executed_timestamp": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "schedule_id": {
+          "data_type": "bigint"
+        },
+        "transaction_body": {
+          "data_type": "bytea"
+        },
+        "expiration_time": {
+          "data_type": "bigint"
+        },
+        "wait_for_expiry": {
+          "data_type": "boolean"
+        }
+      }
+    },
+    "sidecar_file": {
+      "columns": {
+        "bytes": {
+          "data_type": "bytea"
+        },
+        "count": {
+          "data_type": "integer"
+        },
+        "consensus_end": {
+          "data_type": "bigint"
+        },
+        "hash_algorithm": {
+          "data_type": "integer"
+        },
+        "hash": {
+          "data_type": "bytea"
+        },
+        "id": {
+          "data_type": "integer"
+        },
+        "name": {
+          "data_type": "character varying"
+        },
+        "size": {
+          "data_type": "integer"
+        },
+        "types": {
+          "data_type": "ARRAY"
+        }
+      }
+    },
+    "staking_reward_transfer": {
+      "columns": {
+        "account_id": {
+          "data_type": "bigint"
+        },
+        "amount": {
+          "data_type": "bigint"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "token": {
+      "columns": {
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "decimals": {
+          "data_type": "bigint"
+        },
+        "freeze_default": {
+          "data_type": "boolean"
+        },
+        "freeze_key": {
+          "data_type": "bytea"
+        },
+        "initial_supply": {
+          "data_type": "bigint"
+        },
+        "kyc_key": {
+          "data_type": "bytea"
+        },
+        "name": {
+          "data_type": "character varying"
+        },
+        "supply_key": {
+          "data_type": "bytea"
+        },
+        "symbol": {
+          "data_type": "character varying"
+        },
+        "total_supply": {
+          "data_type": "bigint"
+        },
+        "treasury_account_id": {
+          "data_type": "bigint"
+        },
+        "wipe_key": {
+          "data_type": "bytea"
+        },
+        "max_supply": {
+          "data_type": "bigint"
+        },
+        "supply_type": {
+          "data_type": "USER-DEFINED"
+        },
+        "type": {
+          "data_type": "USER-DEFINED"
+        },
+        "fee_schedule_key": {
+          "data_type": "bytea"
+        },
+        "pause_key": {
+          "data_type": "bytea"
+        },
+        "pause_status": {
+          "data_type": "USER-DEFINED"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "freeze_status": {
+          "data_type": "smallint"
+        },
+        "kyc_status": {
+          "data_type": "smallint"
+        },
+        "metadata": {
+          "data_type": "bytea"
+        },
+        "metadata_key": {
+          "data_type": "bytea"
+        }
+      }
+    },
+    "token_account": {
+      "columns": {
+        "account_id": {
+          "data_type": "bigint"
+        },
+        "associated": {
+          "data_type": "boolean"
+        },
+        "automatic_association": {
+          "data_type": "boolean"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "freeze_status": {
+          "data_type": "smallint"
+        },
+        "kyc_status": {
+          "data_type": "smallint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "balance": {
+          "data_type": "bigint"
+        },
+        "balance_timestamp": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "token_account_history": {
+      "columns": {
+        "account_id": {
+          "data_type": "bigint"
+        },
+        "associated": {
+          "data_type": "boolean"
+        },
+        "automatic_association": {
+          "data_type": "boolean"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "freeze_status": {
+          "data_type": "smallint"
+        },
+        "kyc_status": {
+          "data_type": "smallint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "balance": {
+          "data_type": "bigint"
+        },
+        "balance_timestamp": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "token_airdrop": {
+      "columns": {
+        "amount": {
+          "data_type": "bigint"
+        },
+        "receiver_account_id": {
+          "data_type": "bigint"
+        },
+        "sender_account_id": {
+          "data_type": "bigint"
+        },
+        "serial_number": {
+          "data_type": "bigint"
+        },
+        "state": {
+          "data_type": "USER-DEFINED"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "token_airdrop_history": {
+      "columns": {
+        "amount": {
+          "data_type": "bigint"
+        },
+        "receiver_account_id": {
+          "data_type": "bigint"
+        },
+        "sender_account_id": {
+          "data_type": "bigint"
+        },
+        "serial_number": {
+          "data_type": "bigint"
+        },
+        "state": {
+          "data_type": "USER-DEFINED"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "token_allowance": {
+      "columns": {
+        "amount_granted": {
+          "data_type": "bigint"
+        },
+        "owner": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "spender": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "amount": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "token_allowance_history": {
+      "columns": {
+        "amount_granted": {
+          "data_type": "bigint"
+        },
+        "owner": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "spender": {
+          "data_type": "bigint"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "amount": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "token_history": {
+      "columns": {
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "decimals": {
+          "data_type": "bigint"
+        },
+        "freeze_default": {
+          "data_type": "boolean"
+        },
+        "freeze_key": {
+          "data_type": "bytea"
+        },
+        "initial_supply": {
+          "data_type": "bigint"
+        },
+        "kyc_key": {
+          "data_type": "bytea"
+        },
+        "name": {
+          "data_type": "character varying"
+        },
+        "supply_key": {
+          "data_type": "bytea"
+        },
+        "symbol": {
+          "data_type": "character varying"
+        },
+        "total_supply": {
+          "data_type": "bigint"
+        },
+        "treasury_account_id": {
+          "data_type": "bigint"
+        },
+        "wipe_key": {
+          "data_type": "bytea"
+        },
+        "max_supply": {
+          "data_type": "bigint"
+        },
+        "supply_type": {
+          "data_type": "USER-DEFINED"
+        },
+        "type": {
+          "data_type": "USER-DEFINED"
+        },
+        "fee_schedule_key": {
+          "data_type": "bytea"
+        },
+        "pause_key": {
+          "data_type": "bytea"
+        },
+        "pause_status": {
+          "data_type": "USER-DEFINED"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "freeze_status": {
+          "data_type": "smallint"
+        },
+        "kyc_status": {
+          "data_type": "smallint"
+        },
+        "metadata": {
+          "data_type": "bytea"
+        },
+        "metadata_key": {
+          "data_type": "bytea"
+        }
+      }
+    },
+    "token_transfer": {
+      "columns": {
+        "token_id": {
+          "data_type": "bigint"
+        },
+        "account_id": {
+          "data_type": "bigint"
+        },
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "amount": {
+          "data_type": "bigint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "is_approval": {
+          "data_type": "boolean"
+        }
+      }
+    },
+    "topic": {
+      "columns": {
+        "admin_key": {
+          "data_type": "bytea"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "id": {
+          "data_type": "bigint"
+        },
+        "fee_exempt_key_list": {
+          "data_type": "bytea"
+        },
+        "fee_schedule_key": {
+          "data_type": "bytea"
+        },
+        "submit_key": {
+          "data_type": "bytea"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        }
+      }
+    },
+    "topic_history": {
+      "columns": {
+        "admin_key": {
+          "data_type": "bytea"
+        },
+        "created_timestamp": {
+          "data_type": "bigint"
+        },
+        "id": {
+          "data_type": "bigint"
+        },
+        "fee_exempt_key_list": {
+          "data_type": "bytea"
+        },
+        "fee_schedule_key": {
+          "data_type": "bytea"
+        },
+        "submit_key": {
+          "data_type": "bytea"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        }
+      }
+    },
+    "topic_message": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "message": {
+          "data_type": "bytea"
+        },
+        "running_hash": {
+          "data_type": "bytea"
+        },
+        "sequence_number": {
+          "data_type": "bigint"
+        },
+        "running_hash_version": {
+          "data_type": "smallint"
+        },
+        "chunk_num": {
+          "data_type": "integer"
+        },
+        "chunk_total": {
+          "data_type": "integer"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "valid_start_timestamp": {
+          "data_type": "bigint"
+        },
+        "topic_id": {
+          "data_type": "bigint"
+        },
+        "initial_transaction_id": {
+          "data_type": "bytea"
+        }
+      }
+    },
+    "topic_message_lookup": {
+      "columns": {
+        "partition": {
+          "data_type": "text"
+        },
+        "sequence_number_range": {
+          "data_type": "int8range"
+        },
+        "timestamp_range": {
+          "data_type": "int8range"
+        },
+        "topic_id": {
+          "data_type": "bigint"
+        }
+      }
+    },
+    "transaction": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "type": {
+          "data_type": "smallint"
+        },
+        "result": {
+          "data_type": "smallint"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "valid_start_ns": {
+          "data_type": "bigint"
+        },
+        "valid_duration_seconds": {
+          "data_type": "bigint"
+        },
+        "node_account_id": {
+          "data_type": "bigint"
+        },
+        "entity_id": {
+          "data_type": "bigint"
+        },
+        "initial_balance": {
+          "data_type": "bigint"
+        },
+        "max_fee": {
+          "data_type": "bigint"
+        },
+        "charged_tx_fee": {
+          "data_type": "bigint"
+        },
+        "memo": {
+          "data_type": "bytea"
+        },
+        "transaction_hash": {
+          "data_type": "bytea"
+        },
+        "transaction_bytes": {
+          "data_type": "bytea"
+        },
+        "scheduled": {
+          "data_type": "boolean"
+        },
+        "nonce": {
+          "data_type": "integer"
+        },
+        "parent_consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "errata": {
+          "data_type": "USER-DEFINED"
+        },
+        "index": {
+          "data_type": "integer"
+        },
+        "nft_transfer": {
+          "data_type": "jsonb"
+        },
+        "itemized_transfer": {
+          "data_type": "jsonb"
+        },
+        "transaction_record_bytes": {
+          "data_type": "bytea"
+        },
+        "max_custom_fees": {
+          "data_type": "ARRAY"
+        },
+        "batch_key": {
+          "data_type": "bytea"
+        },
+        "inner_transactions": {
+          "data_type": "ARRAY"
+        }
+      }
+    },
+    "transaction_hash": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "hash": {
+          "data_type": "bytea"
+        },
+        "payer_account_id": {
+          "data_type": "bigint"
+        },
+        "distribution_id": {
+          "data_type": "smallint"
+        }
+      }
+    },
+    "transaction_signature": {
+      "columns": {
+        "consensus_timestamp": {
+          "data_type": "bigint"
+        },
+        "public_key_prefix": {
+          "data_type": "bytea"
+        },
+        "entity_id": {
+          "data_type": "bigint"
+        },
+        "signature": {
+          "data_type": "bytea"
+        },
+        "type": {
+          "data_type": "smallint"
+        }
+      }
+    }
+  },
+  "relationships": []
+}

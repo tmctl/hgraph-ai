@@ -91,6 +91,24 @@ services:
       start_period: 10s
       retries: 3
 
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mcp-frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:3001
+      VITE_KEYCLOAK_URL: http://localhost:8080
+      VITE_KEYCLOAK_REALM: mcp
+      VITE_KEYCLOAK_CLIENT_ID: mcp-public-client
+    ports:
+      - "5173:80"
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    networks:
+      - mcp-network
+
 networks:
   mcp-network:
     driver: bridge
