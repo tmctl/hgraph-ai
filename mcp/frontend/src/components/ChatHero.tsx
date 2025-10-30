@@ -331,17 +331,7 @@ const ChatHero = () => {
                   <Bot className="w-4 h-4 text-white" />
                 </div>
                 <div className="bg-muted text-muted-foreground px-4 py-3 rounded-xl border border-border">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-accent rounded-full animate-bounce" />
-                    <div
-                      className="w-2 h-2 bg-accent rounded-full animate-bounce"
-                      style={{ animationDelay: '0.1s' }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-accent rounded-full animate-bounce"
-                      style={{ animationDelay: '0.2s' }}
-                    />
-                  </div>
+                  <span className="text-sm">Thinking...</span>
                 </div>
               </div>
             )}
@@ -448,22 +438,6 @@ const ChatHero = () => {
 
       {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-hero/60" />
-
-      {/* Floating particles effect */}
-      <div className="absolute inset-0">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-2 h-2 bg-accent rounded-full opacity-20 animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${2 + Math.random() * 2}s`,
-            }}
-          />
-        ))}
-      </div>
 
       <div className="container mx-auto px-4 py-32 relative z-10">
         <div className="max-w-4xl mx-auto">
@@ -593,17 +567,7 @@ const ChatHero = () => {
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                   <div className="bg-white/10 text-white px-4 py-3 rounded-xl backdrop-blur-sm border border-white/20">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-accent rounded-full animate-bounce" />
-                      <div
-                        className="w-2 h-2 bg-accent rounded-full animate-bounce"
-                        style={{ animationDelay: '0.1s' }}
-                      />
-                      <div
-                        className="w-2 h-2 bg-accent rounded-full animate-bounce"
-                        style={{ animationDelay: '0.2s' }}
-                      />
-                    </div>
+                    <span className="text-sm">Thinking...</span>
                   </div>
                 </div>
               )}

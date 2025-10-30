@@ -48,10 +48,11 @@ services:
     networks:
       - mcp-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+      test: ["CMD-SHELL", "timeout 10 bash -c 'cat < /dev/null > /dev/tcp/localhost/8080'"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
 
   mcp-server:
     build: .
@@ -86,10 +87,10 @@ services:
       - mcp-network
     healthcheck:
       test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/mcp/health', (r) => {r.statusCode === 200 ? process.exit(0) : process.exit(1)})"]
-      interval: 30s
-      timeout: 3s
-      start_period: 10s
-      retries: 3
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 10
 
   frontend:
     build:

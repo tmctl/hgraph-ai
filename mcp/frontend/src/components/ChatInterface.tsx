@@ -177,17 +177,7 @@ Keep responses concise but informative, and use markdown formatting when helpful
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                   <div className="bg-secondary text-secondary-foreground px-4 py-2 rounded-lg">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                      <div
-                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
-                        style={{ animationDelay: '0.1s' }}
-                      />
-                      <div
-                        className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"
-                        style={{ animationDelay: '0.2s' }}
-                      />
-                    </div>
+                    <span className="text-sm">Thinking...</span>
                   </div>
                 </div>
               )}

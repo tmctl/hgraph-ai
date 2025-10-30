@@ -63,7 +63,7 @@ Return response as JSON:
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-3-sonnet-20240229',
+          model: 'claude-3-5-sonnet-20241022',
           max_tokens: 1024,
           temperature: 0,
           system: systemPrompt,
@@ -387,7 +387,7 @@ app.post('/api/claude', async (req, res) => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: process.env.CLAUDE_MODEL || 'claude-3-sonnet-20240229',
+        model: process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-20241022',
         max_tokens: parseInt(process.env.CLAUDE_MAX_TOKENS) || 4096,
         temperature: parseFloat(process.env.CLAUDE_TEMPERATURE) || 0.7,
         system:
