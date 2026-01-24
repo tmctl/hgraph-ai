@@ -1,0 +1,3377 @@
+{
+  "version": 3,
+  "sources": [
+    {
+      "name": "default",
+      "kind": "postgres",
+      "tables": [
+        {
+          "table": {
+            "name": "active_nft_account_cohorts",
+            "schema": "ecosystem"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "estimated_transaction_totals",
+            "schema": "ecosystem"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "metric",
+            "schema": "ecosystem"
+          },
+          "object_relationships": [
+            {
+              "name": "description",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "name": "name"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "metric_description",
+                    "schema": "ecosystem"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "end_date",
+              "definition": {
+                "function": {
+                  "name": "metric_end_date",
+                  "schema": "ecosystem"
+                }
+              }
+            },
+            {
+              "name": "start_date",
+              "definition": {
+                "function": {
+                  "name": "metric_start_date",
+                  "schema": "ecosystem"
+                }
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["start_date", "end_date"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["start_date", "end_date"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "metric_description",
+            "schema": "ecosystem"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "transaction_count_by_type",
+            "schema": "ecosystem"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "_transfer",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "nft",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "serial_number": "serial_number",
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "nft",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "token",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "transaction",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "transaction",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "transfer_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "address_book",
+            "schema": "public"
+          },
+          "array_relationships": [
+            {
+              "name": "address_book_entry",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "start_consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "address_book_entry",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "end_consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "address_book_end_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "start_consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "address_book_start_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "start_consensus_timestamp_iso8601",
+                  "end_consensus_timestamp_iso8601"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "start_consensus_timestamp_iso8601",
+                  "end_consensus_timestamp_iso8601"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "address_book_entry",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "address_book",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "start_consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "address_book",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "address_book_entry_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "address_book_service_endpoint",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "address_book_service_endpoint_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "assessed_custom_fee",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "assessed_custom_fee_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "contract",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "contract_action",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "contract_action_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "contract_log",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "contract_log_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "contract_result",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "contract_result_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "contract_state",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "created_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "contract_state_created_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "modified_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "contract_state_modified_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["created_timestamp_iso8601", "modified_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["created_timestamp_iso8601", "modified_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "contract_state_change",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "contract_state_change_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "contract_transactions_last_24hrs",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "crypto_allowance",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "modified_timestamp",
+              "definition": {
+                "function": {
+                  "name": "modified_timestamp_crypto_allowance",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "modified_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "crypto_allowance_modified_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["modified_timestamp", "modified_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["modified_timestamp", "modified_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "crypto_allowance_history",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "crypto_transfer",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "transaction",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "transaction",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "array_relationships": [
+            {
+              "name": "nft_transfer",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "nft_transfer",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "token_transfer",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token_transfer",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "crypto_transfer_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "custom_fee",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "entity",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "entity_history",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "id": "id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "entity_history",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "entity_stake",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "id": "id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "entity_stake",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "array_relationships": [
+            {
+              "name": "staked_node_address_book_entry",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "staked_node_id": "node_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "address_book_entry",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "staking_reward_transfer",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "id": "account_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "staking_reward_transfer",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "token_account",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "id": "account_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token_account",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "topic_messages",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "id": "topic_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "topic_message",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "balance_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "entity_balance_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "created_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "entity_created_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_key",
+              "definition": {
+                "function": {
+                  "name": "entity_decoded_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_submit_key",
+              "definition": {
+                "function": {
+                  "name": "entity_decoded_submit_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "expiration_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "entity_expiration_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "key_type",
+              "definition": {
+                "function": {
+                  "name": "entity_key_type",
+                  "schema": "public"
+                },
+                "table_argument": "entity_row"
+              }
+            },
+            {
+              "name": "pending_reward",
+              "definition": {
+                "function": {
+                  "name": "entity_pending_reward",
+                  "schema": "public"
+                },
+                "table_argument": "entity_row"
+              }
+            },
+            {
+              "name": "transaction",
+              "definition": {
+                "function": {
+                  "name": "entity_transaction",
+                  "schema": "public"
+                },
+                "table_argument": "entity_row"
+              }
+            },
+            {
+              "name": "transfer",
+              "definition": {
+                "function": {
+                  "name": "account_transfer",
+                  "schema": "public"
+                },
+                "table_argument": "entity_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "pending_reward",
+                  "key_type",
+                  "balance_timestamp_iso8601",
+                  "created_timestamp_iso8601",
+                  "expiration_timestamp_iso8601",
+                  "decoded_key",
+                  "decoded_submit_key"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "pending_reward",
+                  "key_type",
+                  "balance_timestamp_iso8601",
+                  "created_timestamp_iso8601",
+                  "expiration_timestamp_iso8601",
+                  "decoded_key",
+                  "decoded_submit_key"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "entity_history",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "balance_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "entity_history_balance_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "created_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "entity_history_created_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_key",
+              "definition": {
+                "function": {
+                  "name": "entity_history_decoded_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_submit_key",
+              "definition": {
+                "function": {
+                  "name": "entity_history_decoded_submit_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "expiration_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "entity_history_expiration_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "balance_timestamp_iso8601",
+                  "created_timestamp_iso8601",
+                  "decoded_key",
+                  "decoded_submit_key",
+                  "expiration_timestamp_iso8601"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "balance_timestamp_iso8601",
+                  "created_timestamp_iso8601",
+                  "decoded_key",
+                  "decoded_submit_key",
+                  "expiration_timestamp_iso8601"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "entity_stake",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "ethereum_transaction",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "ethereum_transaction_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "network_stake",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "network_stake_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "nft",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "token",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "array_relationships": [
+            {
+              "name": "history",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "serial_number": "serial_number",
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "nft_history",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "created_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "nft_created_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_metadata",
+              "definition": {
+                "function": {
+                  "name": "decoded_metadata_nft",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "modified_timestamp",
+              "definition": {
+                "function": {
+                  "name": "modified_timestamp_nft",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "modified_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "nft_modified_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "modified_timestamp",
+                  "decoded_metadata",
+                  "modified_timestamp_iso8601",
+                  "created_timestamp_iso8601"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "modified_timestamp",
+                  "decoded_metadata",
+                  "modified_timestamp_iso8601",
+                  "created_timestamp_iso8601"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "nft_allowance",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "modified_timestamp",
+              "definition": {
+                "function": {
+                  "name": "modified_timestamp_nft_allowance",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "modified_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "nft_allowance_modified_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["modified_timestamp", "modified_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["modified_timestamp", "modified_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "nft_allowance_history",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "nft_history",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "end_transaction",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "end_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "transaction",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "start_transaction",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "start_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "transaction",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "created_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "nft_history_created_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_metadata",
+              "definition": {
+                "function": {
+                  "name": "decoded_metadata_nft_history",
+                  "schema": "public"
+                }
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["decoded_metadata", "created_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["decoded_metadata", "created_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "nft_transfer",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "nft",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "serial_number": "serial_number",
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "nft",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "token",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "transaction",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "transaction",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "array_relationships": [
+            {
+              "name": "crypto_transfer",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "crypto_transfer",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "node_stake",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "node_stake_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "non_fee_transfer",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "non_fee_transfer_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "schedule",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "schedule_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "executed_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "schedule_executed_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "expiration_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "schedule_expiration_time_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "consensus_timestamp_iso8601",
+                  "executed_timestamp_iso8601",
+                  "expiration_timestamp_iso8601"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "consensus_timestamp_iso8601",
+                  "executed_timestamp_iso8601",
+                  "expiration_timestamp_iso8601"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "staking_reward_transfer",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "transaction",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "transaction",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "staking_reward_transfer_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "token",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "entity",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "entity",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "array_relationships": [
+            {
+              "name": "airdrop",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token_airdrop",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "assessed_custom_fee",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "assessed_custom_fee",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "custom_fee",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "entity_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "custom_fee",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "nft",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "nft",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "token_account",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token_account",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "token_allowance",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token_allowance",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "admin_key",
+              "definition": {
+                "function": {
+                  "name": "token_admin_key",
+                  "schema": "public"
+                },
+                "table_argument": "token_row"
+              }
+            },
+            {
+              "name": "created_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_created_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_admin_key",
+              "definition": {
+                "function": {
+                  "name": "token_decoded_admin_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_fee_schedule_key",
+              "definition": {
+                "function": {
+                  "name": "token_decoded_fee_schedule_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_freeze_key",
+              "definition": {
+                "function": {
+                  "name": "token_decoded_freeze_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_kyc_key",
+              "definition": {
+                "function": {
+                  "name": "token_decoded_kyc_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_metadata",
+              "definition": {
+                "function": {
+                  "name": "token_decoded_metadata",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_metadata_key",
+              "definition": {
+                "function": {
+                  "name": "token_decoded_metadata_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_pause_key",
+              "definition": {
+                "function": {
+                  "name": "token_decoded_pause_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_supply_key",
+              "definition": {
+                "function": {
+                  "name": "token_decoded_supply_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_wipe_key",
+              "definition": {
+                "function": {
+                  "name": "token_decoded_wipe_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "modified_timestamp",
+              "definition": {
+                "function": {
+                  "name": "modified_timestamp_token",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "modified_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_modified_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "admin_key",
+                  "modified_timestamp",
+                  "modified_timestamp_iso8601",
+                  "created_timestamp_iso8601",
+                  "decoded_admin_key",
+                  "decoded_fee_schedule_key",
+                  "decoded_freeze_key",
+                  "decoded_kyc_key",
+                  "decoded_metadata",
+                  "decoded_metadata_key",
+                  "decoded_pause_key",
+                  "decoded_supply_key",
+                  "decoded_wipe_key"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "admin_key",
+                  "modified_timestamp",
+                  "modified_timestamp_iso8601",
+                  "created_timestamp_iso8601",
+                  "decoded_admin_key",
+                  "decoded_fee_schedule_key",
+                  "decoded_freeze_key",
+                  "decoded_kyc_key",
+                  "decoded_metadata",
+                  "decoded_metadata_key",
+                  "decoded_pause_key",
+                  "decoded_supply_key",
+                  "decoded_wipe_key"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "token_account",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "entity",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "account_id": "id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "entity",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "token",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "array_relationships": [
+            {
+              "name": "nft",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "account_id": "account_id",
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "nft",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "balance_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_account_balance_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "created_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_account_created_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "modified_timestamp",
+              "definition": {
+                "function": {
+                  "name": "modified_timestamp_token_account",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "modified_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_account_modified_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "modified_timestamp",
+                  "modified_timestamp_iso8601",
+                  "created_timestamp_iso8601",
+                  "balance_timestamp_iso8601"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "modified_timestamp",
+                  "modified_timestamp_iso8601",
+                  "created_timestamp_iso8601",
+                  "balance_timestamp_iso8601"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "token_account_history",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "balance_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_account_history_balance_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "created_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_account_history_created_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["balance_timestamp_iso8601", "created_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "token_airdrop",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "token",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": [
+                  "state",
+                  "amount",
+                  "receiver_account_id",
+                  "sender_account_id",
+                  "serial_number",
+                  "token_id",
+                  "timestamp_range"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              },
+              "comment": ""
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": [
+                  "state",
+                  "amount",
+                  "receiver_account_id",
+                  "sender_account_id",
+                  "serial_number",
+                  "token_id",
+                  "timestamp_range"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              },
+              "comment": ""
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "token_airdrop_history",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": [
+                  "state",
+                  "amount",
+                  "receiver_account_id",
+                  "sender_account_id",
+                  "serial_number",
+                  "token_id",
+                  "timestamp_range"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              },
+              "comment": ""
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": [
+                  "state",
+                  "amount",
+                  "receiver_account_id",
+                  "sender_account_id",
+                  "serial_number",
+                  "token_id",
+                  "timestamp_range"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              },
+              "comment": ""
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "token_allowance",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "token",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "modified_timestamp",
+              "definition": {
+                "function": {
+                  "name": "modified_timestamp_token_allowance",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "modified_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_allowance_modified_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["modified_timestamp", "modified_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["modified_timestamp", "modified_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "token_allowance_history",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "token_history",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "decoded_fee_schedule_key",
+              "definition": {
+                "function": {
+                  "name": "token_history_decoded_fee_schedule_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_freeze_key",
+              "definition": {
+                "function": {
+                  "name": "token_history_decoded_freeze_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_kyc_key",
+              "definition": {
+                "function": {
+                  "name": "token_history_decoded_kyc_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_metadata",
+              "definition": {
+                "function": {
+                  "name": "token_history_decoded_metadata",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_metadata_key",
+              "definition": {
+                "function": {
+                  "name": "token_history_decoded_metadata_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_pause_key",
+              "definition": {
+                "function": {
+                  "name": "token_history_decoded_pause_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_supply_key",
+              "definition": {
+                "function": {
+                  "name": "token_history_decoded_supply_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_wipe_key",
+              "definition": {
+                "function": {
+                  "name": "token_history_decoded_wipe_key",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "end_timestamp",
+              "definition": {
+                "function": {
+                  "name": "end_timestamp_token_history",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "end_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_history_end_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "start_timestamp",
+              "definition": {
+                "function": {
+                  "name": "start_timestamp_token_history",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "start_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_history_start_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "start_timestamp",
+                  "end_timestamp",
+                  "start_timestamp_iso8601",
+                  "end_timestamp_iso8601",
+                  "decoded_fee_schedule_key",
+                  "decoded_freeze_key",
+                  "decoded_kyc_key",
+                  "decoded_metadata",
+                  "decoded_metadata_key",
+                  "decoded_pause_key",
+                  "decoded_supply_key",
+                  "decoded_wipe_key"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "start_timestamp",
+                  "end_timestamp",
+                  "start_timestamp_iso8601",
+                  "end_timestamp_iso8601",
+                  "decoded_fee_schedule_key",
+                  "decoded_freeze_key",
+                  "decoded_kyc_key",
+                  "decoded_metadata",
+                  "decoded_metadata_key",
+                  "decoded_pause_key",
+                  "decoded_supply_key",
+                  "decoded_wipe_key"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "token_transfer",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "token",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "token_id": "token_id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "transaction",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "transaction",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "token_transfer_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "topic",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "entity",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "id": "id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "entity",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "topic_message",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "topic",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "topic_id": "id"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "entity",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "topic_message_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_message",
+              "definition": {
+                "function": {
+                  "name": "decoded_topic_message",
+                  "schema": "public"
+                }
+              }
+            },
+            {
+              "name": "valid_start_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "topic_message_valid_start_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "decoded_message",
+                  "consensus_timestamp_iso8601",
+                  "valid_start_timestamp_iso8601"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "decoded_message",
+                  "consensus_timestamp_iso8601",
+                  "valid_start_timestamp_iso8601"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "topic_message_lookup",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "total_accounts",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "transaction",
+            "schema": "public"
+          },
+          "object_relationships": [
+            {
+              "name": "parent_transaction",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "parent_consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "transaction",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "array_relationships": [
+            {
+              "name": "crypto_transfer",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "crypto_transfer",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "nft_transfer_list",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "nft_transfer",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "staking_reward_transfer",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "staking_reward_transfer",
+                    "schema": "public"
+                  }
+                }
+              }
+            },
+            {
+              "name": "token_transfer",
+              "using": {
+                "manual_configuration": {
+                  "column_mapping": {
+                    "consensus_timestamp": "consensus_timestamp"
+                  },
+                  "insertion_order": null,
+                  "remote_table": {
+                    "name": "token_transfer",
+                    "schema": "public"
+                  }
+                }
+              }
+            }
+          ],
+          "computed_fields": [
+            {
+              "name": "child_transactions",
+              "definition": {
+                "function": {
+                  "name": "child_transactions",
+                  "schema": "public"
+                },
+                "table_argument": "transaction_row"
+              }
+            },
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "transaction_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "decoded_memo",
+              "definition": {
+                "function": {
+                  "name": "transaction_decoded_memo",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "id",
+              "definition": {
+                "function": {
+                  "name": "transaction_id",
+                  "schema": "public"
+                },
+                "table_argument": "transaction_row"
+              }
+            },
+            {
+              "name": "parent_consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "transaction_parent_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            },
+            {
+              "name": "sibling_transactions",
+              "definition": {
+                "function": {
+                  "name": "sibling_transactions",
+                  "schema": "public"
+                },
+                "table_argument": "transaction_row"
+              }
+            },
+            {
+              "name": "transfer",
+              "definition": {
+                "function": {
+                  "name": "transaction_transfer",
+                  "schema": "public"
+                },
+                "table_argument": "transaction_row"
+              }
+            },
+            {
+              "name": "type_name",
+              "definition": {
+                "function": {
+                  "name": "transaction_type_name",
+                  "schema": "public"
+                },
+                "table_argument": "transaction_row"
+              }
+            },
+            {
+              "name": "valid_start_ns_iso8601",
+              "definition": {
+                "function": {
+                  "name": "transaction_valid_start_ns_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "id",
+                  "consensus_timestamp_iso8601",
+                  "decoded_memo",
+                  "parent_consensus_timestamp_iso8601",
+                  "valid_start_ns_iso8601"
+                ],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": [
+                  "id",
+                  "consensus_timestamp_iso8601",
+                  "decoded_memo",
+                  "parent_consensus_timestamp_iso8601",
+                  "valid_start_ns_iso8601"
+                ],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "transaction_signature",
+            "schema": "public"
+          },
+          "computed_fields": [
+            {
+              "name": "consensus_timestamp_iso8601",
+              "definition": {
+                "function": {
+                  "name": "transaction_signature_consensus_timestamp_iso8601",
+                  "schema": "public"
+                },
+                "table_argument": "_row"
+              }
+            }
+          ],
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "computed_fields": ["consensus_timestamp_iso8601"],
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        },
+        {
+          "table": {
+            "name": "transactions_last_24hrs",
+            "schema": "public"
+          },
+          "select_permissions": [
+            {
+              "role": "public",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "limit": 1000,
+                "allow_aggregations": true
+              }
+            },
+            {
+              "role": "user",
+              "permission": {
+                "columns": "*",
+                "filter": {},
+                "allow_aggregations": true
+              }
+            }
+          ]
+        }
+      ],
+      "functions": [
+        {
+          "function": {
+            "name": "active_accounts_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "associated_revenue_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "associated_transaction_fees_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "associated_transactions_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "fees_paid_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "fungible_token_transfers_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "hcs_messages_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "nft_collection_sales_volume",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "nft_holders_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "non_fungible_token_transfers_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "revenue_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "smart_contract_calls_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "transaction_fees_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "transactions_by_type",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "transactions_per_period",
+            "schema": "ecosystem"
+          }
+        },
+        {
+          "function": {
+            "name": "account_transfer",
+            "schema": "public"
+          }
+        },
+        {
+          "function": {
+            "name": "child_transactions",
+            "schema": "public"
+          }
+        },
+        {
+          "function": {
+            "name": "entity_transaction",
+            "schema": "public"
+          }
+        },
+        {
+          "function": {
+            "name": "sibling_transactions",
+            "schema": "public"
+          }
+        },
+        {
+          "function": {
+            "name": "transaction_transfer",
+            "schema": "public"
+          }
+        }
+      ],
+      "configuration": {
+        "connection_info": {
+          "database_url": {
+            "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+          },
+          "isolation_level": "read-committed",
+          "pool_settings": {
+            "connection_lifetime": 600,
+            "idle_timeout": 180,
+            "max_connections": 50,
+            "retries": 1
+          },
+          "use_prepared_statements": true
+        }
+      }
+    }
+  ]
+}

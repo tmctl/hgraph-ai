@@ -10,11 +10,15 @@
 
 - Follow existing code patterns and conventions in the project
 - Use Prettier for formatting (run `npm run format`)
+- **ALWAYS run `npm run format` after making any code changes**
 - Ensure all TypeScript code passes linting
 
 ## MCP Server Best Practices
 
+- **NEVER use mock data or hardcoded values** - this is a production-ready product
 - Return processed data, not raw queries
 - No direct SQL execution exposed to clients
 - All data validation happens server-side
 - Maintain proper error handling and security
+- Always fetch real data from appropriate sources
+- Use proper environment variables for configuration, not hardcoded values

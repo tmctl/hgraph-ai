@@ -82,7 +82,7 @@ This MCP server follows security best practices:
 
 ### Running the Server
 
-The MCP server can run in two modes:
+The MCP server can run in three modes:
 
 #### 1. Stdio Mode (for MCP clients)
 
@@ -106,6 +106,70 @@ npm run build && npm run start:mcp-server
 # Or with custom port
 MCP_PORT=8080 npm run dev:mcp-server
 ```
+
+#### 3. Streamable HTTP Mode (with Server-Sent Events)
+
+The server now supports the MCP Streamable HTTP transport specification, providing both request-response and streaming capabilities via Server-Sent Events (SSE).
+
+```bash
+# Development mode (runs on port 3001 by default)
+npm run dev:http
+
+# Production mode
+npm run build && npm run start:http
+
+# Or with custom configuration
+MCP_PORT=3001 MCP_HOST=localhost npm run dev:http
+```
+
+**Configuration:**
+
+- `MCP_PORT`: Server port (default: 3001)
+- `MCP_HOST`: Server host (default: localhost)
+- `MCP_CORS_ORIGIN`: CORS origin configuration (default: \*)
+- `MCP_API_PREFIX`: API path prefix (default: /mcp)
+
+**Endpoints:**
+
+- `GET /mcp/health` - Health check and server status
+- `GET /mcp/sse` - Server-Sent Events stream for real-time updates
+- `POST /mcp/message` - Single JSON-RPC request endpoint
+- `POST /mcp/batch` - Batch JSON-RPC requests
+
+**Testing the Streamable HTTP Server:**
+
+```bash
+# Check server health
+curl http://localhost:3001/mcp/health
+
+# Connect to SSE stream (will stream events)
+curl -N http://localhost:3001/mcp/sse
+
+# Send a JSON-RPC request
+curl -X POST http://localhost:3001/mcp/message \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+
+# Send batch requests
+curl -X POST http://localhost:3001/mcp/batch \
+  -H "Content-Type: application/json" \
+  -d '[
+    {"jsonrpc":"2.0","id":1,"method":"tools/list"},
+    {"jsonrpc":"2.0","id":2,"method":"resources/list"}
+  ]'
+
+# Run the test client
+npm run test:http-client
+```
+
+**Features:**
+
+- Full MCP protocol support over HTTP
+- Server-Sent Events for streaming responses
+- Batch request processing
+- Automatic heartbeat to maintain connections
+- CORS support for browser-based clients
+- Connection management and timeout handling
 
 ### HTTP API Endpoints
 

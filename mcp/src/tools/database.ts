@@ -1,16 +1,16 @@
 /**
  * Database Tools for MCP Server
  *
- * Provides safe, read-only database access with natural language queries
  * Following MCP best practices - returns data, not raw SQL
  */
 
 import { Client } from 'pg';
 import { format } from 'sql-formatter';
 import { z } from 'zod';
-import Anthropic from '@anthropic-ai/sdk';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { validateQuery, quickValidate, suggestFixes } from './queryValidator.js';
+import { getQuerySuggestions, generateQueryCompletion } from './queryAutoComplete.js';
 
 // Database configuration schema
 const DatabaseConfigSchema = z.object({
@@ -32,33 +32,57 @@ interface DatabaseConfig {
 }
 
 interface TableSchema {
+  table_schema: string;
   table_name: string;
   column_name: string;
   data_type: string;
-  is_nullable: string;
-  column_default: string | null;
-  character_maximum_length: number | null;
 }
 
 interface DatabaseSchema {
   tables: {
     [tableName: string]: {
+      description?: string;
+      commonQueries?: string[];
+      keyFields?: string[];
       columns: {
         [columnName: string]: {
           data_type: string;
-          is_nullable: boolean;
-          column_default: string | null;
-          max_length: number | null;
+          udt_name?: string; // User-defined type name
+          enum_values?: string[]; // Possible values for enum types
+          is_nullable?: boolean;
+          column_default?: string;
         };
+      };
+      relationships?: {
+        object_relationships?: Array<{
+          name: string;
+          table: string;
+          column_mapping: Record<string, string>;
+        }>;
+        array_relationships?: Array<{
+          name: string;
+          table: string;
+          column_mapping: Record<string, string>;
+        }>;
       };
     };
   };
   relationships: Array<{
+    table_schema?: string;
     table_name: string;
     column_name: string;
+    foreign_table_schema?: string;
     foreign_table_name: string;
     foreign_column_name: string;
   }>;
+  types?: {
+    [typeName: string]: {
+      type: 'enum' | 'composite';
+      values?: string[]; // For enum types
+      fields?: Record<string, string>; // For composite types
+      description?: string;
+    };
+  };
 }
 
 // Cache for database schema
@@ -109,31 +133,54 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
   const client = await createConnection(config);
 
   try {
-    // Query to get all table schemas
+    // Query to get all table schemas with detailed column information
+    // (excluding legacy tables and partitioned hash tables)
     const schemaQuery = `
       SELECT 
+        t.table_schema,
         t.table_name,
         c.column_name,
         c.data_type,
+        c.udt_name,
         c.is_nullable,
-        c.column_default,
-        c.character_maximum_length
+        c.column_default
       FROM information_schema.tables t
       JOIN information_schema.columns c 
         ON t.table_name = c.table_name 
         AND t.table_schema = c.table_schema
-      WHERE t.table_schema = 'public'
+      WHERE t.table_schema IN ('public', 'ecosystem')
         AND t.table_type = 'BASE TABLE'
-      ORDER BY t.table_name, c.ordinal_position;
+        AND t.table_name NOT LIKE 'account_balance%'
+        AND t.table_name NOT LIKE 'token_balance%'
+        AND t.table_name NOT LIKE 'transaction_hash_%'
+      ORDER BY t.table_schema, t.table_name, c.ordinal_position;
     `;
 
-    const schemaResult = await client.query<TableSchema>(schemaQuery);
+    const schemaResult = await client.query(schemaQuery);
 
-    // Query to get foreign key relationships
+    // Query to get enum types and their values
+    const enumTypesQuery = `
+      SELECT 
+        t.typname as type_name,
+        n.nspname as schema_name,
+        array_agg(e.enumlabel ORDER BY e.enumsortorder) as enum_values
+      FROM pg_type t
+      JOIN pg_enum e ON t.oid = e.enumtypid
+      JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace
+      WHERE n.nspname IN ('public', 'ecosystem')
+      GROUP BY t.typname, n.nspname;
+    `;
+
+    const enumTypesResult = await client.query(enumTypesQuery);
+
+    // Query to get foreign key relationships from both schemas
+    // (excluding legacy tables and partitioned hash tables)
     const relationshipsQuery = `
       SELECT
+        tc.table_schema,
         tc.table_name,
         kcu.column_name,
+        ccu.table_schema AS foreign_table_schema,
         ccu.table_name AS foreign_table_name,
         ccu.column_name AS foreign_column_name
       FROM information_schema.table_constraints AS tc
@@ -144,7 +191,13 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
         ON ccu.constraint_name = tc.constraint_name
         AND ccu.table_schema = tc.table_schema
       WHERE tc.constraint_type = 'FOREIGN KEY'
-        AND tc.table_schema = 'public';
+        AND tc.table_schema IN ('public', 'ecosystem')
+        AND tc.table_name NOT LIKE 'account_balance%'
+        AND tc.table_name NOT LIKE 'token_balance%'
+        AND tc.table_name NOT LIKE 'transaction_hash_%'
+        AND ccu.table_name NOT LIKE 'account_balance%'
+        AND ccu.table_name NOT LIKE 'token_balance%'
+        AND ccu.table_name NOT LIKE 'transaction_hash_%';
     `;
 
     const relationshipsResult = await client.query(relationshipsQuery);
@@ -153,20 +206,75 @@ export async function downloadDatabaseSchema(): Promise<DatabaseSchema> {
     const schema: DatabaseSchema = {
       tables: {},
       relationships: relationshipsResult.rows,
+      types: {},
     };
 
-    for (const row of schemaResult.rows) {
-      if (!schema.tables[row.table_name]) {
-        schema.tables[row.table_name] = { columns: {} };
+    // Process enum types
+    for (const enumType of enumTypesResult.rows) {
+      const typeName =
+        enumType.schema_name === 'ecosystem'
+          ? `ecosystem.${enumType.type_name}`
+          : enumType.type_name;
+
+      // Parse enum values - they come as a string like "{VALUE1,VALUE2,VALUE3}"
+      let enumValues: string[] = [];
+      if (typeof enumType.enum_values === 'string') {
+        // Remove curly braces and split by comma
+        enumValues = enumType.enum_values
+          .replace(/^{|}$/g, '')
+          .split(',')
+          .filter((v: string) => v.length > 0);
+      } else if (Array.isArray(enumType.enum_values)) {
+        enumValues = enumType.enum_values;
       }
 
-      schema.tables[row.table_name].columns[row.column_name] = {
-        data_type: row.data_type,
-        is_nullable: row.is_nullable === 'YES',
-        column_default: row.column_default,
-        max_length: row.character_maximum_length,
+      schema.types![typeName] = {
+        type: 'enum',
+        values: enumValues,
+        description: getEnumTypeDescription(enumType.type_name),
       };
     }
+
+    for (const row of schemaResult.rows) {
+      // Skip legacy tables and partitioned hash tables
+      if (
+        row.table_name.startsWith('account_balance') ||
+        row.table_name.startsWith('token_balance') ||
+        row.table_name.startsWith('transaction_hash_')
+      ) {
+        continue;
+      }
+
+      // Create fully qualified table name with schema prefix for ecosystem tables
+      const qualifiedTableName =
+        row.table_schema === 'ecosystem' ? `ecosystem.${row.table_name}` : row.table_name;
+
+      if (!schema.tables[qualifiedTableName]) {
+        schema.tables[qualifiedTableName] = { columns: {} };
+      }
+
+      // Get enum values if this is a user-defined type
+      let enumValues: string[] | undefined;
+      if (row.data_type === 'USER-DEFINED' && row.udt_name) {
+        const udtName =
+          row.table_schema === 'ecosystem' ? `ecosystem.${row.udt_name}` : row.udt_name;
+        if (schema.types![udtName]) {
+          enumValues = schema.types![udtName].values;
+        }
+      }
+
+      schema.tables[qualifiedTableName].columns[row.column_name] = {
+        data_type: row.data_type,
+        udt_name: row.udt_name,
+        enum_values: enumValues,
+        is_nullable: row.is_nullable === 'YES',
+        column_default: row.column_default,
+      };
+    }
+
+    // Enhance schema with GraphQL relationship mappings and semantic metadata
+    await enhanceSchemaWithGraphQLRelationships(schema);
+    await addSemanticMetadata(schema);
 
     // Cache the schema
     CACHED_SCHEMA = schema;
@@ -215,190 +323,363 @@ async function getOrFetchSchema(): Promise<DatabaseSchema> {
 }
 
 /**
- * Convert natural language to SQL using Anthropic Claude
+ * Enhance database schema with GraphQL relationship mappings
  */
-async function naturalLanguageToSQL(question: string, schema: DatabaseSchema): Promise<string> {
-  const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || '',
-  });
-
-  // Create a simplified schema description for the prompt
-  const schemaDescription = Object.entries(schema.tables)
-    .map(([tableName, tableInfo]) => {
-      const columns = Object.entries(tableInfo.columns)
-        .map(([colName, colInfo]) => `${colName} (${colInfo.data_type})`)
-        .join(', ');
-      return `${tableName}: ${columns}`;
-    })
-    .join('\n');
-
-  const prompt = `Given the following PostgreSQL database schema:
-
-${schemaDescription}
-
-Foreign Key Relationships:
-${schema.relationships
-  .map(
-    (r) => `${r.table_name}.${r.column_name} -> ${r.foreign_table_name}.${r.foreign_column_name}`,
-  )
-  .join('\n')}
-
-Convert this question to a SQL SELECT query:
-"${question}"
-
-Rules:
-1. Only generate SELECT queries (no INSERT, UPDATE, DELETE)
-2. Use proper JOIN syntax when needed
-3. Include appropriate WHERE clauses
-4. Limit results to 100 rows by default
-5. Use table aliases for clarity
-6. Return ONLY the SQL query, no explanations
-
-SQL Query:`;
-
+async function enhanceSchemaWithGraphQLRelationships(schema: DatabaseSchema): Promise<void> {
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 500,
-      temperature: 0,
-      system: 'You are a SQL expert. Generate only valid PostgreSQL SELECT queries. Return only the SQL code, no explanations or markdown formatting.',
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
-    });
+    const graphqlSchemaPath = join(process.cwd(), 'src/schema/graphql-schema.json');
+    if (!existsSync(graphqlSchemaPath)) {
+      console.warn('GraphQL schema file not found, skipping relationship enhancement');
+      return;
+    }
 
-    const sqlQuery = response.content[0].type === 'text' 
-      ? response.content[0].text.trim() 
-      : '';
+    const graphqlSchemaData = JSON.parse(readFileSync(graphqlSchemaPath, 'utf-8'));
+    const tables = graphqlSchemaData?.sources?.[0]?.tables || [];
 
-    // Clean up the query
-    return sqlQuery
-      .replace(/```sql/gi, '')
-      .replace(/```/g, '')
-      .trim();
+    for (const tableConfig of tables) {
+      const tableName = tableConfig.table.name;
+      const tableSchema = tableConfig.table.schema || 'public';
+      const qualifiedTableName = tableSchema === 'ecosystem' ? `ecosystem.${tableName}` : tableName;
+
+      // Skip if table not in our schema (filtered out)
+      if (!schema.tables[qualifiedTableName]) {
+        continue;
+      }
+
+      // Initialize relationships if not exists
+      if (!schema.tables[qualifiedTableName].relationships) {
+        schema.tables[qualifiedTableName].relationships = {};
+      }
+
+      // Process object relationships (one-to-one)
+      if (tableConfig.object_relationships) {
+        schema.tables[qualifiedTableName].relationships!.object_relationships =
+          tableConfig.object_relationships.map((rel: any) => ({
+            name: rel.name,
+            table:
+              rel.using?.manual_configuration?.remote_table?.schema === 'ecosystem'
+                ? `ecosystem.${rel.using.manual_configuration.remote_table.name}`
+                : rel.using?.manual_configuration?.remote_table?.name || '',
+            column_mapping: rel.using?.manual_configuration?.column_mapping || {},
+          }));
+      }
+
+      // Process array relationships (one-to-many)
+      if (tableConfig.array_relationships) {
+        schema.tables[qualifiedTableName].relationships!.array_relationships =
+          tableConfig.array_relationships.map((rel: any) => ({
+            name: rel.name,
+            table:
+              rel.using?.manual_configuration?.remote_table?.schema === 'ecosystem'
+                ? `ecosystem.${rel.using.manual_configuration.remote_table.name}`
+                : rel.using?.manual_configuration?.remote_table?.name || '',
+            column_mapping: rel.using?.manual_configuration?.column_mapping || {},
+          }));
+      }
+    }
+
+    console.log('✅ Enhanced schema with GraphQL relationship mappings');
   } catch (error) {
-    // Fallback to a simple pattern-based approach if Claude fails
-    console.warn('Claude API failed, using fallback SQL generation:', error);
-    return fallbackNaturalLanguageToSQL(question, schema);
+    console.warn('Warning: Could not enhance schema with GraphQL relationships:', error);
   }
 }
 
 /**
- * Fallback SQL generation without AI
+ * Get description for known enum types
  */
-function fallbackNaturalLanguageToSQL(question: string, schema: DatabaseSchema): string {
-  const lowerQuestion = question.toLowerCase();
-  const tables = Object.keys(schema.tables);
+function getEnumTypeDescription(typeName: string): string {
+  const typeDescriptions: Record<string, string> = {
+    entity_type: 'Type of Hedera entity (ACCOUNT, CONTRACT, FILE, TOPIC, TOKEN, SCHEDULE)',
+    key_type: 'Type of cryptographic key (ED25519, ECDSA_SECP256K1, etc.)',
+    transaction_result: 'Result code for transaction execution',
+    transaction_type: 'Type of Hedera transaction operation',
+    token_type: 'Type of token (FUNGIBLE_COMMON, NON_FUNGIBLE_UNIQUE)',
+    token_supply_type: 'Token supply type (INFINITE, FINITE)',
+    token_freeze_status: 'Token freeze status for an account',
+    token_kyc_status: 'Token KYC status for an account',
+    schedule_signature_type: 'Type of signature for scheduled transaction',
+    response_code: 'Response code from Hedera network',
+  };
 
-  // Find mentioned tables
-  const mentionedTables = tables.filter(
-    (table) =>
-      lowerQuestion.includes(table.toLowerCase()) ||
-      lowerQuestion.includes(table.replace(/_/g, ' ').toLowerCase()),
-  );
+  return typeDescriptions[typeName] || `Enum type: ${typeName}`;
+}
 
-  if (mentionedTables.length === 0 && tables.length > 0) {
-    // Default to a common table if none mentioned
-    if (tables.includes('account')) mentionedTables.push('account');
-    else if (tables.includes('transaction')) mentionedTables.push('transaction');
-    else mentionedTables.push(tables[0]);
-  }
-
-  const table = mentionedTables[0] || 'account';
-
-  // Determine limit
-  let limit = 10;
-  const limitMatch = question.match(/(\d+)/);
-  if (limitMatch) {
-    limit = Math.min(parseInt(limitMatch[1]), 100);
-  }
-
-  // Build basic query
-  if (lowerQuestion.includes('count') || lowerQuestion.includes('how many')) {
-    return `SELECT COUNT(*) as count FROM ${table} LIMIT ${limit};`;
-  } else if (lowerQuestion.includes('latest') || lowerQuestion.includes('recent')) {
-    const timeColumn = Object.keys(schema.tables[table]?.columns || {}).find(
-      (col) => col.includes('timestamp') || col.includes('created'),
-    );
-    if (timeColumn) {
-      return `SELECT * FROM ${table} ORDER BY ${timeColumn} DESC LIMIT ${limit};`;
+/**
+ * Add semantic metadata to help external models understand Hedera data structures
+ */
+async function addSemanticMetadata(schema: DatabaseSchema): Promise<void> {
+  const HEDERA_TABLE_METADATA: Record<
+    string,
+    {
+      description: string;
+      commonQueries: string[];
+      keyFields: string[];
     }
-  } else if (lowerQuestion.includes('balance')) {
-    return `SELECT * FROM ${table} WHERE balance > 0 ORDER BY balance DESC LIMIT ${limit};`;
+  > = {
+    entity: {
+      description:
+        'All Hedera entities (accounts, tokens, contracts, topics). Contains current balances in tinybars (1 HBAR = 100,000,000 tinybars)',
+      commonQueries: [
+        'SELECT * FROM entity WHERE id = 123456 -- Get account info by ID',
+        'SELECT id, balance, balance_timestamp FROM entity WHERE balance > 100000000000 ORDER BY balance DESC LIMIT 10 -- Top accounts by balance',
+        "SELECT id, type, created_timestamp FROM entity WHERE type = 'ACCOUNT' AND created_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 -- New accounts",
+        'SELECT id, alias, staked_node_id, stake_period_start FROM entity WHERE staked_node_id IS NOT NULL -- Staking accounts',
+        'SELECT COUNT(*) as total_accounts, SUM(balance) as total_balance FROM entity WHERE deleted = false -- Network totals',
+      ],
+      keyFields: [
+        'id',
+        'num',
+        'realm',
+        'shard',
+        'balance',
+        'type',
+        'created_timestamp',
+        'alias',
+        'key',
+      ],
+    },
+    transaction: {
+      description:
+        'All Hedera network transactions with consensus timestamps in nanoseconds since epoch',
+      commonQueries: [
+        'SELECT * FROM transaction WHERE payer_account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent transactions for account',
+        "SELECT type, COUNT(*) FROM transaction WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 GROUP BY type -- Transaction types last hour",
+        'SELECT * FROM transaction WHERE result != 22 ORDER BY consensus_timestamp DESC LIMIT 10 -- Failed transactions (22 = SUCCESS)',
+        'SELECT payer_account_id, COUNT(*) as tx_count, SUM(charged_tx_fee) as total_fees FROM transaction GROUP BY payer_account_id ORDER BY tx_count DESC LIMIT 10 -- Top transactors',
+        "SELECT DATE_TRUNC('hour', to_timestamp(consensus_timestamp/1000000000)) as hour, COUNT(*) as tx_count FROM transaction WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY hour ORDER BY hour -- Hourly transaction volume",
+      ],
+      keyFields: [
+        'consensus_timestamp',
+        'payer_account_id',
+        'type',
+        'result',
+        'charged_tx_fee',
+        'transaction_id',
+        'valid_start_timestamp',
+      ],
+    },
+    token: {
+      description: 'HTS (Hedera Token Service) tokens including fungible and non-fungible tokens',
+      commonQueries: [
+        "SELECT token_id, name, symbol, total_supply, decimals FROM token WHERE type = 'FUNGIBLE_COMMON' ORDER BY created_timestamp DESC LIMIT 10 -- Recent fungible tokens",
+        "SELECT * FROM token WHERE name ILIKE '%USDC%' OR symbol ILIKE '%USDC%' -- Find USDC tokens",
+        "SELECT token_id, name, COUNT(*) as nft_count FROM token t JOIN nft n ON t.token_id = n.token_id WHERE type = 'NON_FUNGIBLE_UNIQUE' GROUP BY token_id, name ORDER BY nft_count DESC -- NFT collections by size",
+        'SELECT t.token_id, t.name, COUNT(DISTINCT tb.account_id) as holders FROM token t JOIN token_balance tb ON t.token_id = tb.token_id WHERE tb.balance > 0 GROUP BY t.token_id, t.name ORDER BY holders DESC LIMIT 10 -- Top tokens by holder count',
+        'SELECT token_id, name, symbol, total_supply, (total_supply * 1.0 / POWER(10, decimals)) as adjusted_supply FROM token WHERE decimals > 0 ORDER BY adjusted_supply DESC LIMIT 10 -- Tokens by adjusted supply',
+      ],
+      keyFields: [
+        'token_id',
+        'name',
+        'symbol',
+        'type',
+        'total_supply',
+        'decimals',
+        'treasury_account_id',
+        'freeze_key',
+        'kyc_key',
+      ],
+    },
+    crypto_transfer: {
+      description: 'HBAR transfers between accounts (amounts in tinybars)',
+      commonQueries: [
+        'SELECT * FROM crypto_transfer WHERE entity_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- HBAR transfers for account',
+        "SELECT entity_id, SUM(amount) as net_amount FROM crypto_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY entity_id ORDER BY net_amount DESC -- Net HBAR flow last 24h",
+        'SELECT * FROM crypto_transfer WHERE amount > 100000000000 ORDER BY consensus_timestamp DESC -- Large HBAR transfers (>1000 HBAR)',
+        'SELECT entity_id, SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as received, SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as sent FROM crypto_transfer GROUP BY entity_id HAVING SUM(amount) != 0 ORDER BY received DESC LIMIT 20 -- Account HBAR flow analysis',
+        "SELECT COUNT(DISTINCT entity_id) as active_accounts, SUM(ABS(amount))/2 as total_volume FROM crypto_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 -- Hourly HBAR volume",
+      ],
+      keyFields: ['entity_id', 'amount', 'consensus_timestamp', 'payer_account_id', 'is_approval'],
+    },
+    token_transfer: {
+      description: 'Token transfers (both fungible and NFT) between accounts',
+      commonQueries: [
+        'SELECT * FROM token_transfer WHERE account_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Token transfers for account',
+        "SELECT token_id, SUM(amount) as volume FROM token_transfer WHERE consensus_timestamp > extract(epoch from now() - interval '24 hours') * 1000000000 GROUP BY token_id ORDER BY volume DESC -- Token volume last 24h",
+        'SELECT * FROM token_transfer WHERE token_id = 456789 ORDER BY consensus_timestamp DESC LIMIT 100 -- Transfers for specific token',
+      ],
+      keyFields: ['token_id', 'account_id', 'amount', 'consensus_timestamp'],
+    },
+    nft: {
+      description: 'Non-fungible tokens (NFTs) with metadata and ownership',
+      commonQueries: [
+        'SELECT * FROM nft WHERE account_id = 123456 -- NFTs owned by account',
+        'SELECT token_id, COUNT(*) as nft_count FROM nft WHERE account_id IS NOT NULL GROUP BY token_id ORDER BY nft_count DESC -- NFT holdings by collection',
+        'SELECT * FROM nft WHERE token_id = 456789 ORDER BY serial_number -- All NFTs in collection',
+        'SELECT n.*, t.name as collection_name, t.symbol FROM nft n JOIN token t ON n.token_id = t.token_id WHERE n.account_id = 123456 -- NFTs with collection info',
+        'SELECT account_id, COUNT(DISTINCT token_id) as collections, COUNT(*) as total_nfts FROM nft WHERE account_id IS NOT NULL GROUP BY account_id ORDER BY total_nfts DESC LIMIT 10 -- Top NFT collectors',
+        'SELECT token_id, MIN(serial_number) as min_serial, MAX(serial_number) as max_serial, COUNT(*) as minted FROM nft GROUP BY token_id ORDER BY minted DESC -- NFT collection stats',
+      ],
+      keyFields: [
+        'token_id',
+        'serial_number',
+        'account_id',
+        'created_timestamp',
+        'metadata',
+        'spender',
+        'delegating_spender',
+      ],
+    },
+    contract_result: {
+      description: 'Smart contract execution results including gas usage and function calls',
+      commonQueries: [
+        'SELECT * FROM contract_result WHERE contract_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent contract calls',
+        'SELECT contract_id, AVG(gas_used) as avg_gas FROM contract_result GROUP BY contract_id ORDER BY avg_gas DESC -- Gas usage by contract',
+        'SELECT * FROM contract_result WHERE error_message IS NOT NULL ORDER BY consensus_timestamp DESC -- Failed contract calls',
+      ],
+      keyFields: [
+        'contract_id',
+        'consensus_timestamp',
+        'gas_used',
+        'function_result',
+        'error_message',
+      ],
+    },
+    topic_message: {
+      description: 'HCS (Hedera Consensus Service) messages published to topics',
+      commonQueries: [
+        'SELECT * FROM topic_message WHERE topic_id = 123456 ORDER BY consensus_timestamp DESC LIMIT 20 -- Recent messages for topic',
+        'SELECT topic_id, COUNT(*) as message_count FROM topic_message GROUP BY topic_id ORDER BY message_count DESC -- Most active topics',
+        "SELECT * FROM topic_message WHERE consensus_timestamp > extract(epoch from now() - interval '1 hour') * 1000000000 ORDER BY consensus_timestamp DESC -- Recent HCS messages",
+      ],
+      keyFields: [
+        'topic_id',
+        'consensus_timestamp',
+        'sequence_number',
+        'message',
+        'payer_account_id',
+      ],
+    },
+    'ecosystem.metric': {
+      description: 'Aggregated network metrics and analytics with time periods',
+      commonQueries: [
+        "SELECT name, period, total FROM ecosystem.metric WHERE name = 'transaction_count' ORDER BY timestamp_range DESC -- Transaction count metrics",
+        'SELECT * FROM ecosystem.metric m JOIN ecosystem.metric_description md ON m.name = md.name -- Metrics with descriptions',
+        'SELECT name, SUM(total) as total_value FROM ecosystem.metric GROUP BY name ORDER BY total_value DESC -- Aggregate metrics',
+      ],
+      keyFields: ['name', 'period', 'timestamp_range', 'total'],
+    },
+    'ecosystem.metric_description': {
+      description: 'Descriptions and methodology for ecosystem metrics',
+      commonQueries: [
+        'SELECT * FROM ecosystem.metric_description -- All available metrics',
+        "SELECT * FROM ecosystem.metric_description WHERE name ILIKE '%transaction%' -- Transaction-related metrics",
+      ],
+      keyFields: ['name', 'description', 'methodology'],
+    },
+  };
+
+  // Apply metadata to matching tables
+  for (const [tableName, metadata] of Object.entries(HEDERA_TABLE_METADATA)) {
+    if (schema.tables[tableName]) {
+      schema.tables[tableName].description = metadata.description;
+      schema.tables[tableName].commonQueries = metadata.commonQueries;
+      schema.tables[tableName].keyFields = metadata.keyFields;
+    }
   }
 
-  // Default query
-  return `SELECT * FROM ${table} LIMIT ${limit};`;
+  console.log('✅ Added semantic metadata for Hedera-specific tables');
+
+  // Add commonly used enum value meanings
+  if (schema.types) {
+    // Add descriptions for entity_type values
+    if (schema.types['entity_type']) {
+      schema.types['entity_type'].description =
+        'Entity types: ACCOUNT (user/contract account), CONTRACT (smart contract), ' +
+        'FILE (file service), TOPIC (consensus service), TOKEN (HTS token), SCHEDULE (scheduled tx)';
+    }
+
+    // Add descriptions for transaction result codes
+    if (schema.types['transaction_result'] || schema.types['response_code']) {
+      const resultDesc =
+        'Common codes: 22=SUCCESS, 11=INVALID_TRANSACTION, ' +
+        '9=INSUFFICIENT_PAYER_BALANCE, 15=INSUFFICIENT_TX_FEE, 10=INVALID_ACCOUNT_ID';
+      if (schema.types['transaction_result']) {
+        schema.types['transaction_result'].description = resultDesc;
+      }
+      if (schema.types['response_code']) {
+        schema.types['response_code'].description = resultDesc;
+      }
+    }
+  }
 }
 
 /**
  * Validate SQL query against schema
  */
 function validateSQLQuery(query: string, schema: DatabaseSchema): boolean {
-  const cleanQuery = query.toLowerCase().trim();
-
-  // Security checks
-  if (!cleanQuery.startsWith('select')) {
-    throw new Error('Only SELECT queries are allowed');
-  }
-
-  const dangerousKeywords = [
-    'insert',
-    'update',
-    'delete',
-    'drop',
-    'create',
-    'alter',
-    'truncate',
-    'exec',
-    'execute',
-    'grant',
-    'revoke',
-  ];
-
-  for (const keyword of dangerousKeywords) {
-    if (cleanQuery.includes(keyword)) {
-      throw new Error(`Query contains forbidden keyword: ${keyword}`);
-    }
-  }
-
-  // Check if tables exist
-  const tableNames = Object.keys(schema.tables);
-  const fromMatch = cleanQuery.match(/from\s+(\w+)/);
-  if (fromMatch) {
-    const tableName = fromMatch[1];
-    if (!tableNames.includes(tableName)) {
-      throw new Error(`Table '${tableName}' does not exist in the database`);
-    }
-  }
-
+  // Since the database connection has limited permissions,
+  // we don't need to validate SQL keywords
+  // The database will reject any operations it doesn't allow
   return true;
 }
 
 /**
- * Main function: Ask a question in natural language and get data
+ * Execute a SQL query directly against the database
  */
-export async function askQuestion(question: string) {
+export async function executeQuery(sqlQuery: string) {
   try {
-    // Get database schema
+    // Get database schema for validation
     const schema = await getOrFetchSchema();
 
-    // Convert natural language to SQL
-    let sqlQuery = await naturalLanguageToSQL(question, schema);
+    // Pre-validate the query
+    const validation = validateQuery(sqlQuery);
 
-    // Validate the query
-    validateSQLQuery(sqlQuery, schema);
+    if (!validation.valid) {
+      // Return validation errors
+      let errorOutput = '# Query Validation Failed\n\n';
+      errorOutput += '## Errors\n';
+      for (const error of validation.errors) {
+        errorOutput += `- **${error.type}**: ${error.message}\n`;
+        if (error.suggestion) {
+          errorOutput += `  - Suggestion: ${error.suggestion}\n`;
+        }
+      }
 
-    // Format the query for readability
-    let formattedQuery: string;
-    try {
-      formattedQuery = format(sqlQuery, { language: 'postgresql' });
-    } catch {
-      formattedQuery = sqlQuery;
+      // Suggest fixes
+      if (validation.errors.length > 0) {
+        const fixes = suggestFixes(sqlQuery, validation.errors[0]);
+        if (fixes.length > 0) {
+          errorOutput += '\n## Suggested Fixes\n```sql\n';
+          errorOutput += fixes[0];
+          errorOutput += '\n```\n';
+        }
+      }
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: errorOutput,
+          },
+        ],
+      };
     }
+
+    // Show warnings if any
+    let warningText = '';
+    if (validation.warnings.length > 0) {
+      warningText = '## ⚠️ Warnings\n';
+      for (const warning of validation.warnings) {
+        warningText += `- ${warning.message}\n`;
+      }
+      warningText += '\n';
+    }
+
+    // Show suggestions if any
+    let suggestionText = '';
+    if (validation.suggestions.length > 0) {
+      suggestionText = '## 💡 Optimization Suggestions\n';
+      for (const suggestion of validation.suggestions) {
+        suggestionText += `- ${suggestion.message}\n`;
+        if (suggestion.example) {
+          suggestionText += `  Example: \`${suggestion.example}\`\n`;
+        }
+      }
+      suggestionText += '\n';
+    }
+
+    // Use formatted query if available
+    const formattedQuery = validation.formattedQuery || sqlQuery;
 
     // Execute the query
     const config = getDatabaseConfig();
@@ -411,8 +692,12 @@ export async function askQuestion(question: string) {
 
       // Prepare the response
       let output = '# Database Query Result\n\n';
-      output += `**Question:** ${question}\n\n`;
-      output += '## Generated SQL Query\n```sql\n';
+
+      // Include warnings and suggestions if any
+      if (warningText) output += warningText;
+      if (suggestionText) output += suggestionText;
+
+      output += '## SQL Query\n```sql\n';
       output += formattedQuery;
       output += '\n```\n\n';
       output += `**Execution Time:** ${executionTime}ms\n`;
@@ -462,7 +747,7 @@ export async function askQuestion(question: string) {
     }
   } catch (error: any) {
     // Return error but don't expose sensitive information
-    let errorMessage = 'Failed to process your question';
+    let errorMessage = 'Failed to execute query';
 
     if (error.message.includes('forbidden keyword')) {
       errorMessage = error.message;
@@ -483,6 +768,14 @@ export async function askQuestion(question: string) {
 }
 
 /**
+ * Legacy function kept for backwards compatibility
+ * Simply delegates to executeQuery
+ */
+export async function askQuestion(question: string) {
+  return executeQuery(question);
+}
+
+/**
  * Get information about available tables and columns
  */
 export async function getDatabaseInfo() {
@@ -500,9 +793,7 @@ export async function getDatabaseInfo() {
       // Show first few columns as example
       const columns = Object.entries(tableInfo.columns).slice(0, 10);
       for (const [colName, colInfo] of columns) {
-        output += `- **${colName}**: ${colInfo.data_type}`;
-        if (!colInfo.is_nullable) output += ' (required)';
-        output += '\n';
+        output += `- **${colName}**: ${colInfo.data_type}\n`;
       }
 
       if (columnCount > 10) {

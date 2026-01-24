@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  graph-fluent-chat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"  # Both frontend and backend on same port
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      # MCP Server Configuration
+      - MCP_SERVER_COMMAND=node
+      - MCP_SERVER_ARGS=./mcp-server/dist/index.js
+      # Database configuration will be loaded from .env file
+    env_file:
+      - .env
+    volumes:
+      # Mount static assets if needed
+      - ./public:/app/public:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  app-data:

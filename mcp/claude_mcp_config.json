@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "hgraph": {
+      "command": "node",
+      "args": ["/Users/relytmcd/Repositories/hgraph/product/hgraph-ai/mcp/dist/index.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
